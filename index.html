@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="robots" content="index,follow">
+  <title>pitch discrimination tool </title>
+  <link rel="stylesheet" href="" type="text/css">
+  <style type="text/css">
+  body {margin: 40px;
+    font-family: Arial,Helvetica,sans-serif;
+    max-width: 500px;
+    background: lightgrey;
+    }
+  </style>
+</head>
+<body>
+
+<h3>Introduction</h3>
+<p>
+Midiexplorer is a tool for exploring and analyzing a large collection of
+MIDI files. In particular, it was developed for managing the
+<b>Clean MIDI subset</b> that can be downloaded from
+<a href="https://colinraffel.com/projects/lmd/">https://colinraffel.com/projects/lmd/</a>.
+This collection contains approximately 17,000 MIDI files organized
+by artist. If you download this collection, then you should also 
+get the folder <b>lakh_playlist</b> which links the various music
+genres to this collection.
+<p>
+Midiexplorer contains various visualization tools. It can extract
+the characteristics of these files and store them in a
+database. This database can be used to search for files having
+certain attributes.
+<p>
+The latest documentation is found on
+<a href=https://midiexplorer.sourceforge.io/>https://midiexplorer.sourceforge.io/</a>.
+ 
+
+<h3>Requirements</h3>
+<p>
+With one exception (see below),
+you will require tcl/tk 8.5 or higher and some other executables
+installed on your system. On Linux,
+you start midiexplorer by typing
+<pre>
+wish midiexplorer.tcl
+</pre>
+On Windows you would double click on the midiexplorer.tcl icon.
+
+<p>
+Midiexplorer depends on many external applications. If you
+are running runabc, then you probably have these externals.
+<p>
+It requires a midi player (either commercial
+or freeware).  Several players are suggested in the documentation.
+<p>
+Midiexplorer requires the executables midicopy, midi2abc,
+abc2midi which are part of the abcmidi project. The latest source code to
+these externals as well as midiexplorer.tcl can be found on
+
+<a href= https://ifdo.ca/~seymour/runabc/top.html>https://ifdo.ca/~seymour/runabc/top.html</a>
+
+The source code can also be found on
+ <a href= https://sourceforge.net/projects/abcmidi/>https://sourceforge.net/projects/abcmidi/</a> or 
+ <a href=https://github.com/sshlien/abcmidi>https://github.com/sshlien/abcmidi</a> but they are not updated frequently.
+
+<p>
+You also require an internet browser in order to use some of the features.
+
+<p>
+Binaries for various operating systems can be found on
+<a href=http://abcplus.sourceforge.net/>http://abcplus.sourceforge.net/</a>
+
+<p>
+If you running on a Windows operating system (Windows 10, 8.1, 8,0, 7, or
+XP), then you can install midiexplorer from
+<a href=https://sourceforge.net/projects/midiexplorer/>https://sourceforge.net/projects/midiexplorer/</a>. The windows_binary folder contains win32 executables
+that allow you to avoid installing Tcl/Tk. You will still need an external midi player.
+
+</body>
+</html>
+
+
+

@@ -1,0 +1,326 @@
+Radiohead
+10,000 Maniacs
+311
+ABBA
+Ace of Base
+Adriano Celentano
+Aerosmith
+a-ha
+Air Supply
+Alain Souchon
+Alanis Morissette
+Alice Cooper
+Alice in Chains
+Alien Ant Farm
+All Saints
+Alphaville
+Anastacia
+Annie Lennox
+Asia
+Atomic Kitten
+Bad Company
+Bad Manners
+Barenaked Ladies
+Beck
+Belinda Carlisle
+Ben Folds Five
+Big Bad Voodoo Daddy
+Billy Idol
+Billy Joel
+Black Sabbath
+Blind Guardian
+Blind Melon
+blink-182
+Blondie
+Blues Traveler
+Blur
+Bob Dylan
+Bon Jovi
+Boston
+Boyzone
+Brian Wilson
+Britney Spears
+Bruce Springsteen
+Bryan Adams
+Buddy Holly
+Buffalo Springfield
+Bush
+Cake
+Camel
+Canned Heat
+Carole King
+Cheap Trick
+Cher
+Chicago
+Chris de Burgh
+Chris Isaak
+Chris Rea
+Christina Aguilera
+Chuck Berry
+Chumbawamba
+Collective Soul
+Counting Crows
+Crash Test Dummies
+Creed
+Creedence Clearwater Revival
+Crowded House
+Cyndi Lauper
+Dannii Minogue
+Dave Matthews Band
+David Bowie
+David Byrne
+Deep Purple
+Def Leppard
+Deftones
+Depeche Mode
+Devo
+Dire Straits
+Donovan
+Dream Theater
+Dr. John
+Duran Duran
+Dusty Springfield
+Eagle-Eye Cherry
+Eels
+Electric Light Orchestra
+Elton John
+Elvis Costello
+Elvis Presley
+Erasure
+Eric Clapton
+E-Rotic
+Europe
+Eurythmics
+Everclear
+Extreme
+Faith No More
+Falco
+Filter
+Fiona Apple
+Fleetwood Mac
+Foo Fighters
+Foreigner
+Freddie Mercury
+Garbage
+George Harrison
+George Michael
+Geri Halliwell
+Gloria Estefan
+Godsmack
+Goo Goo Dolls
+Grand Funk Railroad
+Green Day
+Guns N' Roses
+Hank Williams
+Hanson
+Harry Nilsson
+Harvey Danger
+Hole
+Incognito
+INXS
+Iron Maiden
+Jackson Browne
+Jamiroquai
+Jane's Addiction
+Janis Joplin
+Jars of Clay
+Jeff Beck
+Jefferson Airplane
+Jethro Tull
+Jewel
+Jimi Hendrix
+Jimmy Buffett
+J.J. Cale
+Joe Cocker
+Joe Satriani
+John Denver
+John Lennon
+Joni Mitchell
+Journey
+Judas Priest
+Kansas
+Kate Bush
+Kid Rock
+King Crimson
+Kylie Minogue
+Led Zeppelin
+Lenny Kravitz
+Ligabue
+Limp Bizkit
+Linkin Park
+Lisa Loeb
+Live
+Local H
+Lou Reed
+Lynyrd Skynyrd
+Madness
+Madonna
+Mandy Moore
+Marc Cohn
+Marianne Faithfull
+Marillion
+Marilyn Manson
+Meat Loaf
+Meat Puppets
+Mecano
+Megadeth
+Metallica
+Michael Bolton
+Midnight Oil
+Mina
+Modern Talking
+Nada Surf
+Nancy Sinatra
+Natalie Imbruglia
+Natalie Merchant
+Nazareth
+Neil Diamond
+Neil Young
+New Order
+Nine Inch Nails
+Nirvana
+No Doubt
+NOFX
+Oasis
+Ocean Colour Scene
+Oingo Boingo
+Orgy
+Our Lady Peace
+Ozzy Osbourne
+Pantera
+Papa Roach
+Patti Smith
+Paul Anka
+Paul McCartney
+Paul Simon
+Pearl Jam
+Peter Gabriel
+Peter Frampton
+Pet Shop Boys
+Phil Collins
+Phish
+Pink Floyd
+Primus
+Prince
+Procol Harum
+Queen
+Rage Against the Machine
+Rammstein
+Randy Newman
+Reel Big Fish
+R.E.M.
+Robbie Williams
+Robert Miles
+Rob Zombie
+Rod Stewart
+Ronan Keating
+Roxette
+Roxy Music
+Roy Orbison
+Ry Cooder
+Saez
+Santana
+Sarah McLachlan
+Savage Garden
+Save Ferris
+Scooter
+Scorpions
+Seal
+Semisonic
+Sheryl Crow
+Silverchair
+Simple Minds
+Simply Red
+Sister Hazel
+Sixpence None the Richer
+Skid Row
+Smash Mouth
+Soft Cell
+Sonic Youth
+Soul Asylum
+Soundgarden
+Spice Girls
+Squirrel Nut Zippers
+Status Quo
+Steely Dan
+Steppenwolf
+Steve Miller Band
+Steve Vai
+Stevie Nicks
+Stone Temple Pilots
+Stray Cats
+Styx
+Sublime
+Sugar Ray
+Supertramp
+Suzanne Vega
+Swing Out Sister
+Take That
+Talking Heads
+Talk Talk
+Tears for Fears
+Texas
+The Alan Parsons Project
+The Allman Brothers Band
+The Animals
+The Beach Boys
+The Beatles
+The Beautiful South
+The Byrds
+The Cardigans
+The Cars
+The Clash
+The Corrs
+The Cranberries
+The Cult
+The Cure
+The Doobie Brothers
+The Doors
+The Hollies
+The Human League
+The Kelly Family
+The Kinks
+The Lemonheads
+The Mighty Mighty Bosstones
+The Moody Blues
+The Offspring
+The Police
+The Rolling Stones
+The Smashing Pumpkins
+The Smiths
+The Stranglers
+The Tragically Hip
+The Ventures
+The Verve
+The Wallflowers
+The Who
+The Yardbirds
+They Might Be Giants
+The Zombies
+Thin Lizzy
+Third Eye Blind
+Todd Rundgren
+Tom Petty
+Tool
+Tori Amos
+Toto
+Tracy Chapman
+T. Rex
+Type O Negative
+U2
+UB40
+Ultravox
+Uriah Heep
+Van Halen
+Van Morrison
+Vengaboys
+Vertical Horizon
+Warren Zevon
+Weezer
+Westlife
+White Lion
+Whitesnake
+White Zombie
+Yes
+Zebrahead
+ZZ Top
