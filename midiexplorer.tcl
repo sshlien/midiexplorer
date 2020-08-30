@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 1.75 2020-08-24 12:40" 
+set midiexplorer_version "MidiExplorer version 1.76 2020-08-29 09:00" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -5264,10 +5264,10 @@ proc compute_pianoroll {} {
 
     
     piano_qnotelines
-    
+
     foreach line $pianoresult {
-        if {[string match [lindex $line 1] "Program"]} {
-          set chanprog([lindex $line 1]) [lindex $line 2]
+        if {[string match "Program" [lindex $line 1]] == 1} {
+          set chanprog([lindex $line 2]) [lindex $line 3]
         } elseif {[string match [lindex $line 0] "Header"]} {
           set midifiletype [lindex $line 1]
           #set miditracks [lindex $line 2]
