@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 1.76 2020-08-29 09:00" 
+set midiexplorer_version "MidiExplorer version 1.77 2020-08-30 14:45" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -2314,7 +2314,7 @@ for {set i 1} {$i <= $ntrks} {incr i} {
   foreach token $trkinfo($i) {
     if {[lindex $token 0] == "trkinfo"} {
       get_trkinfo channel nnotes nharmony pmean duration $token
-      set activechan($i) 1
+      set activechan($channel) 1
       set track2channel($i) $channel
       set totalnotes [expr $nnotes+$nharmony]
       set chan_action [lindex $channel_activity [expr $channel -1]]
@@ -4925,23 +4925,29 @@ proc show_prog_structure {} {
   .midistructure.canx delete all
   for {set i 2} {$i < 32} {incr i} {pack forget .midistructure.leftbuttons.$i}
   for {set i 1} {$i < 17} {incr i} {pack forget .midistructure.leftbuttons.c$i}
+  #puts "activechan = [array get activechan]"
+  #puts "track2channel = [array get track2channel]"
   if {$midi(midishow_sep) == "track"} {
     for {set i 2} {$i < 32} {incr i} {
-       if {[info exist activechan($i)]} {
+       if {[info exist track2channel($i)]} {
+	       set c $track2channel($i)
+       } else {#puts "track2channel($i) does not exist"
+	       break
+	       }
+       if {$activechan($c)} {
          pack .midistructure.leftbuttons.$i -side top
          # ct2band maps track/channel to button band
          incr nbut
          set ct2band($i) $nbut
-         }
+         } 
        }
   } else {
     #puts "nseg = $nseg"
+    # separating by channel  
     set yspacing [winfo reqheight .midistructure.leftbuttons.2]
-    for {set i 0} {$i < 32} {incr i} {
+    for {set i 0} {$i < 17} {incr i} {
        if {[info exist activechan($i)]} {
-	 if {$ntrks > 1} {
-  	         set c $track2channel($i)
-	 } else {set c $i}
+	 set c $i
 	 if {![info exist ct2band($c)]} {
            incr nbut
            set ct2band($c) $nbut
@@ -5281,7 +5287,8 @@ proc compute_pianoroll {} {
         set t [lindex $line 2]
         set c [lindex $line 3]
         #set track2channel($t) $c
-        if {$midi(midishow_sep) == "track"} {set sep $t} else {set sep $c}
+        #if {$midi(midishow_sep) == "track"} {set sep $t} else {set sep $c}
+        set sep $c	
         set note [lindex $line 4]
         set ix1 [expr $begin/$pianoxscale]
         set ix2 [expr $end/$pianoxscale]
