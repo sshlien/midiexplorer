@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 1.77 2020-08-30 14:45" 
+set midiexplorer_version "MidiExplorer version 1.78 2020-08-31 11:55" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -746,7 +746,6 @@ proc midi_init {} {
     set midi(autoopen) 0
     set midi(colorscheme) ""
 
-    set midi(midistructure_version) new
 
     set midi(midirest) 2
     set midi(splits) 0
@@ -1013,9 +1012,7 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
 	$ww add command -label "duckduckgo search" -font $df -accelerator "ctrl-u"\
 	    -command duckduckgo_search
 	$ww add command -label "midi structure" -font $df -accelerator "ctrl-s"\
-            -command {midi_structure_display new}
-	#$ww add command -label "midi structure old" -font $df \
-        #    -command {midi_structure_display old}
+            -command {midi_structure_display}
 	$ww add command -label pianoroll -font $df -accelerator "ctrl-r"\
             -command piano_roll_display
 	$ww add command -label drumroll -font $df -command {drumroll_window} -accelerator "ctrl-d"
@@ -1259,7 +1256,7 @@ pack .treebrowser.menuline2.jump .treebrowser.menuline2.name -side left
 pack .treebrowser.menuline -anchor w
 pack .treebrowser.menuline2 -anchor w
 
-bind . <Control-s> {midi_structure_display new}
+bind . <Control-s> {midi_structure_display}
 bind . <Control-r> piano_roll_display
 bind . <Control-d> drumroll_window
 bind . <Control-k> {show_console_page $exec_out word}
@@ -1323,7 +1320,7 @@ font configure $dfi -family $midi(font_family) -size $sizeminus \
             -weight $midi(font_weight) -slant italic
 if {[winfo exist .midistructure]} {
   destroy .midistructure
-  midi_structure_window $midi(midistructure_version)
+  midi_structure_window 
   }
 }
 
@@ -1338,7 +1335,7 @@ font configure $dfi -family $midi(font_family) -size $sizeminus \
             -weight $midi(font_weight) -slant italic
 if {[winfo exist .midistructure]} {
   destroy .midistructure
-  midi_structure_window $midi(midistructure_version)
+  midi_structure_window 
   }
 }
 
@@ -1896,7 +1893,7 @@ proc selected_midi {} {
             update_displayed_pdf_windows .piano.can}
    if {[winfo exist .midistructure]} {
             zero_trksel
-	    midi_structure_window $midi(midistructure_version)
+	    midi_structure_window 
 	    }
    if {[winfo exist .mftext]} {mftextwindow $midi(midifilein) 0}
    if {[winfo exist .drumroll]} {show_drum_events}
@@ -2728,12 +2725,12 @@ position_window $w
 radiobutton $w.track -text "separate by track" -font $df\
           -value track -variable midi(midishow_sep)\
           -command {zero_trksel
-                    midi_structure_window $midi(midistructure_version)
+                    midi_structure_window 
                     }
 radiobutton $w.channel -text "separate by channel" -font $df\
           -value chan -variable midi(midishow_sep)\
           -command {zero_trksel
-                    midi_structure_window $midi(midistructure_version)
+                    midi_structure_window 
                     }
 radiobutton $w.focus -text "play and focus on selected" -value 1 -variable midi(playmethod) -font $df
 radiobutton $w.only -text "play only selected" -value 2 -variable midi(playmethod) -font $df
@@ -4409,158 +4406,18 @@ labeled 'contains program'.
 
 
 
-proc extract_midifile_structure_by_channel {} {
-    global pianoresult ppqn midi
-    global segstart segend seglink
-    global lastbeat activechan
-    if {$midi(segment_gap) < 4} {set midi(segment_gap) 4}
-    set seg 1
-    set lastbeat 0
-    array unset segstart
-    array unset segend
-    set seq 0
-    if [info exist activechan] {
-        unset activechan
-    }
-    for {set i 0} {$i < 17} {incr i} {
-      set activesegstart($i) -1
-      set activesegend($i) 0
-      set activetrack($i) 0
-      set activechan($i) 0
-      }
-    if {[string length $pianoresult] < 3} return
-    foreach line $pianoresult  {
-        if {[llength $line] != 6} continue
-
-        set begin [lindex $line 0]
-        set end [lindex $line 1]
-        set t [lindex $line 2]
-        set c [lindex $line 3]
-
-        if {[string is double $begin] != 1} continue
-        set start [expr floor($begin/$ppqn)]
-        if {$activechan($c) == 0} {
-              set activesegstart($c) $start
-              set gap 0
-            } else {
-              set gap [expr $start - $activesegend($c)]  
-            }
-        #if {$gap != 0 && $c == 1} {puts "$c $activesegend($c) $activesegstart($c) $gap"}
-        if {$gap > $midi(segment_gap) \
-             && $activesegend($c) != 0\
-             && [expr $activesegend($c) - $activesegstart($c)] > 1} {
-           set segstart($seg) $activesegstart($c)
-           set segend($seg) $activesegend($c)
-           set seglink($seg) [list $activetrack($c) $c]
-           #puts "seg $seg $segstart($seg) $segend($seg) for $c"
-           incr seg
-           set activesegend($c) [expr floor($end/$ppqn)]
-           set activechan($c) 0
-          } else {
-           set activesegend($c) [expr floor($end/$ppqn)]
-           set activetrack($c) $t
-           set activechan($c) 1
-          }
-        }
-   # empty activeseg
-   for {set i 0} {$i < 17} {incr i} {
-     #puts "$i $activesegstart($i) $activesegend($i)"
-     if {[expr $activesegend($i) - $activesegstart($i)] > 1
-            && $activechan($i)} {
-        set segstart($seg) $activesegstart($i)
-        set segend($seg) $activesegend($i)
-        set seglink($seg) [list $activetrack($i) $i]
-        #puts "seg $seg $segstart($seg) $segend($seg) for $i"
-        incr seg
-        }
-    }
- 
-  for {set i 1} {$i < $seg} {incr i} {
-    set lastbeat [expr max($lastbeat,$segend($i))]
-    }     
-  return $seg
-  }
-
-
-
-proc extract_midifile_structure_by_track {} {
-    global pianoresult ppqn midi
-    global lasttrack
-    if {$midi(segment_gap) < 4} {set midi(segment_gap) 4} 
-    set seg 0
-    set lasttrack 0
-    global segstart segend seglink
-    global lastbeat activechan
-    array unset segstart
-    array unset segend
-    array unset seglink
-    array unset activechan
-    set lastbeat 0
-    if {[string length $pianoresult] < 3} return
-    foreach line $pianoresult  {
-        if {[llength $line] != 6} continue
-
-        set begin [lindex $line 0]
-        set end [lindex $line 1]
-        set t [lindex $line 2]
-        set c [lindex $line 3]
-
-        if {[string is double $begin] != 1} continue
-        if {$t != $lasttrack} {
-           if {$seg > 0} {
-                   set segend($seg) $lastsegpos
-                   set lastbeat [expr max($lastbeat,$lastsegpos)]
-                   #puts "track $lasttrack segment $seg $segstart($seg) $segend($seg)"
-              }
-           if {$lasttrack != 0} {
-             set seglink($seg) [list $lasttrack $lastchannel]
-             } else {
-             set seglink($seg) [list $lasttrack $c]
-             }
-           incr seg
-           set lasttrack $t
-           set segstart($seg) [expr floor($begin/$ppqn)] 
-           set segend($seg) [expr floor($begin/$ppqn)]
-           set lastsegpos [expr floor($end/$ppqn)]
-        } else {set gap [expr floor($begin/$ppqn) - $lastsegpos]
-                #if {$seg == 22} {puts "$segstart($seg) $lastsegpos $c"}
-                if {$gap > $midi(segment_gap)} {
-                   set segend($seg) $lastsegpos
-                   #puts "track $t segment $seg $segstart($seg) $segend($seg)"
-                   set seglink($seg) [list $t $c]
-                   incr seg
-                   set segstart($seg) [expr floor($begin)/$ppqn]
-                   } 
-          set lastsegpos [expr floor($end/$ppqn)] 
-        }
-
-        set track2channel($t) $c
-        if {$midi(midishow_sep) == "track"} {set sep $t} else {set sep $c}
-        set note [lindex $line 4]
-        set vel [lindex $line 5]
-        set activechan($sep) 1
-        set beatnumber [expr floor($begin/$ppqn)]
-        set lastchannel $c
-        }
-if {$lastbeat == 0} {set lastbeat $lastsegpos}
-set seglink($seg) [list $t $lastchannel]
-set segend($seg) $lastsegpos
-incr seg
-return $seg
-}
 
 set midistructurewidth 400
 
-proc midi_structure_display {version} {
+proc midi_structure_display {} {
    global midi
    load_midifile
-   set midi(midistructure_version) $version
    destroy .midistructure
-   midi_structure_window $version
+   midi_structure_window 
    bind .midistructure <Alt-p> midistructure_postscript_output
 }
 
-proc midi_structure_window {version} {
+proc midi_structure_window {} {
   set w .midistructure
   global ntrk df
   global midi
@@ -4574,16 +4431,12 @@ proc midi_structure_window {version} {
 
   if {[winfo exist $w]} {
     raise $w .
-    if {$version == "old"} {
-       show_midi_structure  
-    } else {  
-       show_prog_structure
-       }
+    show_prog_structure
     return
     }
   toplevel $w
   position_window $w
-  wm title $w "midi structure $version"
+  wm title $w "midi structure "
   set entrywidth [expr int(800/double($midi(font_size)))]
   set wm $w.menuline
   frame $wm
@@ -4659,11 +4512,7 @@ function"
 
 
    midistructure_select
-   if {$version == "old"} {
-       show_midi_structure  
-   } else {  
-       show_prog_structure
-   }
+   show_prog_structure
 }
 
 proc mstruct_Button1Press {x y} {
@@ -4773,122 +4622,6 @@ set groupnames { "piano keyboard"
 
                
 
-proc show_midi_structure {} {
-  global midi lastbeat
-  global midistructurewidth
-  global midistructureheight
-  global segstart segend seglink nsegs ntrk
-  global activechan
-  global chanprog
-  global mlist
-  global xchannel2program
-  global track2program
-  global track2channel
-  global pixels_per_beat
-  global yspacing
-  global progmapper
-  global groupcolors
-  global df
-
-  #puts "show_midi_structure channel2program [array get channel2program]"
-  if {![winfo exist .midistructure]} return
-
-  if {$midi(midishow_sep) == "track" && $ntrk == 1} {
-     .midistructure.txt configure -text "Type 0 midi file. Cannot separate by track" -foreground red
-     set midi(midishow_sep) "channel"
-     }
-
-  if  {$midi(midishow_sep) == "track" && $ntrk > 1} {
-    set nseg [extract_midifile_structure_by_track]
-    } else {
-    set nseg [extract_midifile_structure_by_channel]
-    }
-
-
-#puts "$nseg segments were found"
-  set nbut 0
-  if {$nseg < 1} return
-  .midistructure.can delete all
-  .midistructure.canx delete all
-  for {set i 2} {$i < 32} {incr i} {pack forget .midistructure.leftbuttons.$i}
-  for {set i 1} {$i < 17} {incr i} {pack forget .midistructure.leftbuttons.c$i}
-  if {$midi(midishow_sep) == "track"} {
-    for {set i 2} {$i < 32} {incr i} {
-       if {[info exist activechan($i)]} {
-         pack .midistructure.leftbuttons.$i -side top
-         # ct2band maps track/channel to button band
-         incr nbut
-         set ct2band($i) $nbut
-         }
-       }
-  } else {
-    #puts "nseg = $nseg"
-    for {set i 0} {$i < 17} {incr i} {
-       set usedchannel($i) 0
-       }
-    for {set i 1} {$i <$nseg} {incr i} {
-       #puts "$segstart($i) $segend($i)  $seglink($i)"
-       set c [lindex $seglink($i) 1]
-       set usedchannel($c) 1
-       }
-    set yspacing [winfo reqheight .midistructure.leftbuttons.2]
-    for {set i 0} {$i < 17} {incr i} {
-       if {$usedchannel($i) == 1} {
-         pack .midistructure.leftbuttons.c$i -side top
-         incr nbut
-         set ct2band($i) $nbut
-       }
-    }
-  }
-  .midistructure.can create rect -1 -1 -1 -1 -tags mark -fill yellow -stipple gray25
-  plot_programcolor
-  plot_program_activity
-
-
-  set yspacing [winfo reqheight .midistructure.leftbuttons.2]
-  set midistructureheight [expr $nbut * $yspacing + 3]
-  .midistructure.can configure -height [expr $nbut * $yspacing]
-  for {set i 1} {$i <  $nbut } {incr i} {
-    set y [expr $yspacing*$i]
-    .midistructure.can create line 1 $y 399 $y -dash {1 2}
-    }
-
-
-  set pixels_per_beat [expr $midistructurewidth/$lastbeat]
-  set xspacing [best_grid_spacing $lastbeat]
-  set x  0
-  while {$x < $lastbeat} {
-    set x  [expr $x + $xspacing]
-    set x1 [expr $x * $pixels_per_beat]
-    .midistructure.can create line $x1 0 $x1 [expr $nbut*$yspacing] -dash {1 2}
-    .midistructure.canx create text $x1 15 -text $x -font $df
-    }
-
-  for {set i 1} {$i < $nseg} {incr i} {
-    set x1 [expr $segstart($i)*$pixels_per_beat]
-    set x2 [expr $segend($i)*$pixels_per_beat]
-    set t [lindex $seglink($i) 0]
-    set c [lindex $seglink($i) 1]
-    if {$midi(midishow_sep) == "track"} {
-      set y [expr $ct2band($t) *$yspacing  - 14]
-      } else {
-      set y [expr $ct2band($c) *$yspacing  - 14]
-      }
-  #puts "$i $segstart($i) $segend($i) $seglink($i)   $ct2band($c)"
-    set x1 [expr round($x1)]
-    set x2 [expr round($x2)]
-    set y [expr round($y)]
-    if {$c == 10} {
-      set kolor black
-      } else {
-      set p $xchannel2program($c)
-      set g [lindex $progmapper $p]
-      set kolor [lindex $groupcolors $g]
-      }
-    .midistructure.can create line $x1 $y $x2 $y -width 13 -tag seg$i -fill $kolor
-    }
-  bind_segments $nseg
-  }
 
 proc show_prog_structure {} {
   global midi lastbeat
