@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 1.78 2020-08-31 11:55" 
+set midiexplorer_version "MidiExplorer version 1.82 2020-09-02 13:35" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -3056,12 +3056,12 @@ proc piano_window {} {
             -value track -variable midi(midishow_sep)\
             -command {zero_trksel
                       compute_pianoroll
-                      show_midi_structure}
+                      show_prog_structure}
     $p.config.items add radiobutton -label "separate by channel" -font $df\
             -value chan -variable midi(midishow_sep)\
             -command {zero_trksel
                       compute_pianoroll
-                      show_midi_structure}
+                      show_prog_structure}
     $p.config.items add checkbutton -label "suppress drum channel" -font $df\
             -variable midi(nodrumroll) -command compute_pianoroll
     $p.config.items add checkbutton -label "follow while playing" -font $df\
@@ -3170,13 +3170,19 @@ proc piano_window {} {
     for {set i 0} {$i < 32} {incr i} {
         checkbutton .piano.trkchn.$i -text $i -variable trksel($i) -font $df -command "highlight_track $i"
     }
-    button .piano.trkchn.but -relief raised -padx 1 -pady 1
-    grid .piano.trkchn.but -column 1
-    bind .piano.trkchn.but <Button> {
+    button .piano.trkchn.play -relief raised -padx 1 -pady 1
+    grid .piano.trkchn.play -column 1
+    bind .piano.trkchn.play <Button> {
         set miditime [midi_to_midi 1]
         piano_play_midi_extract
         startup_playmark_motion $miditime
     }
+    button .piano.trkchn.display -relief raised -padx 1 -pady 1
+    grid .piano.trkchn.display -column 1
+    bind .piano.trkchn.display <Button> {
+        set miditime [midi_to_midi 1]
+        piano_display_midi_extract
+}
     
     
     bind $p.can <ButtonPress-1> {piano_Button1Press %x %y}
@@ -3213,7 +3219,7 @@ for {set i 0} {$i < 32} {incr i} {
     set trksel($i) 0
     }
 }
-
+#
 
 
 #        Support functions
@@ -5019,9 +5025,8 @@ proc compute_pianoroll {} {
         set end [lindex $line 1]
         set t [lindex $line 2]
         set c [lindex $line 3]
-        #set track2channel($t) $c
-        #if {$midi(midishow_sep) == "track"} {set sep $t} else {set sep $c}
-        set sep $c	
+        set track2channel($t) $c
+        if {$midi(midishow_sep) == "track"} {set sep $t} else {set sep $c}
         set note [lindex $line 4]
         set ix1 [expr $begin/$pianoxscale]
         set ix2 [expr $end/$pianoxscale]
@@ -5029,6 +5034,7 @@ proc compute_pianoroll {} {
         if {$midi(nodrumroll) == 0 || $c != 10} {
           $p.can create line $ix1 $iy $ix2 $iy -width 3 -tag trk$sep\
                 -arrow last -arrowshape {2 2 2}
+          #puts "tag = trk$sep"
           }
         set activechan($sep) 1
     }
@@ -5108,21 +5114,51 @@ proc qnote_offset_adjustment {offset} {
 }
 
 proc put_trkchan_selector {} {
+# places a line of buttons at the bottom of the .piano window
+# for selecting midi channels or tracks for further action.
     global activechan midi chanprog mlist df
+    global track2channel
     global last_checked_button
-   if {$midi(midishow_sep)=="track"} {
-        .piano.trkchn.but configure -text "play selected tracks" -font $df} else {
-        .piano.trkchn.but configure -text "play selected channels" -font $df}
 
+    #puts "track2channel [array get track2channel]"
     set j 0
     for {set i 0} {$i < 32} {incr i} {
         grid forget .piano.trkchn.$i
-        if {[info exist activechan($i)]} {
-            grid .piano.trkchn.$i -sticky nw -row [expr $j/10] -column [expr 2 +( $j % 10)]
-            incr j
+        }
+# depending on whether we are separating by midi channel or track number
+    if {$midi(midishow_sep)=="track"} {
+        .piano.trkchn.play configure -text "play selected tracks" -font $df
+        .piano.trkchn.display configure -text "display selected tracks" -font $df
+	for {set i 2} {$i <32} {incr i} {
+            if {[info exist track2channel($i)]} {
+              grid .piano.trkchn.$i -sticky nw -row [expr $j/10] -column [expr 2 +( $j % 10)]
+              incr j
+              }
+           }
+
+    } else {
+
+        .piano.trkchn.play configure -text "play selected channels" -font $df
+        .piano.trkchn.display configure -text "display selected channels" -font $df
+	for {set i 0} {$i <16} {incr i} {
+            if {[info exist activechan($i)]} {
+              grid .piano.trkchn.$i -sticky nw -row [expr $j/10] -column [expr 2 +( $j % 10)]
+              incr j
+              }
+        } 
+    }
+
+#  Bind the buttons so they detect the mouse pointer entering or leaving
+#  the button. The appropriate notes on the pianoroll display will be
+#  highlighted in red. 
+
+       for {set i 0} {$i < $j} {incr i} {
+            #puts "binding $i"
             bind .piano.trkchn.$i <Enter> {
+              #puts "window = [split %W .]" 
               set n [lindex [split %W .] 3]
               set num $n
+
               if {$midi(midishow_sep)=="track"} {
                  set num $track2channel($n)}
               if {$num == 10} {
@@ -5132,6 +5168,9 @@ proc put_trkchan_selector {} {
               } else {
                  .piano.txt configure -text [lindex $mlist 0] -font $df
               }
+
+              #puts ".piano.trkchn.$i bound to trk$n"
+	      #puts "trksel($n) = $trksel($n)"
               if {$trksel($n) == 0} {
                  .piano.can itemconfigure trk$n -fill red -width 3
                  } 
@@ -5141,6 +5180,7 @@ proc put_trkchan_selector {} {
                 set last_checked_button -1
                 }
               } 
+
             bind .piano.trkchn.$i <Leave> {
               set n [lindex [split %W .] 3]
               if {$trksel($n) == 0} {
@@ -5148,7 +5188,6 @@ proc put_trkchan_selector {} {
                 }
               }
             }
-    }
 }
 
 
@@ -5683,6 +5722,10 @@ proc piano_play_midi_extract {} {
     play_midi_file  [file join [pwd] $midi(outfilename)]
 }
 
+proc piano_display_midi_extract {} {
+    global midi
+    piano_abc_file
+}
 
 proc create_midi_file {} {
     midi
@@ -11037,6 +11080,31 @@ edit_abc_output $result
 update_console_page
 }
 
+proc piano_abc_file {} {
+# converts the midi file to abc notation and uses abc2svg
+# to display the abc notation in common music notation
+# on your browser.
+global midi
+global exec_out
+set title [file root [file tail $midi(midifilein)]]
+# -sr 2 swallow small rests
+set options " "
+if {$midi(splits) == 1} {set options [concat $options -splitbars]}
+if {$midi(splits) == 2} {set options [concat $options -splitvoices]}
+if {$midi(midirest) > 0} {set options [concat $options "-sr $midi(midirest)"]}
+set cmd "exec [list $midi(path_midi2abc)] [list $midi(outfilename)] $options -noly -title [list $title]" 
+catch {eval $cmd} result
+set exec_out $exec_out\n$cmd\n$result
+set outhandle [open X.tmp w]
+puts $outhandle $result
+close $outhandle
+copyXtmptohtml 
+set cmd "exec [list $midi(browser)] file:[file join [pwd] $midi(outhtml)] &"
+catch {eval $cmd} exec_out
+set exec_out "$cmd\n$exec_out"
+update_console_page
+}
+
 proc edit_abc_output {output} {
 global midi
 global df
@@ -11434,6 +11502,6 @@ proc show_checkversion_summary {} {
 
 bind . <Control-o> google_search
 bind . <Control-u> duckduckgo_search
-
+#trace add execution compute_pianoroll leave "cmdstr"
 
 restore_root_folder 
