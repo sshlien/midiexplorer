@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 1.82 2020-09-02 13:35" 
+set midiexplorer_version "MidiExplorer version 1.88 2020-09-05 21:00" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -74,7 +74,9 @@ set midiexplorer_version "MidiExplorer version 1.82 2020-09-02 13:35"
 #   Part 17.0 Playlist support
 #   Part 18.0 google_search
 #   Part 19.0 abc file
-#   Part 20.0 internals
+#   Part 20.0 Pgram
+#   Part 21.0 Console Support
+#   Part 22.0 internals
 #
 
 set welcome "Welcome to $midiexplorer_version. This application\
@@ -666,6 +668,7 @@ proc midi_init {} {
     set midi(.midiplayer) ""
     set midi(.tmpfile) ""
     set midi(.cfgmidi2abc) ""
+    set midi(.pgram) ""
 
     
     set midi(player1) ""
@@ -1011,6 +1014,7 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
 	    -command google_search
 	$ww add command -label "duckduckgo search" -font $df -accelerator "ctrl-u"\
 	    -command duckduckgo_search
+        $ww add command -label "pgram" -font $df -command pgram_window
 	$ww add command -label "midi structure" -font $df -accelerator "ctrl-s"\
             -command {midi_structure_display}
 	$ww add command -label pianoroll -font $df -accelerator "ctrl-r"\
@@ -7556,6 +7560,9 @@ if {[winfo exists .notegram]} {
 if {[winfo exists .beatgraph]} {
    beat_graph
    }
+if {[winfo exists .pgram]} {
+   compute_pgram
+   }
 }
 
 proc update_drumroll_pdfs {} {
@@ -10196,7 +10203,7 @@ proc get_geometry_of_all_toplevels {} {
                ".fontwindow" ".support" ".preferences" ".beatgraph"
                ".ppqn" ".drumrollconfig" ".indexwindow" ".wiki"
                ".dictview" ".notegram" ".barmap" ".playmanage" ".data_info"
-               ".midiplayer" ".tmpfile" ".cfgmidi2abc"}
+               ".midiplayer" ".tmpfile" ".cfgmidi2abc" ".pgram"}
   foreach top $toplevellist {
     if {[winfo exist $top]} {
       set g [wm geometry $top]"
@@ -11269,9 +11276,9 @@ set preface $html_preamble
 
 
  switch $midi(webscript) {
-    1 {append preface "</head>\n<body>\n%abc\n"}
-    2 {append preface "</head>\n<body>\n<!--\n"}
-    3 {append preface "</head>\n<body>\n<script type=\"text/vnd.abc\" class=\"abc\">"}
+    1 {append preface "\n</head>\n<body>\n%abc\n"}
+    2 {append preface "\n</head>\n<body>\n<!--\n"}
+    3 {append preface "\n</head>\n<body>\n<script type=\"text/vnd.abc\" class=\"abc\">"}
 }
 
 
@@ -11284,11 +11291,6 @@ close $inhandle
 set midi(outhtml) X.html
 set outhandle [open $midi(outhtml) w]
 puts $outhandle $preface
-if {$midi(webscript) == 3} {
-  puts $outhandle  "</head>\n<body>\n<script type=\"text/vnd.abc\" class=\"abc\">"
-  } else {
-  puts $outhandle  "</head>\n<body>"
-  }
 
 
 set midi(fmt_chk) 0
@@ -11383,8 +11385,119 @@ if {![winfo exist $w]} {
   }
 }
 
+#   Part 20.0 Pgram
+#
+proc pgram_window {} {
+if {![winfo exist .pgram]} {
+  toplevel .pgram
+  position_window .pgram
+  set pgraph .pgram.c
+  canvas $pgraph -width 500 -height 250 -border 3 
+  pack $pgraph
+  }
+compute_pgram
+}
 
-#   Part 20.0 internals
+proc reset_pitch_bands {} {
+global bminpitch
+global bmaxpitch
+# reset
+for {set i 0} {$i < 32} {incr i} {
+  set bminpitch($i) 128
+  set bmaxpitch($i) 0
+  }
+}
+
+proc compute_pgram {} {
+global midi
+global ppqn
+global chn2prg
+global exec_out
+global bminpitch
+global bmaxpitch
+
+set pgraph .pgram.c
+$pgraph delete all
+set pgraphwidth 500
+set xrbx [expr $pgraphwidth - 3]
+set xlbx  40
+set ytbx 20
+set ybbx 220 
+
+$pgraph create rectangle $xlbx $ytbx $xrbx $ybbx -outline white\
+            -width 2 -fill black
+
+set exec_options "[list $midi(midifilein)] -midigram"
+set cmd "exec [list $midi(path_midi2abc)] $exec_options"
+catch {eval $cmd} pianoresult
+ if {[string first "no such" $pianoresult] >= 0} {abcmidi_no_such_error $midi(path_midi2abc)}
+set pianoresult [split $pianoresult \n]
+set sorted_pianoresult [lsort -command compare_onset $pianoresult]
+set nrec [llength $pianoresult]
+set midilength [lindex $pianoresult [expr $nrec -1]]
+set nbeats [expr $midilength/$ppqn]
+set exec_out compute_pgram:\n$cmd\n\n$pianoresult
+
+Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx 0.0 $nbeats 20.0 100.0 
+reset_pitch_bands
+
+set lastbegin 0;
+foreach line $sorted_pianoresult {
+     set begin [lindex $line 0]
+     set end [lindex $line 1]
+     if {[llength $line] == 6} {
+       set begin [expr $begin/$ppqn]
+       if {$begin > $lastbegin} {output_pitch_bands $lastbegin
+	                         set lastbegin $begin}
+       set end [expr [lindex $line 1]/$ppqn]
+       set t [lindex $line 2]
+       set c [lindex $line 3]
+       if {$midi(midishow_sep) == "track"} {set sep $t} else {set sep $c}
+       set pitch [lindex $line 4]        
+       if {$pitch > $bmaxpitch($sep)} {set bmaxpitch($sep) $pitch}
+       if {$pitch < $bminpitch($sep)} {set bminpitch($sep) $pitch}
+       }
+      }
+update_console_page
+}
+
+proc output_pitch_bands {beat} {
+global bminpitch
+global bmaxpitch
+global xchannel2program
+global progmapper
+global groupcolors
+set pgraph .pgram.c
+set line1 ""
+set line2 ""
+set line3 ""
+set ix [Graph::ixpos $beat]
+for {set i 0} {$i < 16} {incr i} {
+  if {$i == 10} continue
+  if {$bminpitch($i) < 128} {
+	  set iy1 [Graph::iypos $bminpitch($i)]
+	  set iy2 [Graph::iypos $bmaxpitch($i)]
+          set p $xchannel2program($i)
+          set g [lindex $progmapper $p]
+          set kolor [lindex $groupcolors $g]
+	  set w [expr $iy1 - $iy2]
+	  #puts "i = $i p = $p g = $g kolor = $kolor"
+	  if {$w < 3} {set iy1 [expr $iy2+2]}
+	  if {$w > 10} {set pat {1 4}
+	  } elseif {$w > 5} {set pat {1 2}
+          } else {set pat {1 1}}
+          $pgraph create line $ix $iy1  $ix $iy2 -fill $kolor -dash $pat
+          }
+  }
+#puts $line1
+#puts $line2
+#puts $line3
+#puts "xchannel2program [array get xchannel2program]"  
+reset_pitch_bands
+}
+
+
+#   Part 22.0 internals
 proc dirhome {} {
 set textout ""
 set filelist [glob *]
@@ -11495,7 +11608,6 @@ proc show_checkversion_summary {} {
     }
         $p.t insert end "\n"
 }
-
 
 
 
