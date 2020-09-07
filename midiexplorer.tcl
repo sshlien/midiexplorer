@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 1.88 2020-09-05 21:00" 
+set midiexplorer_version "MidiExplorer version 1.92 2020-09-07 17:05" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -1014,7 +1014,7 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
 	    -command google_search
 	$ww add command -label "duckduckgo search" -font $df -accelerator "ctrl-u"\
 	    -command duckduckgo_search
-        $ww add command -label "pgram" -font $df -command pgram_window
+        $ww add command -label "pgram" -font $df -command pgram_window -accelerator "ctrl-p"
 	$ww add command -label "midi structure" -font $df -accelerator "ctrl-s"\
             -command {midi_structure_display}
 	$ww add command -label pianoroll -font $df -accelerator "ctrl-r"\
@@ -11387,16 +11387,64 @@ if {![winfo exist $w]} {
 
 #   Part 20.0 Pgram
 #
+
+proc p_highlight {c} {
+global mlist
+global last_high
+global xchannel2program
+set last_high $c
+.pgram.c itemconfigure c$c -fill white 
+set program [lindex $mlist $xchannel2program($c)]
+.pgram.stat configure -text "channel $c --> $program"
+}
+
+proc p_unhighlight {c} {
+global last_high
+global progmapper
+global groupcolors
+global xchannel2program
+set p $xchannel2program($last_high)
+set g [lindex $progmapper $p]
+set kolor [lindex $groupcolors $g]
+.pgram.stat configure -text ""
+.pgram.c itemconfigure c$c -fill $kolor 
+set last_high -1
+}
+
+
 proc pgram_window {} {
+global df
 if {![winfo exist .pgram]} {
   toplevel .pgram
   position_window .pgram
   set pgraph .pgram.c
   canvas $pgraph -width 500 -height 250 -border 3 
   pack $pgraph
+  bind_pgram_tags
+  frame .pgram.chn
+  pack .pgram.chn
+  label .pgram.chn.txt -text "channels: " -font $df
+  pack .pgram.chn.txt -side left
+  label .pgram.stat -text "" -font $df
+  pack .pgram.stat
+  for {set i 1} {$i < 17} {incr i} {
+	  button .pgram.chn.$i -text $i -font $df -relief ridge -bd 2 -padx 1
+	  pack .pgram.chn.$i -side left
+	  bind .pgram.chn.$i <Enter> "p_highlight $i"
+	  bind .pgram.chn.$i  <Leave> "p_unhighlight $i"
+          }
   }
 compute_pgram
 }
+
+proc bind_pgram_tags {} {
+set pgraph .pgram.c
+for {set i 0} {$i < 17} {incr i} {
+        $pgraph bind c$i <Enter> "p_highlight $i"
+        $pgraph bind c$i <Leave> "p_unhighlight $i"
+    }
+}
+
 
 proc reset_pitch_bands {} {
 global bminpitch
@@ -11408,13 +11456,74 @@ for {set i 0} {$i < 32} {incr i} {
   }
 }
 
+proc vbuildpgram {} {
+global sorted_pianoresult
+global ppqn
+global bminpitch
+global bmaxpitch
+set lastbegin 0
+reset_pitch_bands
+foreach line $sorted_pianoresult {
+     set begin [lindex $line 0]
+     set end [lindex $line 1]
+     if {[llength $line] == 6} {
+       set begin [expr $begin/$ppqn]
+       if {$begin > $lastbegin} {output_pitch_bands $lastbegin
+	                         set lastbegin $begin}
+       set end [expr [lindex $line 1]/$ppqn]
+       set t [lindex $line 2]
+       set c [lindex $line 3]
+       set pitch [lindex $line 4]        
+       if {$pitch > $bmaxpitch($c)} {set bmaxpitch($c) $pitch}
+       if {$pitch < $bminpitch($c)} {set bminpitch($c) $pitch}
+       }
+      }
+}
+
+
+proc hbuildpgram {} {
+# We draw the notes horizontally, grouping all the
+# notes of the same pitch in the same beat location.
+# We can have several pitches (chord) occurring in the
+# same beat and same channel. Therefore we separate by
+# pitch rather than by channel. It is possible that two
+# different channels produces the same pitched note, but
+# we assume it does not happen too frequently.
+global sorted_pianoresult
+global ppqn
+set lastbegin 0;
+global endpitchstrip
+reset_endpitchstrip
+foreach line $sorted_pianoresult {
+     if {[llength $line] == 6} {
+       set begin [expr [lindex $line 0]/$ppqn]
+       if {$begin > $lastbegin} {output_pstrip $lastbegin
+	                         set lastbegin $begin}
+       set t [lindex $line 2]
+       set c [lindex $line 3]
+       if {$c == 10} continue
+       set end [expr [lindex $line 1]/$ppqn]
+       set pitch [lindex $line 4]        
+       set endpitchstrip($pitch) [list $end $c]
+       }
+      }
+}
+
+proc reset_endpitchstrip {} {
+global endpitchstrip
+for {set i 1} {$i < 128} {incr i} {
+  set endpitchstrip($i) 0
+  }
+}
+
+
+
 proc compute_pgram {} {
 global midi
 global ppqn
 global chn2prg
 global exec_out
-global bminpitch
-global bmaxpitch
+global sorted_pianoresult
 
 set pgraph .pgram.c
 $pgraph delete all
@@ -11438,27 +11547,25 @@ set midilength [lindex $pianoresult [expr $nrec -1]]
 set nbeats [expr $midilength/$ppqn]
 set exec_out compute_pgram:\n$cmd\n\n$pianoresult
 
-Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx 0.0 $nbeats 20.0 100.0 
-reset_pitch_bands
+Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx 0.0 $nbeats 15.0 100.0 
 
-set lastbegin 0;
-foreach line $sorted_pianoresult {
-     set begin [lindex $line 0]
-     set end [lindex $line 1]
-     if {[llength $line] == 6} {
-       set begin [expr $begin/$ppqn]
-       if {$begin > $lastbegin} {output_pitch_bands $lastbegin
-	                         set lastbegin $begin}
-       set end [expr [lindex $line 1]/$ppqn]
-       set t [lindex $line 2]
-       set c [lindex $line 3]
-       if {$midi(midishow_sep) == "track"} {set sep $t} else {set sep $c}
-       set pitch [lindex $line 4]        
-       if {$pitch > $bmaxpitch($sep)} {set bmaxpitch($sep) $pitch}
-       if {$pitch < $bminpitch($sep)} {set bminpitch($sep) $pitch}
-       }
-      }
+hbuildpgram
+#vbuildpgram
+
+p_reveal_buttons 
 update_console_page
+}
+
+proc p_reveal_buttons {} {
+global activechan
+set butlist [lsort -integer [array names activechan]]
+for {set i 1} {$i < 17} {incr i} {
+   pack forget .pgram.chn.$i 
+   }
+foreach but $butlist {
+   if {$but == 10} continue
+   pack .pgram.chn.$but -side left
+   }
 }
 
 proc output_pitch_bands {beat} {
@@ -11472,6 +11579,7 @@ set line1 ""
 set line2 ""
 set line3 ""
 set ix [Graph::ixpos $beat]
+set ix2 [expr $ix+2]
 for {set i 0} {$i < 16} {incr i} {
   if {$i == 10} continue
   if {$bminpitch($i) < 128} {
@@ -11486,16 +11594,38 @@ for {set i 0} {$i < 16} {incr i} {
 	  if {$w > 10} {set pat {1 4}
 	  } elseif {$w > 5} {set pat {1 2}
           } else {set pat {1 1}}
-          $pgraph create line $ix $iy1  $ix $iy2 -fill $kolor -dash $pat
+	  #if {$i == 7} {puts "chn7 : $w $ix $iy1 $ix2 $iy2 $kolor $pat"}
+          $pgraph create rect $ix $iy1  $ix2 $iy2\
+	      -fill $kolor -dash $pat -tag c$i
           }
   }
-#puts $line1
-#puts $line2
-#puts $line3
-#puts "xchannel2program [array get xchannel2program]"  
 reset_pitch_bands
 }
 
+proc output_pstrip {beat} {
+global endpitchstrip
+global xchannel2program
+global progmapper
+global groupcolors
+set pgraph .pgram.c
+set ix [Graph::ixpos $beat]
+for {set i 1} {$i < 128} {incr i} {
+  if {[llength $endpitchstrip($i)] == 2 } {
+	  set iy1 [Graph::iypos $i]
+	  set iy2 [expr $iy1 +3]
+	  set end [lindex $endpitchstrip($i) 0]
+	  set c [lindex $endpitchstrip($i) 1]
+          set p $xchannel2program($c)
+          set g [lindex $progmapper $p]
+          set kolor [lindex $groupcolors $g]
+	  set ix2 [expr [Graph::ixpos $end] +3]
+	  #puts "i = $i ix = $ix ix2 = $ix2  iy1 = $iy1 iy2 = $iy2 kolor = $kolor"
+          $pgraph create rect $ix $iy1  $ix2 $iy2\
+	      -fill $kolor -tag c$c
+          }
+  }
+reset_endpitchstrip
+}
 
 #   Part 22.0 internals
 proc dirhome {} {
@@ -11612,6 +11742,7 @@ proc show_checkversion_summary {} {
 
 
 
+bind . <Control-p> pgram_window
 bind . <Control-o> google_search
 bind . <Control-u> duckduckgo_search
 #trace add execution compute_pianoroll leave "cmdstr"
