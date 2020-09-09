@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 1.92 2020-09-07 17:05" 
+set midiexplorer_version "MidiExplorer version 1.98 2020-09-09 08:30" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -754,6 +754,11 @@ proc midi_init {} {
     set midi(splits) 0
 
     set midi(webscript) 3
+
+    set midi(pgrammode) nochord
+    set midi(pgramwidth) 500
+    set midi(pgramheight) 350
+    set midi(pgramthick) 2
 }
 
 # save all options, current abc file
@@ -11388,6 +11393,24 @@ if {![winfo exist $w]} {
 #   Part 20.0 Pgram
 #
 
+set hlp_pgram "Pgram\n\n\
+The pgram provides a different way of visualizing a midi file.\
+The plot is similar to the piano roll representation, except the temporal\
+detail is reduced in order to give the big picture. The different\
+instruments (programs) are color coded like in midi structure. (Keyboard\
+instruments are in dark blue, string instruments in purple, and etc.)\
+The higher pitches appear at higher elevations.\n\n\
+Moving the mouse pointer on any of the notes will highlight all the\
+notes belonging to the same midi channel and indicate in the status\
+line below the name of the instrument. Moving the mouse pointer over\
+any of the channel buttons below, will also highlight the notes belonging\
+to that channel. In case the highlighting does not work for that\
+channel, it is likely that there is another channel which displayed\
+the same pitches.\n\n\
+This representation is still somewhat experimental. The configuration menu,\
+allows you to change some the way it is displayed.
+"
+
 proc p_highlight {c} {
 global mlist
 global last_high
@@ -11414,11 +11437,18 @@ set last_high -1
 
 proc pgram_window {} {
 global df
+global hlp_pgram
+global midi
 if {![winfo exist .pgram]} {
   toplevel .pgram
   position_window .pgram
+  frame .pgram.hdr
+  pack .pgram.hdr -anchor w
+  button .pgram.hdr.cfg -text configure -font $df -command pgram_cfg
+  button .pgram.hdr.hlp -text help -font $df -command {show_message_page $hlp_pgram word}
+  pack .pgram.hdr.cfg .pgram.hdr.hlp -side left -anchor w
   set pgraph .pgram.c
-  canvas $pgraph -width 500 -height 250 -border 3 
+  canvas $pgraph -width $midi(pgramwidth) -height $midi(pgramheight) -border 3 
   pack $pgraph
   bind_pgram_tags
   frame .pgram.chn
@@ -11436,6 +11466,47 @@ if {![winfo exist .pgram]} {
   }
 compute_pgram
 }
+
+proc pgram_cfg {} {
+global midi
+global df
+if {![winfo exist .pgramcfg]} {
+  set p .pgramcfg
+  toplevel $p
+  frame $p.mode
+  pack $p.mode -anchor w 
+  radiobutton $p.mode.c -text "chord mode" -font $df -variable midi(pgrammode) -value chord
+  radiobutton $p.mode.p -text "no chord mode" -font $df -variable midi(pgrammode) -value nochord
+  pack $p.mode.c $p.mode.p -side left -anchor w
+  frame $p.width
+  pack $p.width -anchor w
+  label $p.width.txt -text "plot width" -font $df
+  entry $p.width.ent -textvariable midi(pgramwidth) -font $df
+  pack $p.width.txt $p.width.ent -side left -anchor w
+  frame $p.height
+  pack $p.height
+  label $p.height.txt -text "plot height" -font $df
+  entry $p.height.ent -textvariable midi(pgramheight) -font $df
+  pack $p.height.txt $p.height.ent -side left -anchor w
+  button $p.reset -text reset -font $df -command pgram_reset
+  frame $p.linewidth
+  pack $p.linewidth
+  label $p.linewidth.txt -text "line thickness" -font $df
+  entry $p.linewidth.ent -textvariable midi(pgramthick) -font $df
+  pack $p.linewidth.txt $p.linewidth.ent -side left -anchor w
+  pack $p.reset -anchor w
+  }
+}
+
+proc pgram_reset {} {
+global midi
+set midi(pgrammode) nochord
+set midi(pgramwidth) 500
+set midi(pgramheight) 350
+set midi(pgramthick) 2
+}
+
+
 
 proc bind_pgram_tags {} {
 set pgraph .pgram.c
@@ -11527,14 +11598,17 @@ global sorted_pianoresult
 
 set pgraph .pgram.c
 $pgraph delete all
-set pgraphwidth 500
+set pgraphwidth $midi(pgramwidth)
 set xrbx [expr $pgraphwidth - 3]
 set xlbx  40
 set ytbx 20
-set ybbx 220 
+set ybbx [expr $midi(pgramheight) + 20]
 
 $pgraph create rectangle $xlbx $ytbx $xrbx $ybbx -outline white\
-            -width 2 -fill black
+            -width 2 -fill grey15
+
+incr xlbx 3
+incr xrbx -3
 
 set exec_options "[list $midi(midifilein)] -midigram"
 set cmd "exec [list $midi(path_midi2abc)] $exec_options"
@@ -11547,13 +11621,28 @@ set midilength [lindex $pianoresult [expr $nrec -1]]
 set nbeats [expr $midilength/$ppqn]
 set exec_out compute_pgram:\n$cmd\n\n$pianoresult
 
-Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx 0.0 $nbeats 15.0 100.0 
+Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx 0.0 $nbeats 0.0 110.0 
+pgram_vscale
 
-hbuildpgram
-#vbuildpgram
+if {$midi(pgrammode) == "chord"} {
+  vbuildpgram
+  } else {
+  hbuildpgram
+  }
 
 p_reveal_buttons 
 update_console_page
+}
+
+proc pgram_vscale {} {
+global df
+set pgraph .pgram.c
+for {set i 1} {$i < 10} {incr i} {
+  set oct C$i
+  set p [expr $i*12 + 12]
+  set iy [Graph::iypos $p]
+  $pgraph create text 20 $iy -text $oct -font $df
+  }
 }
 
 proc p_reveal_buttons {} {
@@ -11574,10 +11663,9 @@ global bmaxpitch
 global xchannel2program
 global progmapper
 global groupcolors
+global midi
 set pgraph .pgram.c
-set line1 ""
-set line2 ""
-set line3 ""
+set thickness $midi(pgramthick)
 set ix [Graph::ixpos $beat]
 set ix2 [expr $ix+2]
 for {set i 0} {$i < 16} {incr i} {
@@ -11591,37 +11679,39 @@ for {set i 0} {$i < 16} {incr i} {
 	  set w [expr $iy1 - $iy2]
 	  #puts "i = $i p = $p g = $g kolor = $kolor"
 	  if {$w < 3} {set iy1 [expr $iy2+2]}
-	  if {$w > 10} {set pat {1 4}
-	  } elseif {$w > 5} {set pat {1 2}
+	  if {$w > 10} {set pat {1 6}
+	  } elseif {$w > 5} {set pat {1 3}
           } else {set pat {1 1}}
 	  #if {$i == 7} {puts "chn7 : $w $ix $iy1 $ix2 $iy2 $kolor $pat"}
-          $pgraph create rect $ix $iy1  $ix2 $iy2\
-	      -fill $kolor -dash $pat -tag c$i
+          $pgraph create line $ix $iy1  $ix $iy2\
+	      -fill $kolor -dash $pat -tag c$i -width $thickness
           }
   }
 reset_pitch_bands
 }
 
 proc output_pstrip {beat} {
+# create rectangle does not work well here because
+# they all have outlines which are not optional.
 global endpitchstrip
 global xchannel2program
 global progmapper
 global groupcolors
+global midi
 set pgraph .pgram.c
+set thickness $midi(pgramthick)
 set ix [Graph::ixpos $beat]
 for {set i 1} {$i < 128} {incr i} {
   if {[llength $endpitchstrip($i)] == 2 } {
-	  set iy1 [Graph::iypos $i]
-	  set iy2 [expr $iy1 +3]
+	  set iy [Graph::iypos $i]
 	  set end [lindex $endpitchstrip($i) 0]
 	  set c [lindex $endpitchstrip($i) 1]
           set p $xchannel2program($c)
           set g [lindex $progmapper $p]
           set kolor [lindex $groupcolors $g]
 	  set ix2 [expr [Graph::ixpos $end] +3]
-	  #puts "i = $i ix = $ix ix2 = $ix2  iy1 = $iy1 iy2 = $iy2 kolor = $kolor"
-          $pgraph create rect $ix $iy1  $ix2 $iy2\
-	      -fill $kolor -tag c$c
+          $pgraph create line $ix $iy  $ix2 $iy\
+	      -fill $kolor -width $thickness -tag c$c
           }
   }
 reset_endpitchstrip
