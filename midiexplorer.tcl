@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.03 2020-09-13 15:35" 
+set midiexplorer_version "MidiExplorer version 2.04 2020-09-14 14:00" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -4591,21 +4591,21 @@ set progmapper {
 set groupcolors {{medium blue}  
                  Dodgerblue4    
                  orange3   
-                 {cadet blue}   
+                 {chartreuse}   
                  {orange red}   
                  {indian red}   
                  {blue violet}  
                  magenta4       
                  {deep pink}    
                  yellow
-                 gray12         
+                 gray30         
                  green4         
                  turquoise
                  firebrick      
                  sienna4        
                  maroon         
-                 darkolivegreen 
-                 darkgoldenrod4 
+		 {dodger blue} 
+		 {slate gray} 
                  }
 
 set groupnames { "piano keyboard"
