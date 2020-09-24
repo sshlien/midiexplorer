@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.04 2020-09-14 14:00" 
+set midiexplorer_version "MidiExplorer version 2.05 2020-09-23 11:40" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -11788,15 +11788,15 @@ set options ""
 if {[llength $limits] > 1} {
   set fbeat [lindex $limits 0]
   set tbeat [lindex $limits 1]
-  append option " -frombeat $fbeat -tobeat $tbeat "
+  append options " -frombeat $fbeat -tobeat $tbeat "
   } 
   set trkchn ""
   for {set i 1} {$i < 17} {incr i} {
      if {$midichannels($i)} {append trkchn "$i,"}
      }
   if {[string length $trkchn] > 0} {
-         append option "-chns $trkchn"}
-  set cmd "exec [list $midi(path_midicopy)]  $option"
+         append options "-chns $trkchn"}
+  set cmd "exec [list $midi(path_midicopy)]  $options"
   lappend cmd  $midi(midifilein) tmp.mid
   catch {eval $cmd} miditime
   append exec_out "$cmd\n\$miditime"
