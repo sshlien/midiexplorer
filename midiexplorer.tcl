@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.05 2020-09-23 11:40" 
+set midiexplorer_version "MidiExplorer version 2.06 2021-01-10 13:25" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -5947,6 +5947,9 @@ proc drumroll_window {} {
     set p .drumroll.f
     frame $p
 
+    button $p.invert -text invert -width 6 -relief flat\
+         -command invert_drumpick -font $df
+    tooltip::tooltip $p.invert "Invert drum selections"
     button $p.config -text config -width 8 -relief flat\
 	 -command drumroll_config -font $df
     tooltip::tooltip $p.config "Configure how drumroll\n is played"
@@ -5984,7 +5987,7 @@ proc drumroll_window {} {
     button $p.help -text help -relief flat -font $df\
             -command {show_message_page $hlp_drumroll word}
     
-    grid  $p.play $p.config $p.zoom $p.unzoom $p.action $p.help -sticky news
+    grid  $p.invert $p.play $p.config $p.zoom $p.unzoom $p.action $p.help -sticky news
     grid $p -column 1
     
     set p .drumroll.file
@@ -6270,6 +6273,15 @@ proc compute_drumroll {} {
     $p.canx configure -scrollregion $bounding_boxx
     $p.cany configure -scrollregion $bounding_boxy
 }
+
+proc invert_drumpick {} {
+global drumpick
+global gram_ndrums
+for {set i 0} {$i < $gram_ndrums} {incr i} {
+  set drumpick($i) [expr 1 - $drumpick($i)]
+  }
+}
+
 
 proc make_in_and_ex_lists {} {
     global gram_ndrums
@@ -7107,7 +7119,8 @@ allows you to hear some of these percussion instruments alone\
 without competing sounds. You can select the instruments of interest\
 by checking the adjacent checkbox and then clicking play.\
 If you do not check any of the boxes, then all the percussion\
-instruments are played.\n\n\
+instruments are played. The invert button with invert all your\
+selections.\n\n\
 The manner in which the file is played can be modified using\
 the config button. For example, you can play only the percussion\
 channel.\n\n\
