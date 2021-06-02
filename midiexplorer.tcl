@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.06 2021-01-10 13:25" 
+set midiexplorer_version "MidiExplorer version 2.07 2021-06-02 09:40" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -1067,7 +1067,7 @@ menu $ww -tearoff 0
             -command {midi_statistics pitch 
                       show_note_distribution
                      } 
-	$ww add command -label chordgram -font $df -command chordgram_plot
+	$ww add command -label chordgram -font $df -command {chordgram_plot none}
 	$ww add command -label "chord histogram" -font $df -command chord_histogram
         $ww add command -label "chordtext" -font $df -command chordtext_window
         $ww add command -label notegram -font $df -command notegram_plot
@@ -3119,7 +3119,7 @@ proc piano_window {} {
     $p.action.items add command  -label "chord histogram" -font $df \
             -command chord_histogram
     $p.action.items add command  -label "chordgram plot " -font $df \
-            -command chordgram_plot
+            -command {chordgram_plot pianoroll}
     $p.action.items add command -label "help" -font $df\
             -command {show_message_page $hlp_pianoroll_actions word}
     
@@ -3989,17 +3989,21 @@ proc textchords {} {
 
 #         chordgram plot 
 
-proc chordgram_plot {} {
+proc chordgram_plot {source} {
    global pianorollwidth
    global midi
    global df
+   global chord_sequence
+   global seqlength
    if {![winfo exist .chordgram]} {
      toplevel .chordgram
      position_window .chordgram
      frame .chordgram.head
-     radiobutton .chordgram.head.1 -text sequential -variable midi(chordgram) -value seq -font $df -command compute_chordgram
-     radiobutton .chordgram.head.2 -text "circle of fifths" -variable midi(chordgram) -value fifths -font $df -command compute_chordgram
-     pack  .chordgram.head.1 .chordgram.head.2 -side left -anchor w
+     radiobutton .chordgram.head.1 -text sequential -variable midi(chordgram) -value seq -font $df -command {call_compute_chordgram $source}
+     radiobutton .chordgram.head.2 -text "circle of fifths" -variable midi(chordgram) -value fifths -font $df -command {call_compute_chordgram $source}
+     button .chordgram.head.zoom -text zoom -command zoom_chordgram
+     button .chordgram.head.unzoom -text unzoom -command unzoom_chordgram
+     pack  .chordgram.head.1 .chordgram.head.2 .chordgram.head.zoom .chordgram.head.unzoom -side left -anchor w
      pack  .chordgram.head -side top -anchor w 
      set c .chordgram.can
      canvas $c -width $pianorollwidth -height 250 -border 3 -relief sunken
@@ -4008,10 +4012,44 @@ proc chordgram_plot {} {
      bind .chordgram.can <ButtonPress-1> {chordgram_Button1Press %x %y}
      bind .chordgram.can <ButtonRelease-1> chordgram_Button1Release
      bind .chordgram.can <Double-Button-1> chordgram_ClearMark
-
-
      }
-   compute_chordgram
+   set chord_sequence [determine_chord_sequence]
+   set seqlength [llength $chord_sequence]
+   call_compute_chordgram $source
+}
+
+proc call_compute_chordgram {source} {
+global midi
+global seqlength
+global ppqn
+set start -1
+set stop $seqlength
+switch $source {
+  chordgram {
+    set co [.chordgram.can coords mark]
+    set limits [chordgram_limits $co]
+       if {[lindex $limits 0] > 0} {
+       set start [expr [lindex $limits 0]]
+       set stop  [expr [lindex $limits 1]]
+       }
+    }
+  pianoroll {
+    set limits [midi_limits .piano.can]
+    if {[lindex $limits 0] > 0} {
+       set start [expr [lindex $limits 0]/double($ppqn)]
+       set stop  [expr [lindex $limits 1]/double($ppqn)]
+       }
+    }
+  midistructure {
+    set limits [midistruct_limits .midistructure.can]
+    if {$limits != "none"} {
+       set start [lindex $limits 0]
+       set stop [lindex $limits 1]
+       }
+    }
+  }
+#puts "$source compute_chordgram $start $stop"
+compute_chordgram $start $stop
 }
 
 proc chordgram_Button1Press {x y} {
@@ -4049,6 +4087,16 @@ set beat2 [expr ($right-$a)/$b]
 return [list $beat1 $beat2]
 }
 
+proc zoom_chordgram {} {
+call_compute_chordgram chordgram
+}
+
+proc unzoom_chordgram {} {
+global seqlength
+set start -1
+set stop $seqlength
+compute_chordgram $start $stop
+}
 
 proc chordgram_migrate_to_midistruct {co} {
 global midistructureheight
@@ -4065,7 +4113,7 @@ proc chordgram_ClearMark {} {
 
 
 
-proc compute_chordgram {} {
+proc compute_chordgram {start stop} {
    global pianorollwidth
    global sharpnotes
    global flatnotes
@@ -4075,9 +4123,9 @@ proc compute_chordgram {} {
    global ppqn
    global midi
    global chordgram_xfm
+   global chord_sequence
+   global seqlength
    # useflats is set by plot_pitch_class_histogram
-   set chord_sequence [determine_chord_sequence]
-   set seqlength [llength $chord_sequence]
    set xrbx [expr $pianorollwidth - 3]
    set xlbx  40
    set ytbx 20
@@ -4085,30 +4133,10 @@ proc compute_chordgram {} {
    set c .chordgram.can
    $c delete all
    $c create rectangle $xlbx $ybbx $xrbx $ytbx -outline black -width 2 -fill lightgrey 
-  if {[winfo exist .piano]} {
-    set limits [midi_limits .piano.can]
-    set start [expr [lindex $limits 0]/double($ppqn)]
-    set stop  [expr [lindex $limits 1]/double($ppqn)]
-    set start5 [expr (1 + int($start)/5)*5.0]
-  } elseif {[winfo exist .midistructure]} {
-    set limits [midistruct_limits .midistructure.can]
-    if {$limits != "none"} {
-       set start [lindex $limits 0]
-       set start5 [expr (1 + int($start)/5)*5.0]
-       set stop [lindex $limits 1]
-    } else {
-      set start 0
-      set start5 0
-      set stop [llength $chord_sequence]
-    }
- } else {
-      set start 0
-      set start5 0
-      set stop [llength $chord_sequence]
- }
+  set start5 [expr (1 + int($start)/5)*5.0]
 
    # white or black characters
-   set colfg [lindex [.info.txt config -fg] 4]
+  set colfg [lindex [.info.txt config -fg] 4]
 
    set pixelsperbeat [expr ($xrbx - $xlbx) / double($stop - $start)]
    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx $start $stop 0.0 200.0 
@@ -4476,7 +4504,7 @@ function"
             -command {midi_statistics pitch 
                       plotmidi_pitch_pdf
                       }
- $wm.plot.items add command -label chordgram -font $df -command chordgram_plot
+ $wm.plot.items add command -label chordgram -font $df -command {chordgram_plot midistructure}
  $wm.plot.items add command -label notegram -font $df -command notegram_plot
  tooltip::tooltip $wm.plot "Various plots including chordgram and notegram"
 
@@ -7514,7 +7542,7 @@ if {[winfo exists .chordstats]} {
    chord_histogram
    }
 if {[winfo exists .chordgram]} {
-   chordgram_plot
+   chordgram_plot none
    }
 if {[winfo exists .entropy]} {
    analyze_note_patterns
@@ -7560,7 +7588,7 @@ if {[winfo exists .chordstats]} {
    chord_histogram
    }
 if {[winfo exists .chordgram]} {
-   chordgram_plot
+   chordgram_plot midistructure
    }
 if {[winfo exists .entropy]} {
    analyze_note_patterns
