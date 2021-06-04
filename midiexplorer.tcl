@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.07 2021-06-02 09:40" 
+set midiexplorer_version "MidiExplorer version 2.12 2021-06-03 10:30" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -75,8 +75,9 @@ set midiexplorer_version "MidiExplorer version 2.07 2021-06-02 09:40"
 #   Part 18.0 google_search
 #   Part 19.0 abc file
 #   Part 20.0 Pgram
-#   Part 21.0 Console Support
-#   Part 22.0 internals
+#   Part 21.0 Key map
+#   Part 22.0 Console Support
+#   Part 23.0 internals
 #
 
 set welcome "Welcome to $midiexplorer_version. This application\
@@ -1071,6 +1072,7 @@ menu $ww -tearoff 0
 	$ww add command -label "chord histogram" -font $df -command chord_histogram
         $ww add command -label "chordtext" -font $df -command chordtext_window
         $ww add command -label notegram -font $df -command notegram_plot
+        $ww add command -label keymap -font $df -command keymap 
 	$ww add command -label "entropy analysis" -font $df -command analyze_note_patterns
 tooltip::tooltip $w.menuline.pitch "Computes the and plots the distribution
 of various pitch related parameters of the selected midi file."
@@ -2386,7 +2388,7 @@ proc midi_file_browser {} {
     return $openfile
 }
 
-# Part 21.0           Console Page Support Functions
+# Part 23.0           Console Page Support Functions
 
 #source warning.tcl
 
@@ -3989,6 +3991,20 @@ proc textchords {} {
 
 #         chordgram plot 
 
+set hlp_chordgram "Chordgram
+
+Plots the predominant chord for each beat. The chord root is\
+determined using Craig Sapp's algorithm, and then the type of chord\
+is determined by looking at the spaces between the pitches. Major\
+chords are in red, minor blue, diminished green and augmented in\
+purple. The vertical scale is either sequential or follows the circle\
+of fifths.\n\n
+To zoom into an area, sweep the mouse pointer over the region holding\
+the left mouse button down. Then press the zoom button. The chordgram\
+may be linked to the midi structure window or the piano roll window\
+if they are exposed.
+"
+
 proc chordgram_plot {source} {
    global pianorollwidth
    global midi
@@ -4001,9 +4017,10 @@ proc chordgram_plot {source} {
      frame .chordgram.head
      radiobutton .chordgram.head.1 -text sequential -variable midi(chordgram) -value seq -font $df -command {call_compute_chordgram $source}
      radiobutton .chordgram.head.2 -text "circle of fifths" -variable midi(chordgram) -value fifths -font $df -command {call_compute_chordgram $source}
-     button .chordgram.head.zoom -text zoom -command zoom_chordgram
-     button .chordgram.head.unzoom -text unzoom -command unzoom_chordgram
-     pack  .chordgram.head.1 .chordgram.head.2 .chordgram.head.zoom .chordgram.head.unzoom -side left -anchor w
+     button .chordgram.head.zoom -text zoom -command zoom_chordgram -font $df
+     button .chordgram.head.unzoom -text unzoom -command unzoom_chordgram -font $df 
+     button .chordgram.head.help -text help -font $df -command {show_message_page $hlp_chordgram word}
+     pack  .chordgram.head.1 .chordgram.head.2 .chordgram.head.zoom .chordgram.head.unzoom .chordgram.head.help -side left -anchor w
      pack  .chordgram.head -side top -anchor w 
      set c .chordgram.can
      canvas $c -width $pianorollwidth -height 250 -border 3 -relief sunken
@@ -7588,7 +7605,7 @@ if {[winfo exists .chordstats]} {
    chord_histogram
    }
 if {[winfo exists .chordgram]} {
-   chordgram_plot midistructure
+   chordgram_plot none
    }
 if {[winfo exists .entropy]} {
    analyze_note_patterns
@@ -7601,6 +7618,9 @@ if {[winfo exists .beatgraph]} {
    }
 if {[winfo exists .pgram]} {
    compute_pgram
+   }
+if {[winfo exist .keystrip]} {
+   keymap
    }
 }
 
@@ -11875,6 +11895,444 @@ if {[llength $limits] > 1} {
   append exec_out "$cmd\n\$miditime"
 
   play_midi_file tmp.mid 
+}
+
+#   Part 21.0 Key map
+
+proc keymap_help {} {
+set hlp_msg "The function shows how the key signature evolves\
+across a midi file. Histograms of the pitch classes are computed\
+for blocks of n beats where n is specified in the spacing\
+entry box. If the weighted entry box is checked, the histogram\
+is weighted by the duration of the notes. The key is determined\
+by matching the histogram with either the Krumhansl-Kessler\
+or Craig Sapp's simple coefficients, for the different major and\
+minor keys. The key with the highest correlation is plotted in\
+color coded form. If the mouse pointer enters into one of the\
+color coded boxes, the key will be shown below. If you left click\
+the mouse pointer in one of the boxes, the corresponding normalized\
+histogram will appear in a separate window. The correlation values\
+for the four best keys will be listed on the right column. 
+
+If you have a midi player and wish to play a section of the midi\
+file, adjust the width of the window and scroll to the section of\
+interest, then click the play button.
+
+The program creates a text file findpitch.ini containing the user\
+options. A tmp.mid file is created and overwritten each time the user\
+plays a selected segment.
+"
+show_message_page $hlp_msg w
+return
+}
+     
+set midi(pitchcoef) ss
+set midi(keySpacing) 12
+set midi(pitchWeighting) 0
+set midi(stripwindow) 500 
+set midi(debug) 0 
+
+
+# Krumhansl-Kessler coefficients - mean 3.709 removed
+# major C scale
+array set kkMj {
+0       2.87
+1       -1.25
+2       -0.00
+3       -1.15
+4       0.90
+5       0.61
+6       -0.96
+7       1.71
+8       -1.09
+9       0.18
+10      -1.19
+11      -0.60
+}
+
+# Krumhansl-Kessler coefficients - mean 3.4825 removed
+# minor C scale (3 flats)
+array set kkMn {
+0       2.62
+1       -1.03
+2       -0.19
+3       1.67
+4       -1.11
+5       -0.18
+6       -1.17
+7       1.04
+8       0.27
+9       -1.02
+10      -0.37
+11      -0.54
+}
+
+# Craig Sapp's simple coefficients (mkeyscape)
+# mean 9/12 removed
+# Major C scale
+array set ssMj {
+0       1.25
+1       -0.75
+2       0.25
+3       -0.75
+4       0.25
+5       0.25
+6       -0.75
+7       1.25
+8       -0.75
+9       0.25
+10      -0.75
+11      0.25
+}
+
+# Minor C scale (3 flats)
+array set ssMn {
+0       1.25
+1       -0.75
+2       0.25
+3       0.25
+4       -0.75
+5       0.25
+6       -0.75
+7       1.25
+8       0.25
+9       -0.75
+10      0.25
+11      -0.75
+}
+
+
+array set majorColors {
+ 0       #00FF00
+ 1       #26FF8C
+ 2       #3F5FFF
+ 3       #E41353
+ 4       #FF0000
+ 5       #FFFF00
+ 6       #C0FF00
+ 7       #5DD3FF
+ 8       #8132FF
+ 9       #CD29FF
+ 10      #FFA000
+ 11      #FF6E0A
+}
+
+
+proc keystrip_window {} {
+global midi
+global df
+ if {![winfo exist .keystrip.c]} {
+
+
+    set w .keystrip
+    toplevel $w
+#    frame $w.head
+#    button $w.head.but -text configure -font $df
+#    pack $w.head.but -side left -anchor w
+#    pack $w.head -anchor w
+
+    canvas $w.c -width $midi(stripwindow) -height 50\
+         -scrollregion { 0 0 500.0 50}\
+         -xscrollcommand "$w.xsc set"
+    scrollbar $w.xsc -orient horiz -command {.keystrip.c xview}
+    pack $w.c
+    pack $w.xsc -fill x
+    #pack $w
+    frame $w.status
+    label $w.status.txt -text "" -font $df
+    pack $w.status.txt
+    pack $w.status
+  frame $w.cfg
+    frame $w.cfg.spc
+    label $w.cfg.spc.spclab -text keySpacing -font $df
+    entry $w.cfg.spc.spcent -textvariable midi(keySpacing) -width 3 -font $df
+    pack  $w.cfg.spc -side top -anchor w
+    pack $w.cfg.spc.spclab -side left -anchor w
+    pack $w.cfg.spc.spcent -side left -anchor w
+    radiobutton $w.cfg.spc.kk -text kk -value kk -variable midi(pitchcoef) -command keymap -font $df
+    radiobutton $w.cfg.spc.ss -text ss -value ss -variable midi(pitchcoef) -command keymap -font $df
+    checkbutton $w.cfg.spc.w -text pitchWeighting -variable midi(pitchWeighting) -command keymap -font $df
+    button $w.cfg.spc.h -text help -command keymap_help -font $df
+    button $w.cfg.spc.c -text colors -command keyscape_keyboard -font $df
+    pack $w.cfg.spc.kk $w.cfg.spc.ss $w.cfg.spc.w $w.cfg.spc.c $w.cfg.spc.h -side left -anchor w
+
+   pack $w.cfg
+
+    }
+}
+
+proc segment_histogram {beatfrom} {
+    global pianoresult midi
+    global histogram
+    global ppqn
+    global midi
+    set keySpacing $midi(keySpacing)
+    for {set i 0} {$i < 12} {incr i} {set histogram($i) 0}
+    set beatstart [expr $beatfrom * $ppqn]
+    set beatend [expr ($beatfrom + $keySpacing) * $ppqn]
+    foreach line $pianoresult {
+        if {[llength $line] != 6} continue
+        set begin [lindex $line 0]
+        if {$begin < $beatstart} continue
+        if {$begin > $beatend} continue
+        set end [lindex $line 1]
+        set t [lindex $line 2]
+        set c [lindex $line 3]
+        # ignore percussion channel
+        if {$c == 9} continue
+        set note [expr [lindex $line 4] % 12]
+        set vel [lindex $line 5]
+        if {$midi(pitchWeighting)} {
+          set dur [expr ($end - $begin)/double($ppqn)]
+          set histogram($note) [expr $histogram($note)+$dur]
+          } else {
+          set histogram($note) [expr $histogram($note)+1]
+          }
+        }
+
+
+    set total 0;
+    for {set i 0} {$i <12} {incr i} {
+        set total [expr $total+$histogram($i)]
+    }
+    if {$total > 1} {
+       for {set i 0} {$i <12} {incr i} {
+           set histogram($i) [expr double($histogram($i))/$total]
+       }
+    }
+}
+proc keymap {} {
+# derived from pianoroll_statistics
+    global pianoresult midi
+    global histogram
+    global ppqn
+    global lastbeat
+    global total
+    global exec_out
+    global midi
+    global majorColors
+    global stripscale
+    global sharpflatnotes
+    global df
+
+    #puts "keymap $midi(keySpacing)"
+    set sharpflatnotes  {C C# D Eb E F F# G G# A Bb B}
+
+    set keySpacing $midi(keySpacing)
+
+    keystrip_window
+    .keystrip.c delete all
+
+    if {![file exist $midi(path_midi2abc)]} {
+       set msg "cannot find $midi(path_midi2abc). Install midi2abc
+from the abcMIDI package and set the path to its location."
+      tk_messageBox -message $msg
+        return
+        }
+    if {![file exist $midi(midifilein)]} {
+       set msg "cannot find $midi(midifilein). Use the file button to
+set the path to a midi file."
+       tk_messageBox -message $msg
+       return
+       }
+    set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
+    catch {eval $cmd} pianoresult
+    set exec_out [append exec_out "keymap:\n\n$cmd\n\n $pianoresult"]
+    set pianoresult [split $pianoresult \n]
+    set ppqn [lindex [lindex $pianoresult 0] 3]
+    if {$midi(debug)} {puts "ppqn = $ppqn"}
+    set nrec [llength $pianoresult]
+    set midilength [lindex $pianoresult [expr $nrec -1]]
+    set lastbeat [expr $midilength/$ppqn]
+    set stripscale [expr 500.0/$lastbeat]
+    if {$midi(debug)} {puts "midilength = $midilength lastbeat = $lastbeat"}
+    set str1 ""
+     for {set i 0} {$i <12} {incr i} {
+        append str1 [format "%5s" [lindex $sharpflatnotes $i]]
+        }
+    if {$midi(debug)} {puts $str1}
+
+    for {set beatfrom 0} {$beatfrom < [expr $lastbeat - $keySpacing]} {set beatfrom [expr $beatfrom + $keySpacing]} {
+           segment_histogram $beatfrom
+           set key [keyMatch]
+           set jc [lindex $key 0]
+           if {$jc < 0} continue
+           set keysig [lindex $sharpflatnotes $jc][lindex $key 1]
+    #puts $keysig
+           if {$midi(debug)} {puts "$beatfrom $key"}
+           set x0 [expr $stripscale*$beatfrom]
+           set x1 [expr $stripscale*$keySpacing + $x0]
+           if {[lindex $key 1] == "minor"} {
+             .keystrip.c create rect $x0 25 $x1 1 -fill $majorColors($jc) -tag $keysig -stipple gray50
+              } else {
+             .keystrip.c create rect $x0 25 $x1 1 -fill $majorColors($jc) -tag $keysig
+       }
+        .keystrip.c bind $keysig <Enter> ".keystrip.status.txt configure -text $keysig"
+        bind .keystrip.c  <1> "show_histogram %W %x %y"
+         }
+  }
+
+proc show_histogram {w x y} {
+global stripscale
+global midi
+global df
+global rmajmin
+global sharpflatnotes
+set keySpacing $midi(keySpacing)
+set xv [.keystrip.c xview]
+set xpos  [expr $x + [lindex $xv 0]*1000]
+set beatfrom [expr $keySpacing*floor($xpos/$stripscale/$keySpacing)]
+segment_histogram $beatfrom
+keymap_plot_pitch_class_histogram
+keyMatch
+set matches [lsort -real -decreasing -indices $rmajmin]
+set iy 50
+set ix 420 
+for {set i 0} {$i <4} {incr i} {
+  set j [lindex $matches $i]
+  set note [lindex $sharpflatnotes [expr $j/2]]
+  set minor [expr $j % 2]
+  if {$minor} {set mode minor
+   } else {set mode major}
+  set str "[format %5.3f [lindex $rmajmin $j]] $note$mode"
+  .pitchclass.c create text $ix $iy -text $str -font $df
+  incr iy 15
+  }
+}
+
+proc keyMatch {} {
+# correlates the normalized histogram with the major and
+# minor functions for different keys and returns the result
+# with the highest correlation.
+global ssMj
+global ssMn
+global kkMj
+global kkMn
+global histogram
+global midi
+global rmajmin
+set best 0.0
+set bestIndex 0
+set bestMode ""
+
+set rmajmin [list]
+for {set r 0} {$r < 12} {incr r} {
+  set c2M 0.0
+  set c2m 0.0
+  set h2 0.0
+  set hM 0.0
+  set hm 0.0
+
+  for {set i 0} {$i < 12} {incr i} {
+    set k [expr ($i - $r)%12]
+    switch $midi(pitchcoef) {
+      kk {set coefM($i) $kkMj($k)
+          set coefm($i) $kkMn($k)
+          }
+      ss {set coefM($i) $ssMj($k)
+          set coefm($i) $ssMn($k)
+         }
+      }
+
+      set c2M [expr $c2M + $coefM($i)*$coefM($i)]
+      set c2m [expr $c2m + $coefm($i)*$coefm($i)]
+      set h2  [expr $h2 + $histogram($i)*$histogram($i)]
+      set hm  [expr $hm + $histogram($i)*$coefm($i)]
+      set hM  [expr $hM + $histogram($i)*$coefM($i)]
+     }
+   if {$h2 < 0.0001} {return "-1 0"}
+   set rmaj($r) [expr $hM/sqrt($h2*$c2M)]
+   set rmin($r) [expr $hm/sqrt($h2*$c2m)]
+   lappend rmajmin $rmaj($r)
+   lappend rmajmin $rmin($r)
+   }
+
+#search for best match
+set str3 ""
+set str4 ""
+for {set r 0} {$r <12} {incr r} {
+    append str3 [format %5.1f $rmaj($r)]
+    append str4 [format %5.1f $rmin($r)]
+    if {$rmaj($r) > $best} {set best $rmaj($r)
+                       set bestIndex $r
+                       set bestMode major}
+    if {$rmin($r) > $best} {set best $rmin($r)
+                       set bestIndex $r
+                       set bestMode minor}
+    }
+if {$midi(debug)} {puts $str3}
+if {$midi(debug)} {puts $str4}
+
+    return "$bestIndex $bestMode [format %7.3f $best]"
+  }
+
+
+proc keymap_plot_pitch_class_histogram {} {
+    global scanwidth scanheight
+    global xlbx ytbx xrbx ybbx
+    global histogram
+    global df
+    set notes {C C# D D# E F F# G G# A A# B}
+    set maxgraph 0.0
+    set xpos [expr $xrbx -40]
+    for {set i 0} {$i < 12} {incr i} {
+        if {$histogram($i) > $maxgraph} {set maxgraph $histogram($i)}
+    }
+
+    set maxgraph [expr $maxgraph + 0.2]
+    set pitchc .pitchclass.c
+    if {[winfo exists .pitchclass] == 0} {
+        toplevel .pitchclass
+        position_window ".pitchclass"
+        pack [canvas $pitchc -width [expr $scanwidth +130] -height $scanheight]\
+                -expand yes -fill both
+    } else {.pitchclass.c delete all}
+
+    $pitchc create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
+            -width 2 -fill grey
+    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx 0.0 12.0 0.0 $maxgraph
+    Graph::draw_y_ticks $pitchc 0.0 $maxgraph 0.1 2 %3.1f
+
+    set iy [expr $ybbx +10]
+    set i 0
+    foreach note $notes {
+        set ix [Graph::ixpos [expr $i +0.5]]
+        $pitchc create text $ix $iy -text $note -font $df
+        set iyb [Graph::iypos $histogram($i)]
+        set ix [Graph::ixpos [expr double($i)]]
+        set ix2 [Graph::ixpos [expr double($i+1)]]
+        $pitchc create rectangle $ix $ybbx $ix2 $iyb -fill blue
+        incr i
+    }
+    $pitchc create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
+            -width 2
+}
+
+proc keyscape_keyboard {} {
+# plots the color scheme for the different keys.
+global majorColors
+set w .keystrip
+canvas $w.keyboard -width 350 -height 100
+pack $w.keyboard -anchor w
+set nat {0 2 4 5 7 9 11}
+set shp {1 3 6 8 10}
+set shploc {1 2 4 5 6}
+$w.keyboard create text 70 8 -text "Major keys"
+$w.keyboard create text 220 8 -text "Minor keys"
+for  {set i 0} {$i < 7} {incr i} {
+   set x1 [expr $i*20]
+   set x2 [expr ($i+1)*20]
+   $w.keyboard create rect $x1 90 $x2 40 -fill $majorColors([lindex $nat $i])
+   $w.keyboard create rect [expr $x1+150] 90 [expr $x2+150] 40 -fill $majorColors([lindex $nat $i]) -stipple gray50
+   }
+for  {set i 0} {$i < 5} {incr i} {
+   set jc [lindex $shp $i]
+   set jl [lindex $shploc $i]
+   set x1 [expr $jl*20-7]
+   set x2 [expr ($jl+1)*20 -14]
+   $w.keyboard create rect $x1 70 $x2 20 -fill $majorColors($jc)
+   $w.keyboard create rect [expr $x1+150] 70 [expr $x2+150] 20 -fill $majorColors($jc) -stipple gray50
+   }
 }
 
 
