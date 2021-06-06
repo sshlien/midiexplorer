@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.12 2021-06-03 10:30" 
+set midiexplorer_version "MidiExplorer version 2.13 2021-06-05 20:35" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -12135,7 +12135,9 @@ set the path to a midi file."
        tk_messageBox -message $msg
        return
        }
-    set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
+   # copy selected tracks/channels
+   copy_midi_to_tmp
+   set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
     catch {eval $cmd} pianoresult
     set exec_out [append exec_out "keymap:\n\n$cmd\n\n $pianoresult"]
     set pianoresult [split $pianoresult \n]
@@ -12312,6 +12314,11 @@ proc keyscape_keyboard {} {
 # plots the color scheme for the different keys.
 global majorColors
 set w .keystrip
+if {[winfo exist $w.keyboard]} {
+     pack forget $w.keyboard
+     destroy $w.keyboard
+     return
+     }
 canvas $w.keyboard -width 350 -height 100
 pack $w.keyboard -anchor w
 set nat {0 2 4 5 7 9 11}
