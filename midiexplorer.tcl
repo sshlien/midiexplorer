@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.13 2021-06-05 20:35" 
+set midiexplorer_version "MidiExplorer version 2.15 2021-06-07 17:25" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -65,7 +65,7 @@ set midiexplorer_version "MidiExplorer version 2.13 2021-06-05 20:35"
 #         make_midi_database, get_midi_features, load_desc,
 #         search_window, searchname, searchtempo, searchprogs,
 #         searchperc, searchex, searchbends, matchprogs, etc.
-#   Part 15.0 Screen Layout (get_geometry_of_all_toplevels)
+#   Part 15.0 Screen Layout (getGeometryOfAllToplevels)
 #   Part 16.0 Track/Channel analysis
 #         get_note_patterns {}, analyze_note_patterns {},
 #         dictview_window {}, dictlistp {dictdata dicthist},
@@ -656,6 +656,7 @@ proc midi_init {} {
     set midi(.offsetpdf) ""
     set midi(.durpdf) ""
     set midi(.pitchclass) ""
+    set midi(.keypitchclass) ""
     set midi(.midivelocity) ""
     set midi(.mftext) ""
     set midi(.searchbox) ""
@@ -670,6 +671,7 @@ proc midi_init {} {
     set midi(.tmpfile) ""
     set midi(.cfgmidi2abc) ""
     set midi(.pgram) ""
+    set midi(.keystrip) ""
 
     
     set midi(player1) ""
@@ -763,7 +765,7 @@ proc midi_init {} {
 }
 
 # save all options, current abc file
-proc write_midiexplorer_ini {} {
+proc WriteMidiExplorerIni {} {
     global midi
     global midiexplorer_version
     set midi(version) $midiexplorer_version
@@ -777,7 +779,7 @@ proc write_midiexplorer_ini {} {
 }
 
 # read all options
-proc read_midiexplorer_ini {} {
+proc readMidiexplorerIni {} {
     global midi df tocf
     set infile midiexplorer.ini
     set handle [open $infile r]
@@ -826,7 +828,7 @@ foreach ex  $execlist {
 
 midi_init
 if {[file exists midiexplorer.ini]} {
-	read_midiexplorer_ini
+	readMidiexplorerIni
 } else {
   if {$tcl_platform(platform) == "windows"} {
       set midi(dir_abcmidi) $install_folder
@@ -848,8 +850,8 @@ if {[file exists midiexplorer.ini]} {
 
 
 wm protocol . WM_DELETE_WINDOW {
-    get_geometry_of_all_toplevels 
-    write_midiexplorer_ini 
+    getGeometryOfAllToplevels 
+    WriteMidiExplorerIni 
     if {[array exist genre_db]} {update_genre_database}
     exit
     }
@@ -917,7 +919,7 @@ $ww add cascade -label "recent" -font $df -menu $ww.recent
 $ww add command -label "playlist manager" -font $df -command make_playlist_manager
 
 $ww add command -label "quit" -font $df -command {
-    write_midiexplorer_ini 
+    WriteMidiExplorerIni 
     exit
     }
 
@@ -1839,7 +1841,7 @@ foreach i $indices {
   #        }
     }
 midistructure_select
-mstruct_update_displayed_pdf_windows
+updateAllWindows
 }
 
 
@@ -1901,7 +1903,7 @@ proc selected_midi {} {
 	    }
    if {[winfo exist .mftext]} {mftextwindow $midi(midifilein) 0}
    if {[winfo exist .drumroll]} {show_drum_events}
-   mstruct_update_displayed_pdf_windows 
+   updateAllWindows 
    }
 }
 
@@ -4545,10 +4547,10 @@ function"
 
   set f [frame $w.leftbuttons -bd 3 -relief sunken]
   for {set i 2} {$i <40} {incr i} {
-    checkbutton .midistructure.leftbuttons.$i -text "trk$i" -variable miditracks($i) -font $df -command mstruct_update_displayed_pdf_windows
+    checkbutton .midistructure.leftbuttons.$i -text "trk$i" -variable miditracks($i) -font $df -command updateAllWindows
     }
   for {set i 0} {$i <17} {incr i} {
-    checkbutton .midistructure.leftbuttons.c$i -text "chan$i" -variable midichannels($i) -font $df -command mstruct_update_displayed_pdf_windows
+    checkbutton .midistructure.leftbuttons.c$i -text "chan$i" -variable midichannels($i) -font $df -command updateAllWindows
     }
   set yspacing [winfo reqheight .midistructure.leftbuttons.2]
   canvas $w.can -width $midistructurewidth -height 200 -border 3 -relief sunken
@@ -4588,7 +4590,7 @@ proc mstruct_Button1Motion {x} {
 proc mstruct_Button1Release {} {
     bind .midistructure.can <Motion> {}
     set co [.midistructure.can coords mark]
-    mstruct_update_displayed_pdf_windows
+    updateAllWindows
     }
 
 proc mstruct_ClearMark {} {
@@ -7570,7 +7572,7 @@ if {[winfo exists .beatgraph]} {
 }
 
 
-proc mstruct_update_displayed_pdf_windows {} {
+proc updateAllWindows {} {
 if {[winfo exists .pitchpdf]} {
    midi_statistics pitch 
    plotmidi_pitch_pdf
@@ -7621,6 +7623,9 @@ if {[winfo exists .pgram]} {
    }
 if {[winfo exist .keystrip]} {
    keymap
+   }
+if {[winfo exists .keypitchclass]} {
+   destroy .keypitchclass
    }
 }
 
@@ -10250,9 +10255,9 @@ if {$genre == 0 || $genre == "unknown"} {
 bind . <Alt-g> get_genre
 
 
-#   Part 15.0 Screen Layout (get_geometry_of_all_toplevels)
+#   Part 15.0 Screen Layout (getGeometryOfAllToplevels)
 
-proc get_geometry_of_all_toplevels {} {
+proc getGeometryOfAllToplevels {} {
   global midi
   set toplevellist {"." ".notice" ".progsel" ".piano" ".chordstats"
                ".colors" ".chordview" ".chordgram" ".midistructure" 
@@ -10262,7 +10267,8 @@ proc get_geometry_of_all_toplevels {} {
                ".fontwindow" ".support" ".preferences" ".beatgraph"
                ".ppqn" ".drumrollconfig" ".indexwindow" ".wiki"
                ".dictview" ".notegram" ".barmap" ".playmanage" ".data_info"
-               ".midiplayer" ".tmpfile" ".cfgmidi2abc" ".pgram"}
+               ".midiplayer" ".tmpfile" ".cfgmidi2abc" ".pgram" ".keystrip"
+               ".keypitchclass"}
   foreach top $toplevellist {
     if {[winfo exist $top]} {
       set g [wm geometry $top]"
@@ -11901,26 +11907,33 @@ if {[llength $limits] > 1} {
 
 proc keymap_help {} {
 set hlp_msg "The function shows how the key signature evolves\
-across a midi file. Histograms of the pitch classes are computed\
+across a midi file on a color coded strip.\
+Histograms of the pitch classes are computed\
 for blocks of n beats where n is specified in the spacing\
 entry box. If the weighted entry box is checked, the histogram\
 is weighted by the duration of the notes. The key is determined\
-by matching the histogram with either the Krumhansl-Kessler\
-or Craig Sapp's simple coefficients, for the different major and\
+by matching the histogram with either the Krumhansl-Kessler (kk)\
+or Craig Sapp's simple coefficients (ss), for the different major and\
 minor keys. The key with the highest correlation is plotted in\
 color coded form. If the mouse pointer enters into one of the\
-color coded boxes, the key will be shown below. If you left click\
+color coded boxes, the key associated with that box will\
+be shown below. If you left click\
 the mouse pointer in one of the boxes, the corresponding normalized\
 histogram will appear in a separate window. The correlation values\
 for the four best keys will be listed on the right column. 
 
-If you have a midi player and wish to play a section of the midi\
-file, adjust the width of the window and scroll to the section of\
-interest, then click the play button.
+The colors button will display a legend showing the colors\
+for the different keys. Clicking the color button again will\
+remove this legend.
 
-The program creates a text file findpitch.ini containing the user\
-options. A tmp.mid file is created and overwritten each time the user\
-plays a selected segment.
+The key estimator works better with larger blocks, but may miss\
+key changes of short duration. You can apply this algorithm to\
+specific channels or tracks by selecting them in the main window\
+or the midistructure window.
+
+The keystrip matches the key changes in the entire midi file. Long\
+midi files will have more blocks (boxes), so they will appear\
+thinner in this display.
 "
 show_message_page $hlp_msg w
 return
@@ -12026,6 +12039,7 @@ global df
 
     set w .keystrip
     toplevel $w
+    position_window ".keystrip"
 #    frame $w.head
 #    button $w.head.but -text configure -font $df
 #    pack $w.head.but -side left -anchor w
@@ -12045,7 +12059,8 @@ global df
   frame $w.cfg
     frame $w.cfg.spc
     label $w.cfg.spc.spclab -text keySpacing -font $df
-    entry $w.cfg.spc.spcent -textvariable midi(keySpacing) -width 3 -font $df
+    entry $w.cfg.spc.spcent -textvariable midi(keySpacing) -width 3 -font $df 
+    bind $w.cfg.spc.spcent <Return> {keymap; focus .keystrip}
     pack  $w.cfg.spc -side top -anchor w
     pack $w.cfg.spc.spclab -side left -anchor w
     pack $w.cfg.spc.spcent -side left -anchor w
@@ -12185,7 +12200,7 @@ set xv [.keystrip.c xview]
 set xpos  [expr $x + [lindex $xv 0]*1000]
 set beatfrom [expr $keySpacing*floor($xpos/$stripscale/$keySpacing)]
 segment_histogram $beatfrom
-keymap_plot_pitch_class_histogram
+keymapPlotPitchClassHistogram
 keyMatch
 set matches [lsort -real -decreasing -indices $rmajmin]
 set iy 50
@@ -12197,7 +12212,7 @@ for {set i 0} {$i <4} {incr i} {
   if {$minor} {set mode minor
    } else {set mode major}
   set str "[format %5.3f [lindex $rmajmin $j]] $note$mode"
-  .pitchclass.c create text $ix $iy -text $str -font $df
+  .keypitchclass.c create text $ix $iy -text $str -font $df
   incr iy 15
   }
 }
@@ -12269,7 +12284,7 @@ if {$midi(debug)} {puts $str4}
   }
 
 
-proc keymap_plot_pitch_class_histogram {} {
+proc keymapPlotPitchClassHistogram {} {
     global scanwidth scanheight
     global xlbx ytbx xrbx ybbx
     global histogram
@@ -12282,13 +12297,13 @@ proc keymap_plot_pitch_class_histogram {} {
     }
 
     set maxgraph [expr $maxgraph + 0.2]
-    set pitchc .pitchclass.c
-    if {[winfo exists .pitchclass] == 0} {
-        toplevel .pitchclass
-        position_window ".pitchclass"
+    set pitchc .keypitchclass.c
+    if {[winfo exists .keypitchclass] == 0} {
+        toplevel .keypitchclass
+        position_window ".keypitchclass"
         pack [canvas $pitchc -width [expr $scanwidth +130] -height $scanheight]\
                 -expand yes -fill both
-    } else {.pitchclass.c delete all}
+    } else {.keypitchclass.c delete all}
 
     $pitchc create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
             -width 2 -fill grey
