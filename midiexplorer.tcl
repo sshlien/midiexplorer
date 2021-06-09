@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.15 2021-06-07 17:25" 
+set midiexplorer_version "MidiExplorer version 2.16 2021-06-09 12:45" 
 
 # Copyright (C) 2019 Seymour Shlien
 #
@@ -762,6 +762,12 @@ proc midi_init {} {
     set midi(pgramwidth) 500
     set midi(pgramheight) 350
     set midi(pgramthick) 2
+
+# keymap
+    set midi(pitchcoef) ss
+    set midi(keySpacing) 12
+    set midi(pitchWeighting) 0
+    set midi(stripwindow) 500 
 }
 
 # save all options, current abc file
@@ -11939,10 +11945,6 @@ show_message_page $hlp_msg w
 return
 }
      
-set midi(pitchcoef) ss
-set midi(keySpacing) 12
-set midi(pitchWeighting) 0
-set midi(stripwindow) 500 
 set midi(debug) 0 
 
 
