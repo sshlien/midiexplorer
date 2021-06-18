@@ -5,9 +5,9 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.16 2021-06-09 12:45" 
+set midiexplorer_version "MidiExplorer version 2.19 2021-06-18 15:05" 
 
-# Copyright (C) 2019 Seymour Shlien
+# Copyright (C) 2019-2021 Seymour Shlien
 #
 #
 # This program is free software; you can redistribute it and/or modify
@@ -7631,7 +7631,7 @@ if {[winfo exist .keystrip]} {
    keymap
    }
 if {[winfo exists .keypitchclass]} {
-   destroy .keypitchclass
+   displayKeyPitchHistogram
    }
 }
 
@@ -10287,13 +10287,14 @@ proc getGeometryOfAllToplevels {} {
 
 #   Part 16.0 Track/Channel analysis
  
-proc compare_onset {a b} {
-    set a_onset [lindex $a 0]
-    set b_onset [lindex $b 0]
-    if {$a_onset > $b_onset} {
-        return 1}  elseif {$a_onset < $b_onset} {
-        return -1} else {return 0}
-}
+# already defined
+#proc compare_onset {a b} {
+#    set a_onset [lindex $a 0]
+#    set b_onset [lindex $b 0]
+#    if {$a_onset > $b_onset} {
+#        return 1}  elseif {$a_onset < $b_onset} {
+#        return -1} else {return 0}
+#}
 
  
 proc get_note_patterns {} {
@@ -12118,6 +12119,10 @@ proc segment_histogram {beatfrom} {
        }
     }
 }
+
+
+
+
 proc keymap {} {
 # derived from pianoroll_statistics
     global pianoresult midi
@@ -12161,8 +12166,8 @@ set the path to a midi file."
     set ppqn [lindex [lindex $pianoresult 0] 3]
     if {$midi(debug)} {puts "ppqn = $ppqn"}
     set nrec [llength $pianoresult]
-    set midilength [lindex $pianoresult [expr $nrec -1]]
-    set lastbeat [expr $midilength/$ppqn]
+    #set midilength [lindex $pianoresult [expr $nrec -1]]
+    #set lastbeat [expr $midilength/$ppqn]
     set stripscale [expr 500.0/$lastbeat]
     if {$midi(debug)} {puts "midilength = $midilength lastbeat = $lastbeat"}
     set str1 ""
@@ -12178,7 +12183,6 @@ set the path to a midi file."
            if {$jc < 0} continue
            set keysig [lindex $sharpflatnotes $jc][lindex $key 1]
     #puts $keysig
-           if {$midi(debug)} {puts "$beatfrom $key"}
            set x0 [expr $stripscale*$beatfrom]
            set x1 [expr $stripscale*$keySpacing + $x0]
            if {[lindex $key 1] == "minor"} {
@@ -12186,24 +12190,62 @@ set the path to a midi file."
               } else {
              .keystrip.c create rect $x0 25 $x1 1 -fill $majorColors($jc) -tag $keysig
        }
-        .keystrip.c bind $keysig <Enter> ".keystrip.status.txt configure -text $keysig"
+        .keystrip.c bind $keysig <Enter> "keyDescriptor $keysig %W %x %y"
         bind .keystrip.c  <1> "show_histogram %W %x %y"
          }
   }
 
-proc show_histogram {w x y} {
-global stripscale
-global midi
-global df
+
+array set keysharpflats {
+Cmajor "C major"
+C#major "Db major 5 flats"
+Dmajor "D major 2 sharps"
+Ebmajor "Eb major 3 flats"
+Emajor "E major 4 sharps"
+Fmajor "F major 1 flats"
+F#major "F# major 6 sharps or Gb 6 flats"
+Gmajor "G major 1 sharp"
+G#major "Ab major 4 flats"
+Amajor "A major 3 sharps"
+Bbmajor "Bb major 2 flats"
+Bmajor "B major 5 sharps"
+Cminor "C minor 3 flats"
+C#minor "C# minor 4 sharps"
+Dminor "D minor 1 flat"
+Ebminor "Eb minor 6 flats or D# minor 6 sharps"
+Eminor "E minor 1 sharp"
+Fminor "F minor 4 flats"
+F#minor "F# minor 3 sharps"
+Gminor "G minor 2 flats"
+G#minor "G# minor 5 sharps"
+Aminor "A minor"
+Bbminor "Bb minor 5 flats"
+Bminor "B minor 2 sharps"
+}
+
+proc keyDescriptor {keysig w x y} {
+  global midi
+  global stripscale
+  global keysharpflats
+  set str [append $keysig $keysharpflats($keysig)]
+  set spacing $midi(keySpacing)
+  set xv [.keystrip.c xview]
+  set xpos  [expr $x + [lindex $xv 0]*1000] 
+  set beatfrom [expr $spacing*floor($xpos/$stripscale/$spacing)]
+  append str " at beat $beatfrom"
+  .keystrip.status.txt configure -text $str
+  }
+ 
+
+proc displayKeyPitchHistogram {} {
+global beatfrom
 global rmajmin
 global sharpflatnotes
-set keySpacing $midi(keySpacing)
-set xv [.keystrip.c xview]
-set xpos  [expr $x + [lindex $xv 0]*1000]
-set beatfrom [expr $keySpacing*floor($xpos/$stripscale/$keySpacing)]
+global df
 segment_histogram $beatfrom
 keymapPlotPitchClassHistogram
 keyMatch
+if {[llength $rmajmin] < 10} return
 set matches [lsort -real -decreasing -indices $rmajmin]
 set iy 50
 set ix 420 
@@ -12217,6 +12259,21 @@ for {set i 0} {$i <4} {incr i} {
   .keypitchclass.c create text $ix $iy -text $str -font $df
   incr iy 15
   }
+}
+
+proc show_histogram {w x y} {
+global stripscale
+global midi
+#global df
+#global rmajmin
+#global sharpflatnotes
+global beatfrom
+
+set keySpacing $midi(keySpacing)
+set xv [.keystrip.c xview]
+set xpos  [expr $x + [lindex $xv 0]*1000]
+set beatfrom [expr $keySpacing*floor($xpos/$stripscale/$keySpacing)]
+displayKeyPitchHistogram 
 }
 
 proc keyMatch {} {
@@ -12282,7 +12339,7 @@ for {set r 0} {$r <12} {incr r} {
 if {$midi(debug)} {puts $str3}
 if {$midi(debug)} {puts $str4}
 
-    return "$bestIndex $bestMode [format %7.3f $best]"
+return "$bestIndex $bestMode [format %7.3f $best]"
   }
 
 
