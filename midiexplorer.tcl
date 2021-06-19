@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.19 2021-06-18 15:05" 
+set midiexplorer_version "MidiExplorer version 2.20 2021-06-18 16:30" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -4023,8 +4023,8 @@ proc chordgram_plot {source} {
      toplevel .chordgram
      position_window .chordgram
      frame .chordgram.head
-     radiobutton .chordgram.head.1 -text sequential -variable midi(chordgram) -value seq -font $df -command {call_compute_chordgram $source}
-     radiobutton .chordgram.head.2 -text "circle of fifths" -variable midi(chordgram) -value fifths -font $df -command {call_compute_chordgram $source}
+     radiobutton .chordgram.head.1 -text sequential -variable midi(chordgram) -value seq -font $df -command "call_compute_chordgram $source"
+     radiobutton .chordgram.head.2 -text "circle of fifths" -variable midi(chordgram) -value fifths -font $df -command "call_compute_chordgram $source"
      button .chordgram.head.zoom -text zoom -command zoom_chordgram -font $df
      button .chordgram.head.unzoom -text unzoom -command unzoom_chordgram -font $df 
      button .chordgram.head.help -text help -font $df -command {show_message_page $hlp_chordgram word}
