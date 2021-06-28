@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.20 2021-06-18 16:30" 
+set midiexplorer_version "MidiExplorer version 2.22 2021-06-28 09:40" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -5820,54 +5820,55 @@ proc mftext_tmp {} {
 #   Part 10.0 Drum Roll Window
 #source drumgram.tcl
 
+
 set drumpatches {
-    {35	B,,,	{Acoustic Bass Drum}}
-    {36	C,,	{Bass Drum 1}}
-    {37	^C,,	{Side Stick}}
-    {38	D,,	{Acoustic Snare}}
-    {39	^D,,	{Hand Clap}}
-    {40	E,,	{Electric Snare}}
-    {41	F,,	{Low Floor Tom}}
-    {42	^F,,	{Closed Hi Hat}}
-    {43	G,,	{High Floor Tom}}
-    {44	^G,,	{Pedal Hi-Hat}}
-    {45	A,,	{Low Tom}}
-    {46	^A,,	{Open Hi-Hat}}
-    {47	B,,	{Low-Mid Tom}}
-    {48	C,	{Hi Mid Tom}}
-    {49	^C,	{Crash Cymbal 1}}
-    {50	D,	{High Tom}}
-    {51	^D,	{Ride Cymbal 1}}
-    {52	E,	{Chinese Cymbal}}
-    {53	F,	{Ride Bell}}
-    {54	^F,	Tambourine}
-    {55	G,	{Splash Cymbal}}
-    {56	^G,	Cowbell}
-    {57	A,	{Crash Cymbal 2}}
-    {58	^A,	Vibraslap}
-    {59	B,	{Ride Cymbal 2}}
-    {60	C	{Hi Bongo}}
-    {61	^C	{Low Bongo}}
-    {62	D	{Mute Hi Conga}}
-    {63	^D	{Open Hi Conga}}
-    {64 	E	{Low Conga}}
-    {65 	F	{High Timbale}}
-    {66	^F	{Low Timbale}}
-    {67	G	{High Agogo}}
-    {68	^G	{Low Agogo}}
-    {69	A	Cabasa}
-    {70	^A	Maracas}
-    {71	B	{Short Whistle}}
-    {72	c	{Long Whistle}}
-    {73	^c	{Short Guiro}}
-    {74	d	{Long Guiro}}
-    {75	^d	{Claves}}
-    {76	e	{Hi Wood Block}}
-    {77	f	{Low Wood Block}}
-    {78	^f	{Mute Cuica}}
-    {79	g	{Open Cuica}}
-    {80	^g	{Mute Triangle}}
-    {81	a	{Open Triangle}}
+    {35	{Acoustic Bass Drum} DodgerBlue1}
+    {36	{Bass Drum 1} SteelBlue1}
+    {37	{Side Stick} DeepPink3}
+    {38	{Acoustic Snare} tomato1}
+    {39 {Hand Clap} HotPink1}
+    {40	{Electric Snare} red1}
+    {41	{Low Floor Tom} DodgerBlue2}
+    {42	{Closed Hi Hat} SeaGreen1}
+    {43	{High Floor Tom} SteelBlue2}
+    {44	{Pedal Hi-Hat} SeaGreen2}
+    {45	{Low Tom} DeepSkyBlue1}
+    {46	{Open Hi-Hat} SpringGreen1}
+    {47	{Low-Mid Tom} DeepSkyBlue2}
+    {48	{Hi Mid Tom} DeepSkyBlue3}
+    {49	{Crash Cymbal 1} Green1}
+    {50	{High Tom} SkyBlue1}
+    {51	{Ride Cymbal 1} PaleGreen1}
+    {52	{Chinese Cymbal} Green2}
+    {53	{Ride Bell} DarkOliveGreen1}
+    {54	Tambourine LightGoldenrod1}
+    {55	{Splash Cymbal} Green3}
+    {56	Cowbell DarkOliveGreen1}
+    {57	{Crash Cymbal 2} Green3}
+    {58	Vibraslap seashell1}
+    {59	{Ride Cymbal 2} PaleGreen2}
+    {60	{Hi Bongo} salmon2}
+    {61	{Low Bongo} salmon1}
+    {62	{Mute Hi Conga} IndianRed3}
+    {63	{Open Hi Conga} IndianRed4}
+    {64 {Low Conga} IndianRed2}
+    {65 {High Timbale} magenta1}
+    {66	{Low Timbale} magenta2}
+    {67	{High Agogo} plum1}
+    {68	{Low Agogo} plum2}
+    {69	Cabasa maroon3}
+    {70	Maracas orchid1}
+    {71	{Short Whistle} purple1}
+    {72	{Long Whistle} purple2}
+    {73	{Short Guiro} purple3}
+    {74	{Long Guiro} DarkOliveGreen2}
+    {75	{Claves} cyan1}
+    {76	{Hi Wood Block} cyan2}
+    {77	{Low Wood Block} cyan3}
+    {78	{Mute Cuica} chartreuse1}
+    {79	{Open Cuica} chartreuse2}
+    {80	{Mute Triangle} OliveDrab1}
+    {81	{Open Triangle} OliveDrab2}
 }
 
 proc drum_selector {} {
@@ -5884,7 +5885,7 @@ position_window $w
 button .drumsel.47 -command clear_drum_select -font $df -text "clear all"
 for {set i 0} {$i < 47} {incr i} {
  set elem [lindex $drumpatches $i]
- set lab "[lindex $elem 0] [lindex $elem 2]"
+ set lab "[lindex $elem 0] [lindex $elem 1]"
  checkbutton $w.$i -text $lab -variable drumselect($i) -command update_drumlist -font $df -width 24 -anchor w -borderwidth 0 
  }
 for {set i 0} {$i < 12} {incr i} {
@@ -5925,7 +5926,6 @@ set midi(drumlist) $p
 
 proc active_drums {} {
     global pianoresult
-    global drumpatches
     global drumstrip rdrumstrip
     global gram_ndrums
     global activedrum avgvel
@@ -5949,7 +5949,6 @@ proc active_drums {} {
     for {set i 35} {$i <82} {incr i} {
       if {$activedrum($i) != 0} {
          set j [expr $i -35]
-         set p [lindex $drumpatches $j]
          set drumstrip($i) $gram_ndrums
          set rdrumstrip($gram_ndrums) $i
          set avgvel($i) [expr $avgvel($i)/$activedrum($i)]
@@ -6204,7 +6203,7 @@ proc drumroll_qnotelines {} {
         for {set i $piano_qnote_offset} {$i < $midilength} {incr i $vspace} {
             set ix1 [expr $i/$pianoxscale]
             if {$ix1 < 0} continue
-            $p.can create line $ix1 $top $ix1 $bot -width 1 -tag barline
+            $p.can create line $ix1 $top $ix1 $bot -width 1 -tag barline -dash {1 2}
         }
         
         for {set i $piano_qnote_offset} {$i < $midilength} {incr i $txspace} {
@@ -6264,10 +6263,10 @@ proc compute_drumroll {} {
                 -foreground red -font $df}
     for {set i 0} {$i <$gram_ndrums} {incr i} {
             $p.can create line 0 [expr $i*20 +20] $pixels_per_file\
-                        [expr $i*20+20] 
+                        [expr $i*20+20] -dash {1 1}
             set jj $rdrumstrip($i)
             set j [expr $jj - 35]
-            set patch [lindex [lindex $drumpatches $j] 2]
+            set patch [lindex [lindex $drumpatches $j] 1]
             set legend [format "%s" $patch]
             set legend "$rdrumstrip($i) $legend"
 	    if {[winfo exist $p.cany.drm$i] != 1} {
@@ -6282,7 +6281,7 @@ proc compute_drumroll {} {
 	     set item [$p.cany create window 10 [expr $i*20 + 0] -anchor nw -window $p.cany.drm$i]
         }
     set canheight [expr $gram_ndrums*20 + 10]
-    $p.can configure -height $canheight
+    $p.can configure -height $canheight -background grey
     $p.cany configure -height $canheight
     
     drumroll_qnotelines
@@ -6296,16 +6295,21 @@ proc compute_drumroll {} {
         set c [lindex $line 3]
         if {$c != 10} continue
         set note [lindex $line 4]
+        set velocity [lindex $line 5]
         if {[lindex $line 5] < 1} continue
-        if {$note < 35 || $note > 81} continue
+        if {$note < 35 || $note > 81 || $velocity < 32} continue
+        if {$velocity < 64} {set velocity 64}
         set ix1 [expr $begin/$pianoxscale]
         set ix2 [expr $ix1+3]
         if {$ix2 > $pixels_per_file} {
            #puts "$begin $note $ix1 $ix2"
            continue
            }
+        set width [expr 4 + ($velocity-64)/6]
         set iy [expr $drumstrip($note)*20 + 10]
-        $p.can create line $ix1 $iy $ix2 $iy -width 8 -tag trk$sep 
+        set percindex [expr $note - 35]
+        set kolor [lindex [lindex $drumpatches $percindex] 2]
+        $p.can create line $ix1 $iy $ix2 $iy -width $width -tag trk$sep -fill $kolor
         set activechan($sep) 1
     }
     #bind_tracks
@@ -7165,7 +7169,10 @@ return [string index $i2l $i]
 
 set hlp_drumroll "This tool is designed for viewing and analyzing\
 midi drum sequences. The tool behaves somewhat similar to pianoroll\
-but in addition labels the individual drum events.\n\n\
+but in addition labels the individual drum events. The percussion\
+instruments are color coded so that similar instruments have\
+similar colors. The height of the vertical bars representing the\
+the individual note-on is proportional to the MIDI velocity of that note.\n\n\
 The percussion channel can address many percussion instruments.\
 Some of these instruments may be barely audible. This interface\
 allows you to hear some of these percussion instruments alone\
