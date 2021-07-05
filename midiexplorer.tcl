@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.22 2021-06-28 09:40" 
+set midiexplorer_version "MidiExplorer version 2.25 2021-07-05 19:15" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -76,8 +76,9 @@ set midiexplorer_version "MidiExplorer version 2.22 2021-06-28 09:40"
 #   Part 19.0 abc file
 #   Part 20.0 Pgram
 #   Part 21.0 Key map
-#   Part 22.0 Console Support
-#   Part 23.0 internals
+#   Part 22.0 PercMap
+#   Part 23.0 Console Support
+#   Part 24.0 internals
 #
 
 set welcome "Welcome to $midiexplorer_version. This application\
@@ -450,7 +451,6 @@ toplevel $w
 position_window $w
 wm title $w "Listbox Demonstration (colors)"
 wm iconname $w "Listbox"
-#positionWindow $w
 
 label $w.msg  -wraplength 4i -justify left -text "A listbox containing several color names is displayed\
 below, along with a scrollbar.  You can scan the list either using the scrollbar or by dragging in the \
@@ -672,6 +672,7 @@ proc midi_init {} {
     set midi(.cfgmidi2abc) ""
     set midi(.pgram) ""
     set midi(.keystrip) ""
+    set midi(.channel9) ""
 
     
     set midi(player1) ""
@@ -768,6 +769,8 @@ proc midi_init {} {
     set midi(keySpacing) 12
     set midi(pitchWeighting) 0
     set midi(stripwindow) 500 
+
+    set midi(percspeed) 1.0
 }
 
 # save all options, current abc file
@@ -1027,6 +1030,7 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
 	$ww add command -label pianoroll -font $df -accelerator "ctrl-r"\
             -command piano_roll_display
 	$ww add command -label drumroll -font $df -command {drumroll_window} -accelerator "ctrl-d"
+	$ww add command -label percView -font $df -command percMapInterface
 	$ww add command -label "mftext by beats" -font $df -command {
              set midi(mftextunits) 2
              mftextwindow $midi(midifilein) 0}
@@ -2395,6 +2399,290 @@ proc midi_file_browser {} {
 
     return $openfile
 }
+
+# Part 22.0	PercMap
+
+set hlp_channel9 "\tPercView\n\n
+This is an application for visualizing the percussion channel\
+of a MIDI file. Percussion sequences in MIDI files tend to consist\
+of various loops corresponding to one or more musical measures.\
+These loops are best identified when the percussion sequences are\
+displayed in a compact form.\n\n\
+The percussion hits (events) are shown as a function of time in\
+color coded form as vertical line sements.  Their minimum temporal\
+separation is one sixteenth note.  if several percussion instruments\
+play at the same time, they are stacked vertically. The colors refer\
+to the type of percussion instrument. Thus bass drums, floor toms,\
+and similar instruments are shown in bluish colors. Snare drums\
+are red, hi-hats green, and etc. If you position the mouse cursor\
+over one of the colored rectangles, the name of the instrument\
+will appear on a status line.\n\n\
+The play button will play whatever portion of the MIDI file that\
+is exposed. You can scroll to the area of interest and resize the window\
+to display the desired MIDI data.\
+The spinbox besides the play button controls the speed of the playback.\
+data. The value of 1.0 plays it at normal speed, fractions such as 0.5\
+slows it down. In order for this to be effective, you must adjust it\
+prior to clicking the play button.\n\n\
+The hi-hat and some of the cymbol instruments beat like a metronome and\
+may not provide useful information. You can suppress these instruments\
+using the checkbox 'ignore hi-hat'.\n\n\
+"
+
+proc percMapInterface {} {
+global df
+global midi
+
+set w .channel9
+if {[winfo exist $w]} return
+toplevel .channel9 
+position_window .channel9
+
+frame $w.header 
+pack $w.header
+frame $w.blk
+frame $w.blk.left
+frame $w.blk.right
+pack $w.blk.left $w.blk.right -side left
+pack $w.blk
+label $w.header.filename -text "" -font $df -width 60
+pack  $w.header.filename -side left -anchor w
+button $w.blk.left.help -text help -font $df -width 9 -command {show_message_page $hlp_channel9 w}
+button $w.blk.left.play -text play -font $df -width 9 -command play_exposed
+spinbox $w.blk.left.speed -from 0.2 -to 1.2 -increment 0.1 -font $df -width 4 -textvariable midi(percspeed)
+frame $w.blk.left.mag
+label $w.blk.left.maglab -text scale -font $df
+spinbox $w.blk.left.magbox -values {0.25 0.50 1.0 2.0 4.0} -font $df -width 4 -textvariable midi(percmag) -command change_horizontal_resolution 
+$w.blk.left.magbox set 0.5 
+grid $w.blk.left.maglab $w.blk.left.magbox 
+grid $w.blk.left.play $w.blk.left.speed
+grid $w.blk.left.mag
+grid $w.blk.left.help 
+
+canvas $w.blk.right.can -height 100 -width 1000 -scrollregion {0. 0. 1000.0 50.} -xscrollcommand {.channel9.blk.right.scr set} -bg grey4
+scrollbar .channel9.blk.right.scr -orient horiz -command {.channel9.blk.right.can xview}
+label $w.blk.right.status -text ""
+pack $w.blk.right.can
+pack $w.blk.right.scr -fill x
+pack $w.blk.right.status
+
+
+frame $w.prf
+label $w.prf.ignlab -text "ignore hi-hat" -font $df
+checkbutton $w.prf.ignchk -variable midi(ignoreHiHat) -command switchIgnoreHiHat
+label $w.prf.seplab -text "separate drums" -font $df
+checkbutton $w.prf.sepchk -variable midi(separate) -command compute_drum_pattern
+pack   $w.prf.ignlab $w.prf.ignchk $w.prf.seplab $w.prf.sepchk -side left 
+
+bind_all_percussion_tags
+compute_drum_pattern 
+}
+
+proc compareOnset {a b} {
+    set a_onset [lindex $a 0]
+    set b_onset [lindex $b 0]
+    if {$a_onset > $b_onset} {
+        return 1}  elseif {$a_onset < $b_onset} {
+        return -1} else {return 0}
+}
+
+proc extractAndSortPercussionEvents {} {
+  global midi
+  global ppqn
+  global sorted_events
+  set ignoreperc {42 44 46 69 71 72}
+  if {![file exist [list $midi(path_midi2abc)]]} {
+       set msg "channel9 requires the executable midi2abc which you can\
+ find in the midiAbc package. Click the settings button and indicate the\
+ path to this file and restart this program."
+      tk_messageBox -message $msg
+      return
+      }
+  if {![file exist $midi(midifilein)]} {
+       set msg "Cannot find the file $midi(midifilein). Use the open button to browse to the midi file that\
+you want to analyze."
+       tk_messageBox -message $msg
+       return
+       }
+  set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
+  catch {eval $cmd} pianoresult
+  set pianoresult [split $pianoresult \n]
+  if {[llength $pianoresult] < 1} {
+      return
+      }
+  set ppqn [lindex [lindex $pianoresult 0] 3]
+  set eventlist {}
+  foreach line $pianoresult {
+      if {[llength $line] != 6} continue
+      set begin [lindex $line 0]
+      if {[string is double $begin] != 1} continue
+      set c [lindex $line 3]
+      if {$c != 10} continue
+      set note [lindex $line 4]
+      set velocity [lindex $line 5]
+      if {[lindex $line 5] < 1} continue
+      if {$note < 35 || $note > 81} continue
+      if {$midi(ignoreHiHat) && [lsearch $ignoreperc $note] >= 0} continue
+      lappend eventlist [list $begin $note $velocity]
+      }
+set sorted_events [lsort -command compareOnset $eventlist]
+#return $sorted_events
+}
+
+proc show_percussion_info {note} {
+global drumpatches
+set patchnum [expr $note - 35]
+set patchcolor [lindex [lindex $drumpatches $patchnum] 2]
+set patchname [lindex [lindex $drumpatches $patchnum] 1]
+#puts "$patchnum $patchname $patchcolor"
+.channel9.blk.right.status configure -text "$patchnum $patchname"
+}
+
+proc compute_drum_pattern {} {
+    global midi
+    global ppqn
+    global drumpatches
+    global lastBeat
+    global sorted_events
+    global drumstrip rdrumstrip
+    global gram_ndrums
+
+    extractAndSortPercussionEvents 
+
+    array unset perc2color
+
+    set mag $midi(percmag)
+    if {[llength $sorted_events] < 2} return
+    set ppqn4 [expr $ppqn/4]
+    .channel9.blk.right.can delete all
+   
+
+    set ixlast 0
+    set lastBeat 0
+    set beatNumber 0
+    set ix1 0
+    set ypos 0
+    set ix2 0
+    foreach event $sorted_events {
+        set begin [lindex $event 0]
+        set note [lindex $event 1]
+        set ix [expr $begin/$ppqn4]
+        set beatNumber [expr $begin/$ppqn]
+        if {$beatNumber > $lastBeat} {set lastBeat $beatNumber}
+       
+        
+        if {$ix != $ixlast} {
+           set ix1 [expr $ix*4*$mag]
+           set ix2 [expr $ix1 + $mag]
+           set ixlast $ix
+           set ypos 0
+           } else {
+           incr ypos}
+
+        if {[info exist perc2color($note)] == 0} {
+           set patchnum [expr $note - 35]
+           set patchcolor [lindex [lindex $drumpatches $patchnum] 2]
+           if {[string length $patchcolor] > 1} {
+             set xcol $patchcolor
+           } else {
+             puts "no color assigned for patch $patchnum [lindex [lindex $drumpatches $patchnum] 1]"
+           }
+         } else {
+         set xcol $perc2color($note)
+         }
+           
+      set iy1 [expr 10 + $ypos*11] 
+      set iy2 [expr $iy1 + 8]
+
+        #.channel9.blk.right.can create line $ix1 $iy1 $ix1 $iy2 -fill $xcol -width 3 -tag n$note -width 1
+        .channel9.blk.right.can create rectangle $ix1 $iy1 $ix2 $iy2 -fill $xcol -width 3 -tag n$note -width 0
+    }
+    displayBeatGrid $mag
+    .channel9.blk.right.can configure -scrollregion [.channel9.blk.right.can bbox all]
+}
+
+proc displayBeatGrid {mag} {
+ global lastBeat
+ global df
+ set height 100
+ set iy0  [expr $height -32 ]
+ set iy1  [expr $height -22 ]
+ set iy2  [expr $height -12 ]
+ set iy3  [expr $height -2  ]
+ set x 0
+ set spacing [expr round(4/$mag)]
+ if {$spacing < 1} {set spacing 1}
+ while {$x < $lastBeat} {
+    set x1  [expr $x*16*$mag]
+    if {[expr $x % $spacing] == 0} {
+    .channel9.blk.right.can create line $x1 $iy0 $x1 $iy2 -dash {1 1} -fill white
+    .channel9.blk.right.can create text $x1 $iy3 -text $x -fill white -font $df 
+    } else {
+    .channel9.blk.right.can create line $x1 $iy1 $x1 $iy2 -dash {1 1} -fill white
+    }
+    incr x
+    }
+}
+
+proc bind_all_percussion_tags {} {
+for {set i 35} {$i < 81} {incr i} {
+     .channel9.blk.right.can bind n$i <Enter> "show_percussion_info $i"
+    }
+}
+
+proc change_horizontal_resolution {} {
+set xv [lindex [.channel9.blk.right.can xview] 0]
+compute_drum_pattern
+.channel9.blk.right.can xview moveto $xv
+}
+
+proc copy_midi_to_tmp_for_drums {fbeat tbeat} {
+    global midi
+    if {![file exist $midi(path_midicopy)]} {
+       set msg "cannot find $midi(path_midicopy). Install midicopy \
+from the abcMIDI package, click settings and set the path to its location."
+       tk_messageBox -message $msg
+       return
+       }
+    set cmd "exec [list $midi(path_midicopy)]"
+    append cmd " -frombeat $fbeat -tobeat $tbeat -chns 10 -speed $midi(percspeed)"
+    append cmd " [list $midi(midifilein)] tmp.mid"
+    catch {eval $cmd} midicopyresult
+    set exec_out "$cmd\n $midicopyresult\n"
+    #puts $exec_out
+    return $midicopyresult
+}
+
+
+proc play_exposed {} {
+global midi
+global lastBeat
+#set scrollregion [.channel9.blk.right.can cget -scrollregion]
+set xv [.channel9.blk.right.can xview]
+set fbeat [expr [lindex $xv 0] * $lastBeat]
+set tbeat [expr [lindex $xv 1] * $lastBeat]
+copy_midi_to_tmp_for_drums $fbeat $tbeat
+if {![file exist $midi(path_midiplay)]} {
+     set msg "You need to specify the path to a program which plays\
+midi files using the settings button. The box to the right can contain\
+ any runtime options."
+     tk_messageBox -message $msg
+     return
+     }
+set cmd "exec [list $midi(path_midiplay)]"
+if {![file exist tmp.mid]} {
+    set msg "Something is wrong. Midicopy should create a the tmp.mid
+file."
+    tk_messageBox -message $msg
+    return
+    }
+append cmd " $midi(midiplay_options) tmp.mid &"
+catch {eval $cmd} midiplayerresult
+}
+
+
+
+
 
 # Part 23.0           Console Page Support Functions
 
@@ -5824,7 +6112,7 @@ proc mftext_tmp {} {
 set drumpatches {
     {35	{Acoustic Bass Drum} DodgerBlue1}
     {36	{Bass Drum 1} SteelBlue1}
-    {37	{Side Stick} DeepPink3}
+    {37	{Side Stick} DeepPink2}
     {38	{Acoustic Snare} tomato1}
     {39 {Hand Clap} HotPink1}
     {40	{Electric Snare} red1}
@@ -5835,33 +6123,33 @@ set drumpatches {
     {45	{Low Tom} DeepSkyBlue1}
     {46	{Open Hi-Hat} SpringGreen1}
     {47	{Low-Mid Tom} DeepSkyBlue2}
-    {48	{Hi Mid Tom} DeepSkyBlue3}
+    {48	{Hi Mid Tom} DeepSkyBlue2}
     {49	{Crash Cymbal 1} Green1}
     {50	{High Tom} SkyBlue1}
     {51	{Ride Cymbal 1} PaleGreen1}
     {52	{Chinese Cymbal} Green2}
     {53	{Ride Bell} DarkOliveGreen1}
     {54	Tambourine LightGoldenrod1}
-    {55	{Splash Cymbal} Green3}
-    {56	Cowbell DarkOliveGreen1}
-    {57	{Crash Cymbal 2} Green3}
+    {55	{Splash Cymbal} Green2}
+    {56	Cowbell burlywood1}
+    {57	{Crash Cymbal 2} Green2}
     {58	Vibraslap seashell1}
     {59	{Ride Cymbal 2} PaleGreen2}
-    {60	{Hi Bongo} salmon2}
-    {61	{Low Bongo} salmon1}
-    {62	{Mute Hi Conga} IndianRed3}
-    {63	{Open Hi Conga} IndianRed4}
-    {64 {Low Conga} IndianRed2}
+    {60	{Hi Bongo} IndianRed1}
+    {61	{Low Bongo} IndianRed2}
+    {62	{Mute Hi Conga} sienna1}
+    {63	{Open Hi Conga} sienna2}
+    {64 {Low Conga} salmon1}
     {65 {High Timbale} magenta1}
     {66	{Low Timbale} magenta2}
     {67	{High Agogo} plum1}
     {68	{Low Agogo} plum2}
-    {69	Cabasa maroon3}
+    {69	Cabasa maroon2}
     {70	Maracas orchid1}
     {71	{Short Whistle} purple1}
     {72	{Long Whistle} purple2}
     {73	{Short Guiro} purple3}
-    {74	{Long Guiro} DarkOliveGreen2}
+    {74	{Long Guiro} DarkOliveGreen1}
     {75	{Claves} cyan1}
     {76	{Hi Wood Block} cyan2}
     {77	{Low Wood Block} cyan3}
@@ -5870,6 +6158,8 @@ set drumpatches {
     {80	{Mute Triangle} OliveDrab1}
     {81	{Open Triangle} OliveDrab2}
 }
+
+
 
 proc drum_selector {} {
 global drumpatches
@@ -7582,6 +7872,9 @@ if {[winfo exists .entropy]} {
 if {[winfo exists .beatgraph]} {
    beat_graph
    }
+if {[winfo exists .channel9]} {
+   compute_drum_pattern
+   }
 }
 
 
@@ -7639,6 +7932,9 @@ if {[winfo exist .keystrip]} {
    }
 if {[winfo exists .keypitchclass]} {
    displayKeyPitchHistogram
+   }
+if {[winfo exists .channel9]} {
+   compute_drum_pattern
    }
 }
 
@@ -10064,7 +10360,7 @@ for {set i 1} {$i <$decsize} {incr i} {
 for {set i 35} {$i < 82} {incr i} {
    if {[info exist featcount($i)]} {
        set index [expr $i - 35]
-       $w insert insert "$i [lindex [lindex $drumpatches $index] 2] $featcount($i)\n"
+       $w insert insert "$i [lindex [lindex $drumpatches $index] 1] $featcount($i)\n"
        }
    }
 }
@@ -10281,7 +10577,7 @@ proc getGeometryOfAllToplevels {} {
                ".ppqn" ".drumrollconfig" ".indexwindow" ".wiki"
                ".dictview" ".notegram" ".barmap" ".playmanage" ".data_info"
                ".midiplayer" ".tmpfile" ".cfgmidi2abc" ".pgram" ".keystrip"
-               ".keypitchclass"}
+               ".keypitchclass" ".channel9"}
   foreach top $toplevellist {
     if {[winfo exist $top]} {
       set g [wm geometry $top]"
@@ -12424,7 +12720,7 @@ for  {set i 0} {$i < 5} {incr i} {
 }
 
 
-#   Part 22.0 internals
+#   Part 24.0 internals
 proc dirhome {} {
 set textout ""
 set filelist [glob *]
