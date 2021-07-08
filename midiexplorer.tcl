@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.25 2021-07-05 19:15" 
+set midiexplorer_version "MidiExplorer version 2.26 2021-07-07 09:15" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -7626,7 +7626,8 @@ proc midi_statistics {choice} {
 
     for {set i 0} {$i < 128} {incr i} {set histogram($i) 0}
     
-    foreach line [split $pianoresult \n] {
+    set pianoresult [split $pianoresult \n]
+    foreach line $pianoresult  {
         if {[llength $line] != 6} continue
         set begin [lindex $line 0]
         set end [lindex $line 1]
