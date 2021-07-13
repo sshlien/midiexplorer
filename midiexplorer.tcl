@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.26 2021-07-07 09:15" 
+set midiexplorer_version "MidiExplorer version 2.27 2021-07-13 15:10" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -7403,6 +7403,10 @@ return $s
 }
 
 proc barseqcode {letter} {
+# given the letter code for the bar pitch pattern,
+# the function gets the beat sequence pattern corresponding
+# to the code and then the tatum sequences for each beat
+# and returns all this information in a string.
 global patindex3dict
 global patindex2dict
 global patindexdict
@@ -10801,29 +10805,8 @@ global beatsperbar
 global bar_rhythm
 set beatsperbar 4
 
-proc analyze_note_patterns {} {
-# This procedure creates the .entropy interface if it does not
-# exist and computes all the distributions that can be displayed
-# in this interface.
-global midi
+proc entropyInterface {} {
 global df
-global pianoresult
-global exec_out
-global midilength
-# It is necessary to use global variables in order to pass these
-# variables to the procedures called by the button controls.
-global patindexdict
-global patindex2dict
-global patindex3dict
-global tatumhistogram
-global beathistogram
-global barhistogram
-global barseq
-global rhythmhistogram
-global rpatindexdict
-global bar_rhythm
-global beatsperbar
-global last_dictview
 if {![winfo exist .entropy]} {
   setup_i2l
   set last_dictview 0
@@ -10872,6 +10855,34 @@ if {![winfo exist .entropy]} {
   tooltip::tooltip $e.rsize "Number of distinct measures."
 
   }
+}
+
+
+proc analyze_note_patterns {} {
+# This procedure creates the .entropy interface if it does not
+# exist and computes all the distributions that can be displayed
+# in this interface.
+global midi
+global df
+global pianoresult
+global exec_out
+global midilength
+# It is necessary to use global variables in order to pass these
+# variables to the procedures called by the button controls.
+global patindexdict
+global patindex2dict
+global patindex3dict
+global tatumhistogram
+global beathistogram
+global barhistogram
+global barseq
+global rhythmhistogram
+global rpatindexdict
+global bar_rhythm
+global beatsperbar
+global last_dictview
+
+entropyInterface 
 
 # copy_midi_to_tmp deals with the selected tracks and time interval
 copy_midi_to_tmp
@@ -10883,31 +10894,47 @@ set midilength [lindex $pianoresult [expr $nrec -1]]
 set exec_out [append exec_out "note_patterns:\n\n$cmd\n\n $pianoresult"]
 update_console_page
 
+
+# we start by getting the pitch and rhythm patterns
+# from the function get_note pattern.
 set result [get_note_patterns] 
 set notepat [lindex $result 0]
 set bar_rhythm [lindex $result 1]
 #
 # pitch class analysis
+# we look for repeated patterns by first computing the histogram
+# of notepat.
 set tatumhistogram [make_string_histogram $notepat]
-#puts "tatumhistogram:\n $tatumhistogram"
-#set tentropy [string_entropy $tatumhistogram]
 set tsize [llength [dict keys $tatumhistogram]]
+# using this histogram we create a dictionary for all the
+# repeated patterns. The dictionary defines symbols representing
+# the repeated patterns
 set patindexdict [keys2index $tatumhistogram]
-#puts "patindexdict:\n$patindexdict"
+# using this dictionary, we translate notepat into higher level
+# words (represented by new symbols), where these words denote
+# sequences of pitches that re-occur. The representation for the
+# beats put in beatseries by the function index_and_group.
 set beatseries [index_and_group $patindexdict $notepat $beatsperbar "-"]
+# now we start over again with beatseries and create another
+# histogram of the occurrence of the beat symbols.
 set beathistogram [make_string_histogram $beatseries]
-#puts "beathistogram:\n$beathistogram"
-#set bentropy [string_entropy $beathistogram]
+# the beathistogram is used to create another dictionary, patindex2dict
+# which denotes symbols for repeated sequences of beats.
 set bsize [llength [dict keys $beathistogram]]
-#append exec_out "bentropy = $bentropy bsize = $bsize\n"
 set patindex2dict [keys2index $beathistogram]
+# using the patindex2dict translation table, we now represent each
+# bar with a symbol. A new symbol is introduced if that bar did not
+# appear earlier.
 set barseq [index_and_group $patindex2dict $beatseries $beatsperbar "_"]
+# compute a histograms of the different bars
 set barhistogram [make_string_histogram $barseq]
 #set barentropy [string_entropy $barhistogram]
 set barsize [llength [dict keys $barhistogram]]
+# create a translation table for the different bars
 set patindex3dict [keys2index $barhistogram]
 set barseries [bar2index $patindex3dict $barseq]
-#set barseqstring [barseq2string $patindex3dict $barseq]
+# represent each bar by a symbol
+#
 #
 # rhythm analysis
 set rhythmhistogram [make_string_histogram $bar_rhythm]
@@ -11199,6 +11226,11 @@ proc rdictview_map {patindex series} {
 }
 
 proc getbarinfo_from_map {} {
+# The function gets the position of the letter code
+# of interest in the text widget displayed in the
+# dictview window. It calls barseqcode to interpret
+# this letter and displays the interpretation in the
+# top label widget of this window.
 set loc [.dictview.2.txt index insert]
 set letter [.dictview.2.txt get $loc]
 .dictview.1.lab configure -text [barseqcode $letter]
