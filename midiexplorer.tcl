@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.27 2021-07-13 15:10" 
+set midiexplorer_version "MidiExplorer version 2.28 2021-07-25 10:00" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -7429,6 +7429,9 @@ return $representation
 }
 
 proc rbarseqcode {letter} {
+# translates the letter symbol representation of a particular
+# rhythm to its binary representation which is displayed on
+# header of the dictview window.
 global rpatindexdict
 global i2l
 set code [string first $letter $i2l]
@@ -10621,6 +10624,7 @@ proc get_note_patterns {} {
    global pianoresult
    global midilength
    global beatsperbar
+   global notefragments
 
    set ppqn4 [expr $ppqn/4]
    set jitter [expr $ppqn4/2]
@@ -10859,9 +10863,11 @@ if {![winfo exist .entropy]} {
 
 
 proc analyze_note_patterns {} {
-# This procedure creates the .entropy interface if it does not
-# exist and computes all the distributions that can be displayed
-# in this interface.
+# The procedure analyzes the note patterns and records all
+# repeating (or nonrepeating patterns) into tcl dictionaries
+# for the pitch tatum, beat, and bar time intervals and
+# the rhythm representation. The hlp_entropy defined in this file
+# gives some explanation of the system used here.
 global midi
 global df
 global pianoresult
@@ -11088,6 +11094,8 @@ switch $last_barmap {
 }
 
 proc dictview_window {} { 
+# creates the dictview window for displaying histograms
+# for pitch classes or rhythm (tatum, beat or bar resolution).
    global df
    if {[winfo exist .dictview] == 0} {
      set f .dictview
@@ -11105,6 +11113,8 @@ proc dictview_window {} {
 }
 
 proc dictlist_output {dictdataname histogram} {
+# outputs the tatum,  beat or bar pitch histograms in the
+# dictview window.
    upvar #0 $dictdataname dictdata
    upvar #0 $histogram histdata
    dictview_window
@@ -11118,8 +11128,11 @@ proc dictlist_output {dictdataname histogram} {
 
 
 proc dictlistp {dictdata dicthist} {
+# outputs the tatum histogram for pitch classes
+   global notefragments
    set f .dictview.2.txt
    $f delete 1.0 end
+   $f insert end "There are $notefragments tatums in the file\n"
    set line "index\tcode\tcount\tpitch classes"
    $f insert end $line\n
    dict for {key data} $dictdata {
@@ -11131,12 +11144,16 @@ proc dictlistp {dictdata dicthist} {
    }
 
 proc dictlistb {dictdata dicthist} {
+# outputs the beat histogram for pitch classes
+   global patindexdict
+   global notefragments
    global patindexdict
    set f .dictview.2.txt
    $f delete 1.0 end
-   set rpatindexdict [lreverse $patindexdict]
+   $f insert end "There are [expr $notefragments/4] beats in the file\n"
    set line "index\tcode\tcount\tpitch classes"
    $f insert end $line\n
+   set rpatindexdict [lreverse $patindexdict]
    dict for {key data} $dictdata {
      set p ""
      set pkeys [split $key -]
@@ -11151,8 +11168,13 @@ proc dictlistb {dictdata dicthist} {
    }
 
 proc dictlist {dictdata dicthist} {
+# outputs the bar pitch class histogram in the dictview
+# window.
+   global notefragments
+   global beatsperbar
    set f .dictview.2.txt
    $f delete 1.0 end
+   $f insert end "There are [expr $notefragments/4/$beatsperbar] bars in the file\n"
    set line "index\tcode\t\tcount"
    $f insert end $line\n
    dict for {key data} $dictdata {
@@ -11188,6 +11210,9 @@ return $notes
 
 
 proc dictview_map {patindex series} {
+# produces the pitch map representing each distinct bar
+# in the midi file with a distinct character. We group 8
+# characters at a time.
    global dfi
    dictview_window
    set f .dictview.2.txt
@@ -11207,6 +11232,12 @@ proc dictview_map {patindex series} {
 }
 
 proc rdictview_map {patindex series} {
+# pops up the dictview window and displays the  string
+# of symbols (characters) for the rhythm representations
+# of each measure. The symbols are puts into groups  of
+# 8 to make the map more readable. The symbols are bound
+# to mouse and keyboard events to allow interpretations
+# to appear in the header.
    global dfi
    dictview_window
    set f .dictview.2.txt
@@ -11237,6 +11268,9 @@ set letter [.dictview.2.txt get $loc]
 }
 
 proc rgetbarinfo_from_map {} {
+# bound to event clicking on a character in the pitch map
+# where each character represents a particular
+# bar in the midi file.
 set loc [.dictview.2.txt index insert]
 set letter [.dictview.2.txt get $loc]
 .dictview.1.lab configure -text [rbarseqcode $letter]
@@ -12748,7 +12782,7 @@ for  {set i 0} {$i < 5} {incr i} {
    set x1 [expr $jl*20-7]
    set x2 [expr ($jl+1)*20 -14]
    $w.keyboard create rect $x1 70 $x2 20 -fill $majorColors($jc)
-   $w.keyboard create rect [expr $x1+150] 70 [expr $x2+150] 20 -fill $majorColors($jc) -stipple gray50
+   $w.keyboard create rect [expr $x1+150] 70 [expr $x2+150] 20 -fill $majorColors($jc) -stipple gray50 
    }
 }
 
