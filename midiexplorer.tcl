@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.28 2021-07-25 10:00" 
+set midiexplorer_version "MidiExplorer version 2.31 2021-08-03 13:10" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -77,8 +77,9 @@ set midiexplorer_version "MidiExplorer version 2.28 2021-07-25 10:00"
 #   Part 20.0 Pgram
 #   Part 21.0 Key map
 #   Part 22.0 PercMap
-#   Part 23.0 Console Support
-#   Part 24.0 internals
+#   Part 23.0 PitchClass Map
+#   Part 24.0 Console Support
+#   Part 25.0 internals
 #
 
 set welcome "Welcome to $midiexplorer_version. This application\
@@ -673,6 +674,8 @@ proc midi_init {} {
     set midi(.pgram) ""
     set midi(.keystrip) ""
     set midi(.channel9) ""
+    set midi(.ribbon) ""
+    set midi(.ptableau) ""
 
     
     set midi(player1) ""
@@ -1080,6 +1083,10 @@ menu $ww -tearoff 0
             -command {midi_statistics pitch 
                       show_note_distribution
                      } 
+        $ww add command  -label "compact pitch class map" -font $df \
+            -command simple_tableau
+        $ww add command  -label "detailed pitch class map" -font $df \
+            -command detailed_tableau
 	$ww add command -label chordgram -font $df -command {chordgram_plot none}
 	$ww add command -label "chord histogram" -font $df -command chord_histogram
         $ww add command -label "chordtext" -font $df -command chordtext_window
@@ -2597,11 +2604,11 @@ proc compute_drum_pattern {} {
         #.channel9.blk.right.can create line $ix1 $iy1 $ix1 $iy2 -fill $xcol -width 3 -tag n$note -width 1
         .channel9.blk.right.can create rectangle $ix1 $iy1 $ix2 $iy2 -fill $xcol -width 3 -tag n$note -width 0
     }
-    displayBeatGrid $mag
+    displayBeatGrid_for_perc $mag
     .channel9.blk.right.can configure -scrollregion [.channel9.blk.right.can bbox all]
 }
 
-proc displayBeatGrid {mag} {
+proc displayBeatGrid_for_perc {mag} {
  global lastBeat
  global df
  set height 100
@@ -2681,10 +2688,389 @@ catch {eval $cmd} midiplayerresult
 }
 
 
+# Part 23.0           Pitch Class Maps
+
+proc loadMidiFile {} {
+# Extracts information from a midi file.
+global midi
+global pianoresult
+global midilength
+global lastbeat
+global ntrks
+global midicommands
+global ppqn
+global chanprog
+
+if {![file exist $midi(midifilein)]} {
+ set msg "Cannot find the file $midi(midifilein). Use the open button to browse to the midi file that\
+you want to analyze."
+       tk_messageBox -message $msg
+       return -1
+       }
+
+if {![file exist $midi(path_midi2abc)]} {
+    set msg "channel9 requires the executable midi2abc which you can\
+ find in the midiAbc package. Click the settings button and indicate the\
+ path to this file and restart this program."
+      tk_messageBox -message $msg
+      return -1
+      }
+
+set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
+catch {eval $cmd} pianoresult
+#puts "midifilein = $midi(midifilein)"
+set nrec [llength $pianoresult]
+set midilength [lindex $pianoresult [expr $nrec -1]]
+set pianoresult [split $pianoresult \n]
+
+set ntrks [lindex [lindex $pianoresult 0] 2]
+if {$midi(midishow_sep) == "track"} {
+   incr ntrks} else {
+   set ntrks 16
+   }
+
+set ppqn [lindex [lindex $pianoresult 0] 3]
+set lastbeat [expr $midilength/$ppqn]
+#puts "nrec = $nrec midilength = $midilength lastbeat = $lastbeat"
+set midicommands [lsort -command compare_onset $pianoresult ]
+
+for {set i 0} {$i < 17} {incr i} {
+   set chanprog($i) 0
+   }
+}
 
 
 
-# Part 23.0           Console Page Support Functions
+
+proc noteRibbon {} {
+# creates window for the simple and detailed tableau
+if {![winfo exist .ribbon]} {
+  toplevel .ribbon
+  position_window ".ribbon"
+  set w .ribbon.frm
+  frame $w
+  canvas $w.can -height 120 -width 1000 -scrollregion {0. 0. 10000.0 50.} -xscrollcommand {.ribbon.scr set} -bg grey4
+  canvas $w.labcan -height 120 -width 50 -bg grey4
+  scrollbar .ribbon.scr -orient horiz -command {.ribbon.frm.can xview}
+  label $w.status -text ""
+  pack $w.labcan $w.can -side left
+  pack .ribbon.scr -fill x -side bottom
+  pack $w.status
+  pack $w
+  fillRibbonSideBar
+  }
+}
+
+proc fillRibbonSideBar {} {
+global sharpnotes
+set dfsmall [font create -size 8]
+for {set i 0} {$i < 12} {incr i} {
+  label .ribbon.frm.labcan.$i -text [lindex $sharpnotes $i] -width 2 -fg white -font $dfsmall -bg black
+   if {[expr $i % 2] == 0} {
+      .ribbon.frm.labcan create window 8 [expr  ($i*8) + 2] -window .ribbon.frm.labcan.$i -anchor nw
+     } else {
+      .ribbon.frm.labcan create window 30 [expr  ($i*8) + 2] -window .ribbon.frm.labcan.$i -anchor nw
+     }
+  }
+.ribbon.frm.labcan configure -height 100 
+}
+
+proc tableauWindow {} {
+# creates window for the simple and detailed tableau
+global midi
+set w .ptableau
+if {![winfo exist $w]} {
+  toplevel $w
+  position_window $w
+  set w .ptableau.frm
+  frame $w
+  canvas $w.can -height 60 -width 1000 -scrollregion {0. 0. 10000.0 50.} -xscrollcommand {.ptableau.scr set} -bg grey20
+  scrollbar .ptableau.scr -orient horiz -bg #002000\
+   -activebackground #004000 -command {.ptableau.frm.can xview}
+  canvas $w.chkscan -width 50 -height 300 -bg #002000
+  label .ptableau.status -text "$midi(midifilein)"
+  frame $w.header
+  button $w.header.play -text play -command playExposed
+  pack $w.header.play -side left -anchor nw
+  pack .ptableau.status
+  pack $w.header -side top -anchor nw
+  pack .ptableau.scr -fill x -side bottom 
+  pack $w.chkscan $w.can -side left
+  pack $w
+  }
+}
+
+
+proc displayBeatGrid {height xspacing} {
+ global lastbeat
+ global df
+ set mag 1
+ set iy0  [expr $height -40 ]
+ set iy1  [expr $height -30 ]
+ set iy2  [expr $height -20 ]
+ set iy3  [expr $height -10  ]
+ set x 0
+ set spacing [expr round(4/$mag)]
+ if {$spacing < 1} {set spacing 1}
+ while {$x < $lastbeat} {
+    set x1  [expr $x*$xspacing*$mag]
+    if {[expr $x % $spacing] == 0} {
+    .ptableau.frm.can create line $x1 $iy0 $x1 $iy2 -dash {1 1} -fill white
+    .ptableau.frm.can create text $x1 $iy3 -text $x -fill white -font $df
+    } else {
+    .ptableau.frm.can create line $x1 $iy1 $x1 $iy2 -dash {1 1} -fill white
+    }
+    incr x
+    }
+}
+
+proc extractPitchClasses {notecode} {
+set representation [binary_to_pitchclass_codes $notecode]
+return $representation
+}
+
+
+proc binary_to_pitchclass_codes {binaryvector} {
+# The binaryvector is a 12 bit number where every bit
+# references one of the 11 pitch classes. This function
+# returns the positions of all the on-bits in the number
+# or a list of all the pitch classes.
+global sharpnotes
+global flatnotes
+global useflats
+set useflats 0
+set i 0
+set pitchcodelist [list]
+while {$binaryvector > 0} {
+  if {[expr $binaryvector % 2] == 1} {
+   lappend pitchcodelist $i
+   }
+ set binaryvector [expr $binaryvector/2]
+ incr i
+ }
+return $pitchcodelist
+}
+
+proc simple_tableau {} {
+loadMidiFile
+noteRibbon
+.ribbon.frm.can delete all
+
+set result [get_note_patterns]
+set notepat [lindex $result 0]
+set size [dict get $notepat size]
+for {set i 0} {$i < $size} {incr i} {
+  set notecode [dict get $notepat $i]
+  set codes [extractPitchClasses $notecode]
+  foreach code $codes {
+    set ix1 $i
+    #set ix1 [expr $i*2]
+    set iy1 [expr $code*8 + 4]
+    set iy2 [expr $iy1 + 3]
+    .ribbon.frm.can create rectangle $ix1 $iy1 $ix1 $iy2 -fill yellow -width 0
+    incr i
+    }
+  }
+set region "0 0 $i 100"
+.ribbon.frm.can configure -height 100 -scrollregion $region
+}
+
+set progmapper {
+ 0  0  0  0  0  0  0  0
+ 0  1  1  1  1  1  1  2
+ 3  3  3  3  3  3  3  3
+ 2  2  4  4  4  4  4  2
+ 4  4  4  4  4  4  4  4
+ 5  5  5  5  5  2  6  8
+ 6  6  6  6  6  6  6  6
+ 7  7  7  7  7  7  7  7
+ 9  9  9  9  9  9  9  9
+ 9  9  9  9  9  9  9  9
+10 10 10 10 10 10 10 10
+10 10 10 10 10 10 10 10
+11 11 11 11 11 11 11 11
+ 2  2  2  2  2  9  6  9 
+ 1  1  8  8  8  8  8  1
+ 11 11 11 11 11 11 11 11
+}
+
+
+proc NoteCodes2Pitches_for {chan } {
+tableauWindow
+global notepat
+global chanlist
+global chanprog
+global progmapper
+global groupcolors
+global majorColors
+global mlist
+global beatsperbar
+global midichannels
+global df
+
+
+if {![dict exists $notepat $chan,size]} {
+  return
+  }
+set prog $chanprog($chan)
+set group [lindex $progmapper $prog]
+#puts "chan = $chan prog = $prog group = $group"
+#set color $majorColors($group)
+set color [lindex $groupcolors $group]
+#puts "progdata = $progdata color = $color"
+#puts "notepat $chan,size = [dict get $notepat $chan,size]"
+set row [lsearch $chanlist $chan]
+set size [dict get $notepat $chan,size]
+for {set i 0} {$i < $size} {incr i} {
+  set code [dict get $notepat $chan,$i]
+  set codes [extractPitchClasses $code]
+  #if {[llength $codes] > 0} {puts "codes for $chan,$i = $codes in row $row"}
+  foreach code $codes {
+    if {$code == 0} continue
+    set ix1 [expr $i ]
+    set iy1 [expr $code*4 + $row*50]
+    set iy2 [expr $iy1 + 2]
+    .ptableau.frm.can create rectangle $ix1 $iy1 $ix1 $iy2 -fill $color -width 0
+    }
+#  puts "$i codes = $codes"
+  }
+checkbutton .ptableau.frm.chkscan.$chan -text $chan -background #606070 -width 1 -fg black -variable midichannels($chan) -font $df
+.ptableau.frm.chkscan create window 4 [expr $row*50 +10] -window .ptableau.frm.chkscan.$chan -anchor nw
+tooltip::tooltip .ptableau.frm.chkscan.$chan "[lindex $mlist $prog]"
+return [expr $size ]
+}
+
+proc detailed_tableau {} {
+# creates separate pitch class plots for the different
+# tracks.
+global ntrks
+global notepat
+global activechan
+global chanlist
+global beatsperbar
+global lastTableau
+
+loadMidiFile
+set lastTableau "pitch"
+set result [get_all_note_patterns]
+set notepat [lindex $result 0]
+#puts "notepat = $notepat"
+
+
+set chanlist [list]
+for {set i 1} {$i < $ntrks} {incr i} {
+  if {![info exist activechan($i)]} continue
+  if {$activechan($i) > 0 && $i != 10} {lappend chanlist $i}
+  }
+
+#puts "chanlist = $chanlist"
+#puts "there are [llength $trklist] channels in the file."
+set h [expr [llength $chanlist]*50 + 40]
+tableauWindow
+.ptableau.frm.can delete all
+# destroy buttons
+for {set i 1} {$i<16} {incr i} {
+  destroy .ptableau.frm.chkscan.$i
+  }
+
+
+
+# outline channel bands
+set i 1
+foreach chan $chanlist {
+   set iy2 [expr $i*50]
+   set iy1 [expr $iy2 - 50] 
+# distinguish the tracks by different shade of gray background
+   if {[expr $i % 2] ==  1} {
+     .ptableau.frm.can create rectangle 0 $iy1 10000 $iy2 -fill #151505 -width 0
+   } else {
+     .ptableau.frm.can create rectangle 0 $iy1 10000 $iy2 -fill #05050A -width 0
+   }
+   incr i
+}
+
+
+set maxsize 0
+#puts "chanlist = $chanlist"
+foreach chan $chanlist {
+   set lsize [NoteCodes2Pitches_for $chan] 
+   if {$lsize > $maxsize} {set maxsize $lsize}
+   }
+set region "0 0 $maxsize $h"
+#puts "region = $region"
+.ptableau.frm.can configure -height $h -scrollregion $region
+.ptableau.frm.chkscan configure -height $h
+
+set spacing [expr 4*$beatsperbar]
+#put barlines
+for {set ix 0} {$ix < $maxsize} {incr ix $spacing} {
+  .ptableau.frm.can create line $ix 0 $ix $h -fill #606060 -stipple gray25 -width 2
+  }
+
+displayBeatGrid $h 16
+}
+
+
+proc playExposed {} {
+global midi
+global lastbeat
+global midichannels
+set scrollregion [.ptableau.frm.can cget -scrollregion]
+set xv [.ptableau.frm.can xview]
+#puts "xv $xv"
+set fbeat [expr [lindex $xv 0] * $lastbeat]
+set tbeat [expr [lindex $xv 1] * $lastbeat]
+copyMidiToTmpForEntropy $fbeat $tbeat
+if {![file exist $midi(path_midiplay)]} {
+     set msg "You need to specify the path to a program which plays
+midi files. The box to the right can contain any runtime options."
+     tk_messageBox -message $msg
+     return
+     }
+set cmd "exec [list $midi(path_midiplay)]"
+if {![file exist tmp.mid]} {
+    set msg "Something is wrong. Midicopy should create a the tmp.mid
+file."
+    tk_messageBox -message $msg
+    return
+    }
+append cmd " $midi(midiplay_options) tmp.mid &"
+catch {eval $cmd} midiplayerresult
+#puts $cmd
+#puts $midiplayerresult
+}
+
+proc copyMidiToTmpForEntropy {fbeat tbeat} {
+    global midi
+    global midichannels
+    if {![file exist $midi(path_midicopy)]} {
+       set msg "cannot find $midi(path_midicopy). Install midicopy
+from the abcMIDI package and set the path to its location."
+       tk_messageBox -message $msg
+       return
+       }
+    set chns ""
+    for {set i 0} {$i < 17} {incr i} {
+      if {$midichannels($i)} {append chns " $i"}
+      }
+    #puts "chns = $chns"
+
+    set cmd "exec [list $midi(path_midicopy)]"
+    append cmd " -frombeat $fbeat -tobeat $tbeat"
+    if {[string length $chns] > 0} {
+       append cmd " -chns $chns"
+       }
+    append cmd " [list $midi(midifilein)] tmp.mid"
+    catch {eval $cmd} midicopyresult
+    set exec_out "$cmd\n $midicopyresult\n"
+    #puts $exec_out
+    return $midicopyresult
+}
+
+
+
+
+# Part 24.0           Console Page Support Functions
 
 #source warning.tcl
 
@@ -10585,7 +10971,7 @@ proc getGeometryOfAllToplevels {} {
                ".ppqn" ".drumrollconfig" ".indexwindow" ".wiki"
                ".dictview" ".notegram" ".barmap" ".playmanage" ".data_info"
                ".midiplayer" ".tmpfile" ".cfgmidi2abc" ".pgram" ".keystrip"
-               ".keypitchclass" ".channel9"}
+               ".keypitchclass" ".channel9" ".ribbon" ".ptableau"}
   foreach top $toplevellist {
     if {[winfo exist $top]} {
       set g [wm geometry $top]"
@@ -10621,7 +11007,7 @@ proc get_note_patterns {} {
 # The dictionaries are indexed by the sequential positions
 # of these tatums or bars.
    global ppqn
-   global pianoresult
+   global midicommands
    global midilength
    global beatsperbar
    global notefragments
@@ -10647,7 +11033,6 @@ proc get_note_patterns {} {
    set unitlength [expr $barsize/24]
    set rjitter [expr $unitlength/2]
    set lastbarnumber -1
-   set midicommands [lsort -command compare_onset [split $pianoresult \n]]
    foreach line $midicommands {
         if {[llength $line] != 6} continue
         set onset [lindex $line 0]
@@ -10680,6 +11065,7 @@ proc get_note_patterns {} {
            }
         #puts "onset,barnumber,unit = $onset,$barnumber,$unit"	
        }
+   dict set notepat size $loc
    return [list $notepat $bar_rhythm]
 }
 
@@ -10716,10 +11102,15 @@ proc get_all_note_patterns {} {
    global midilength
    global beatsperbar
    global midi
+   global midicommands
+   global chanprog
+
+   #puts "calling get_all_note_patterns"
 
    set ppqn4 [expr $ppqn/4]
    set jitter [expr $ppqn4/2]
    set notefragments [expr 5 + $midilength/$ppqn4]
+   #puts "notefragments = $notefragments"
    set barsize [expr $ppqn*$beatsperbar]
    set nbars [expr $midilength/$barsize]
    incr nbars
@@ -10733,19 +11124,33 @@ proc get_all_note_patterns {} {
    set lastbarnumber -1
    # sort all midi channel commands so that the program commands
    # appear at the right positions.
-   set midicommands [lsort -command compare_onset [split $pianoresult \n]]
+#   set midicommands [lsort -command compare_onset [split $pianoresult \n]]
+   #puts "midicommands = $midicommands"
    foreach line $midicommands {
+ if {[string match "Program" [lindex $line 1]] == 1} {
+             set chan [lindex $line 2]
+             set prog [lindex $line 3]
+             #set tatumTime [expr [lindex $line 0]/$ppqn4]
+             #set progdata [list $tatumTime $prog]
+             if {$chan != 10} {
+                #puts "channel $chan --> $progdata"
+                #dict set chanProgTable $chan $progdata
+                set chanprog($chan) $prog
+                }
+           }
+
         if {[llength $line] != 6} continue
         set onset [lindex $line 0]
         set loc [expr ($onset + $jitter) / $ppqn4]
         #set loc [expr $onset / $ppqn4]
         if {[string is double $onset] != 1} continue
 	set channel [lindex $line 3]
-	if {$midi(midishow_sep) == "track"} {
-	  set c [lindex $line 2]
-	} else {
-          set c [lindex $line 3]
-        }
+#	if {$midi(midishow_sep) == "track"} {
+#	  set c [lindex $line 2]
+#	} else {
+#          set c [lindex $line 3]
+#        }
+        set c [lindex $line 3]
         if {$channel == 10} continue
         if {[lindex $line 5] < 1} continue
         set pitch [lindex $line 4]
@@ -10756,6 +11161,7 @@ proc get_all_note_patterns {} {
                 dict set notepat $c,$i 0
              }
 	     dict set notepat $c,size $notefragments
+             #puts "setting notepat $c,size to $notefragments"
         }
         set patfrag [dict get $notepat $c,$loc]
         set patfrag [expr $patfrag | 1<<$pitchindex]
@@ -10991,9 +11397,15 @@ if {$midi(midishow_sep) == "track"} {
    $b insert insert "trk\tn  \n" wheat3
    set ntrks $lasttrack
    incr ntrks} else {
-   $b insert insert "chn\tn  \n" wheat3
+   $b insert insert "chn\ti/j/k       \n" wheat3
    set ntrks 16
    }
+# identify all distinct note patterns. notepat deals with the pitches
+# which includes all possible chords. bar-rhythm deals with all the
+# rhythm patterns. We compute the histograms of all these patterns,
+# assign an index to each of these patterns, and then group the time
+# units into larger time units corresponding to beats and eventually
+# bars. All the distinct beats are given separate indices and etc.
 set result [get_all_note_patterns]
 set notepat [lindex $result 0]
 set bar_rhythm [lindex $result 1]
@@ -11005,16 +11417,19 @@ for {set c 0} {$c < $ntrks} {incr c} {
       set size  [dict get $notepat $c,size]
       set tatumhistogram [make_string_histogram_for $notepat $c $size]
       set patindexdict [keys2index $tatumhistogram]
+      set tsize [llength $patindexdict]
       set beatseries [index_and_group_for $patindexdict $notepat $c $beatsperbar "-"]
       set beathistogram [make_string_histogram $beatseries]
       set patindex2dict [keys2index $beathistogram]
+      set bsize [llength $patindex2dict]
       set barseq [index_and_group $patindex2dict $beatseries $beatsperbar "-"]
       set barhistogram [make_string_histogram $barseq]
       set barsize [llength [dict keys $barhistogram]]
       set patindex3dict [keys2index $barhistogram]
       set barseries [bar2index $patindex3dict $barseq]
+      set channelStats $tsize/$bsize/$barsize
       $b insert insert $trkchn\t headr
-      $b insert insert $barsize\t headr
+      $b insert insert $channelStats\t\t headr
       set nchar [symbolfy_series $b $barseries 8] 
       incr nlines
       }
@@ -12787,7 +13202,7 @@ for  {set i 0} {$i < 5} {incr i} {
 }
 
 
-#   Part 24.0 internals
+#   Part 25.0 internals
 proc dirhome {} {
 set textout ""
 set filelist [glob *]
