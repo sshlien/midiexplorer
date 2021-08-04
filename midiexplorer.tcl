@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.31 2021-08-03 13:10" 
+set midiexplorer_version "MidiExplorer version 2.35 2021-08-04 18:50" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -47,7 +47,7 @@ set midiexplorer_version "MidiExplorer version 2.31 2021-08-03 13:10"
 #   Part 5.0 Midi summary header
 #        present_midi_info, interpret_midi...,tinfo_select
 #   Part 6.0 Midi file selection support
-#        selected_midi, load_midifile, read_midifile_header,
+#        selected_midi,  read_midifile_header,
 #        get_midi_info_for, parse_midi_info, get_trkinfo,
 #        midi_type0_table, midi_type1_table
 #   Part 7.0 Program selector and support
@@ -547,6 +547,8 @@ set install_folder [pwd]
 
 set execpath [pwd]
 
+set cleanData 0
+
 proc setup_midiexplorer {} {
 # will create midiexplorer_home in the user's directory if
 # it does not already exist and cd to that folder.
@@ -774,6 +776,9 @@ proc midi_init {} {
     set midi(stripwindow) 500 
 
     set midi(percspeed) 1.0
+
+# pitch class map
+    set midi(dotsize) 1
 }
 
 # save all options, current abc file
@@ -1839,6 +1844,8 @@ global midi
 global miditracks
 global midichannels
 global ntrks
+global cleanData
+set cleanData 0
 #puts "tinfo selection"
 set indices [.tinfo.tree selection]
 clear_miditracks_and_channels
@@ -1865,6 +1872,8 @@ updateAllWindows
 proc midistructure_select {} {
 global miditracks
 global midichannels
+global cleanData
+set cleanData 0
 if {[winfo exists .midistructure]} {
 set w .midistructure.leftbuttons
 for {set i 2} {$i < 40} {incr i} {
@@ -1892,6 +1901,8 @@ proc selected_midi {} {
  global midi
  global ntrks
  global df
+ global cleanData
+ set cleanData 0
  set sel [.treebrowser.tree selection]
  set c [.treebrowser.tree item $sel -values]
  set f [lindex $c 0]
@@ -1909,7 +1920,8 @@ proc selected_midi {} {
    parse_midi_info $midi_info
    switch_between_info_and_tinfo 
    present_midi_info
-   load_midifile
+   loadMidiFile
+   set cleanData 1
    if {[winfo exist .piano]} {
             zero_trksel
             compute_pianoroll
@@ -1961,38 +1973,6 @@ proc read_midifile_header {openfile} {
     if {$mformat == 0} {set midi(midishow_sep)  "chan"}
     }
 
-proc load_midifile {} {
-    global midi df
-    global pianoresult midilength
-    #global exec_out
-    if {[file exist $midi(midifilein)] == 0} {
-       if {[winfo exist .piano]} {
-        .piano.txt configure -text "can't open file $midi(midifilein)"\
-                -foreground red -font $df
-        } else {
-        tk_messageBox -message "can't open $midi(midifilein)" -type ok
-        }
-        return
-        }
-    read_midifile_header $midi(midifilein); # read midi header
-    
-    set exec_options "[list $midi(midifilein)] -midigram"
-    
-    set cmd "exec [list $midi(path_midi2abc)] $exec_options"
-    #    puts $cmd
-    catch {eval $cmd} pianoresult
-    if {[string first "no such" $pianoresult] >= 0} {abcmidi_no_such_error $midi(path_midi2abc)}
-    set pianoresult [split $pianoresult \n]
-    set exec_out show_events:\n$cmd\n\n$pianoresult
-    update_console_page
-    set nrec [llength $pianoresult]
-    set midilength [lindex $pianoresult [expr $nrec -1]]
-    if {[string is integer $midilength] != 1} {
-         # in case there is an Error in the midifile
-         set midilength [lindex [lindex $pianoresult [expr $nrec -2] 0]]
-        #return
-    }
-}
 
 proc normalize_activity {vector} {
 set fnorm 0.0
@@ -2700,7 +2680,9 @@ global ntrks
 global midicommands
 global ppqn
 global chanprog
+global cleanData
 
+if {$cleanData} return
 if {![file exist $midi(midifilein)]} {
  set msg "Cannot find the file $midi(midifilein). Use the open button to browse to the midi file that\
 you want to analyze."
@@ -2716,6 +2698,7 @@ if {![file exist $midi(path_midi2abc)]} {
       return -1
       }
 
+read_midifile_header $midi(midifilein); # read midi header
 set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
 catch {eval $cmd} pianoresult
 #puts "midifilein = $midi(midifilein)"
@@ -2749,8 +2732,8 @@ if {![winfo exist .ribbon]} {
   position_window ".ribbon"
   set w .ribbon.frm
   frame $w
-  canvas $w.can -height 120 -width 1000 -scrollregion {0. 0. 10000.0 50.} -xscrollcommand {.ribbon.scr set} -bg grey4
-  canvas $w.labcan -height 120 -width 50 -bg grey4
+  canvas $w.can -height 160 -width 1000 -scrollregion {0. 0. 10000.0 50.} -xscrollcommand {.ribbon.scr set} -bg grey4
+  canvas $w.labcan -height 160 -width 50 -bg grey4
   scrollbar .ribbon.scr -orient horiz -command {.ribbon.frm.can xview}
   label $w.status -text ""
   pack $w.labcan $w.can -side left
@@ -2772,12 +2755,13 @@ for {set i 0} {$i < 12} {incr i} {
       .ribbon.frm.labcan create window 30 [expr  ($i*8) + 2] -window .ribbon.frm.labcan.$i -anchor nw
      }
   }
-.ribbon.frm.labcan configure -height 100 
+.ribbon.frm.labcan configure -height 150 
 }
 
 proc tableauWindow {} {
 # creates window for the simple and detailed tableau
 global midi
+global df
 set w .ptableau
 if {![winfo exist $w]} {
   toplevel $w
@@ -2790,8 +2774,17 @@ if {![winfo exist $w]} {
   canvas $w.chkscan -width 50 -height 300 -bg #002000
   label .ptableau.status -text "$midi(midifilein)"
   frame $w.header
-  button $w.header.play -text play -command playExposed
+  button $w.header.play -text play -command playExposed -font $df
+  menubutton $w.header.dot -text "dot size" -font $df -menu $w.header.dot.items
+  menu $w.header.dot.items -tearoff 0
+  $w.header.dot.items add radiobutton -label 0 -font $df -command {dotmod 0}
+  $w.header.dot.items add radiobutton -label 1 -font $df -command {dotmod 1}
+  $w.header.dot.items add radiobutton -label 2 -font $df -command {dotmod 2}
+  $w.header.dot.items add radiobutton -label 3 -font $df -command {dotmod 3}
+  $w.header.dot.items add radiobutton -label 4 -font $df -command {dotmod 4}
+
   pack $w.header.play -side left -anchor nw
+  pack $w.header.dot
   pack .ptableau.status
   pack $w.header -side top -anchor nw
   pack .ptableau.scr -fill x -side bottom 
@@ -2800,8 +2793,14 @@ if {![winfo exist $w]} {
   }
 }
 
+proc dotmod {size} {
+global midi
+set midi(dotsize) $size
+detailed_tableau
+}
 
-proc displayBeatGrid {height xspacing} {
+
+proc displayBeatGrid {height xspacing mag can} {
  global lastbeat
  global df
  set mag 1
@@ -2815,10 +2814,10 @@ proc displayBeatGrid {height xspacing} {
  while {$x < $lastbeat} {
     set x1  [expr $x*$xspacing*$mag]
     if {[expr $x % $spacing] == 0} {
-    .ptableau.frm.can create line $x1 $iy0 $x1 $iy2 -dash {1 1} -fill white
-    .ptableau.frm.can create text $x1 $iy3 -text $x -fill white -font $df
+    $can create line $x1 $iy0 $x1 $iy2 -dash {1 1} -fill white
+    $can create text $x1 $iy3 -text $x -fill white -font $df
     } else {
-    .ptableau.frm.can create line $x1 $iy1 $x1 $iy2 -dash {1 1} -fill white
+    $can create line $x1 $iy1 $x1 $iy2 -dash {1 1} -fill white
     }
     incr x
     }
@@ -2871,8 +2870,9 @@ for {set i 0} {$i < $size} {incr i} {
     incr i
     }
   }
-set region "0 0 $i 100"
-.ribbon.frm.can configure -height 100 -scrollregion $region
+set region "0 0 $i 150"
+.ribbon.frm.can configure -height 150 -scrollregion $region
+displayBeatGrid 145 16 1 .ribbon.frm.can
 }
 
 set progmapper {
@@ -2907,8 +2907,10 @@ global mlist
 global beatsperbar
 global midichannels
 global df
+global midi
 
-
+set dotsize $midi(dotsize)
+set dotsizehalf [expr $dotsize/2]
 if {![dict exists $notepat $chan,size]} {
   return
   }
@@ -2929,8 +2931,9 @@ for {set i 0} {$i < $size} {incr i} {
     if {$code == 0} continue
     set ix1 [expr $i ]
     set iy1 [expr $code*4 + $row*50]
-    set iy2 [expr $iy1 + 2]
-    .ptableau.frm.can create rectangle $ix1 $iy1 $ix1 $iy2 -fill $color -width 0
+    set iy2 [expr $iy1 + 2 + $dotsize]
+    set ix2 [expr $ix1 + $dotsizehalf]
+    .ptableau.frm.can create rectangle $ix1 $iy1 $ix2 $iy2 -fill $color -width 0
     }
 #  puts "$i codes = $codes"
   }
@@ -3007,7 +3010,7 @@ for {set ix 0} {$ix < $maxsize} {incr ix $spacing} {
   .ptableau.frm.can create line $ix 0 $ix $h -fill #606060 -stipple gray25 -width 2
   }
 
-displayBeatGrid $h 16
+displayBeatGrid $h 16 1 .ptableau.frm.can
 }
 
 
@@ -3719,8 +3722,11 @@ proc play_midi_file {name} {
 set pianorollwidth 500
 
 proc piano_roll_display {} {
+   global cleanData
    piano_window
-   load_midifile
+   #load_midifile
+   loadMidiFile
+   set cleanData 1
    show_events
    }
 
@@ -4542,16 +4548,19 @@ proc determine_chord_sequence {} {
     global pianoresult
     global midilength
     global exec_out
+    global cleanData
 
     set list_of_chords {}
     if {[winfo exist .piano]} {
       set limits [midi_limits .piano.can]
       set start [lindex $limits 0]
       set stop  [lindex $limits 1]
-      if {$midilength == 0} load_midifile
+      if {$midilength == 0} loadMidiFile
+      set cleanData 1
       } else {
 # if not called from .piano window
       copy_midi_to_tmp
+      set cleanData 0
       set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
       catch {eval $cmd} pianoresult
       set exec_out [append exec_out "determine_chord_seq:\n\n$cmd\n\n $pianoresult"]
@@ -5146,7 +5155,9 @@ set midistructurewidth 400
 
 proc midi_structure_display {} {
    global midi
-   load_midifile
+   global cleanData
+   loadMidiFile
+   set cleanData 1
    destroy .midistructure
    midi_structure_window 
    bind .midistructure <Alt-p> midistructure_postscript_output
@@ -5452,15 +5463,16 @@ proc show_prog_structure {} {
 # new code follows here
 #
   global pianoresult
+  global midicommands
   global ppqn
   global chn2prg
-  set sorted_pianoresult [lsort -command compare_onset $pianoresult]
+  #set sorted_pianoresult [lsort -command compare_onset $pianoresult]
   set taglist {}
 
   for {set i 0} {$i < 128} {incr i}  {set progactivity($i) 0}
   for {set i 0} {$i < 17} {incr i} {set koloractivity($i) 0}
 
-  foreach line $sorted_pianoresult {
+  foreach line $midicommands {
      set begin [lindex $line 0]
      set end [lindex $line 1]
      if {[llength $line] == 6} {
@@ -7559,6 +7571,7 @@ proc make_string_histogram {series} {
 set size [dict size $series]
 set histogram [dict create]
 for {set i 0} {$i < $size} {incr i} {
+  if {![dict exists $series $i]} continue
   set pat [dict get $series $i]
   if {$pat == 0 } continue
   incr total
@@ -7706,6 +7719,7 @@ set j 0
 set k 0
 set top [expr $nunits -1]
 for {set i 0} {$i < $size} {incr i} {
+  if {![dict exists $series $i]} continue
   set elem [dict get $series $i]
   set tatumname [dict get $patindex $elem]
   if {$j == 0} {set beatname $tatumname
@@ -7886,13 +7900,14 @@ proc pianoroll_statistics {choice canvs} {
     global trksel
     global total
     global start stop
+    global cleanData
     for {set i 0} {$i < 128} {incr i} {set histogram($i) 0}
     set limits [midi_limits $canvs]
     set start [lindex $limits 0]
     set stop  [lindex $limits 1]
     set exec_out "pianoroll_statistics\n\n"
     append exec_out "from $start to $stop\n\n"
-    if {[llength $pianoresult] < 1} {load_midifile}
+    if {[llength $pianoresult] < 1} {loadMidiFile; set cleanData 1}
     set tsel [count_selected_midi_tracks]
     foreach line $pianoresult {
         if {[llength $line] != 6} continue
@@ -11012,6 +11027,7 @@ proc get_note_patterns {} {
    global beatsperbar
    global notefragments
 
+   loadMidiFile
    set ppqn4 [expr $ppqn/4]
    set jitter [expr $ppqn4/2]
    set notefragments [expr 5 + $midilength/$ppqn4]
@@ -11125,9 +11141,8 @@ proc get_all_note_patterns {} {
    # sort all midi channel commands so that the program commands
    # appear at the right positions.
 #   set midicommands [lsort -command compare_onset [split $pianoresult \n]]
-   #puts "midicommands = $midicommands"
    foreach line $midicommands {
- if {[string match "Program" [lindex $line 1]] == 1} {
+          if {[string match "Program" [lindex $line 1]] == 1} {
              set chan [lindex $line 2]
              set prog [lindex $line 3]
              #set tatumTime [expr [lindex $line 0]/$ppqn4]
