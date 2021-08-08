@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.35 2021-08-04 18:50" 
+set midiexplorer_version "MidiExplorer version 2.40 2021-08-08 15:00" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -1035,6 +1035,8 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
         $ww add command -label "pgram" -font $df -command pgram_window -accelerator "ctrl-p"
 	$ww add command -label "midi structure" -font $df -accelerator "ctrl-s"\
             -command {midi_structure_display}
+        $ww add command  -label "pitch class map by channel" -font $df \
+            -command detailed_tableau
 	$ww add command -label pianoroll -font $df -accelerator "ctrl-r"\
             -command piano_roll_display
 	$ww add command -label drumroll -font $df -command {drumroll_window} -accelerator "ctrl-d"
@@ -1088,10 +1090,8 @@ menu $ww -tearoff 0
             -command {midi_statistics pitch 
                       show_note_distribution
                      } 
-        $ww add command  -label "compact pitch class map" -font $df \
+        $ww add command  -label "aggregated pitch class map" -font $df \
             -command simple_tableau
-        $ww add command  -label "detailed pitch class map" -font $df \
-            -command detailed_tableau
 	$ww add command -label chordgram -font $df -command {chordgram_plot none}
 	$ww add command -label "chord histogram" -font $df -command chord_histogram
         $ww add command -label "chordtext" -font $df -command chordtext_window
@@ -2727,9 +2727,17 @@ for {set i 0} {$i < 17} {incr i} {
 
 proc noteRibbon {} {
 # creates window for the simple and detailed tableau
+global df
 if {![winfo exist .ribbon]} {
   toplevel .ribbon
   position_window ".ribbon"
+  label .ribbon.filename -text "" -font $df
+  set v .ribbon.buttonfrm
+  frame  $v 
+  button $v.help -text help -font $df
+  button $v.play -text play -font $df
+  pack $v.play $v.help -side left -anchor nw
+  
   set w .ribbon.frm
   frame $w
   canvas $w.can -height 160 -width 1000 -scrollregion {0. 0. 10000.0 50.} -xscrollcommand {.ribbon.scr set} -bg grey4
@@ -2739,6 +2747,8 @@ if {![winfo exist .ribbon]} {
   pack $w.labcan $w.can -side left
   pack .ribbon.scr -fill x -side bottom
   pack $w.status
+  pack .ribbon.filename -side top
+  pack .ribbon.buttonfrm -side top -anchor nw
   pack $w
   fillRibbonSideBar
   }
@@ -2757,6 +2767,20 @@ for {set i 0} {$i < 12} {incr i} {
   }
 .ribbon.frm.labcan configure -height 150 
 }
+
+set hlp_tableau "Pitch Class Map
+
+For each channel, the pitch classes of each note onset are shown as\
+function of time up to a resolution of 1/16 note. These onsets are\
+color coded according to their midi program (musical instrument).\
+The dot size menu controls how prominent these onsets appear in the\
+plots. If the dot sizes are too large, the onsets may overlap.\
+Hovering the mouse pointer on one of the channel checkboxes will\
+pop up the midi program number and name.\n\
+The horizontal scale is measured in beats (quarter notes).
+"
+
+
 
 proc tableauWindow {} {
 # creates window for the simple and detailed tableau
@@ -2782,9 +2806,8 @@ if {![winfo exist $w]} {
   $w.header.dot.items add radiobutton -label 2 -font $df -command {dotmod 2}
   $w.header.dot.items add radiobutton -label 3 -font $df -command {dotmod 3}
   $w.header.dot.items add radiobutton -label 4 -font $df -command {dotmod 4}
-
-  pack $w.header.play -side left -anchor nw
-  pack $w.header.dot
+  button $w.header.help -text help -font $df -command {show_message_page $hlp_tableau word}
+  pack $w.header.play $w.header.dot $w.header.help -side left -anchor nw
   pack .ptableau.status
   pack $w.header -side top -anchor nw
   pack .ptableau.scr -fill x -side bottom 
@@ -2851,6 +2874,9 @@ return $pitchcodelist
 }
 
 proc simple_tableau {} {
+global midi
+global df
+
 loadMidiFile
 noteRibbon
 .ribbon.frm.can delete all
@@ -2873,6 +2899,7 @@ for {set i 0} {$i < $size} {incr i} {
 set region "0 0 $i 150"
 .ribbon.frm.can configure -height 150 -scrollregion $region
 displayBeatGrid 145 16 1 .ribbon.frm.can
+.ribbon.filename configure -text $midi(midifilein)
 }
 
 set progmapper {
@@ -2937,7 +2964,7 @@ for {set i 0} {$i < $size} {incr i} {
     }
 #  puts "$i codes = $codes"
   }
-checkbutton .ptableau.frm.chkscan.$chan -text $chan -background #606070 -width 1 -fg black -variable midichannels($chan) -font $df
+checkbutton .ptableau.frm.chkscan.$chan -text $chan -background #606070 -width 2 -fg black -variable midichannels($chan) -font $df
 .ptableau.frm.chkscan create window 4 [expr $row*50 +10] -window .ptableau.frm.chkscan.$chan -anchor nw
 tooltip::tooltip .ptableau.frm.chkscan.$chan "[lindex $mlist $prog]"
 return [expr $size ]
@@ -2961,18 +2988,17 @@ set notepat [lindex $result 0]
 
 
 set chanlist [list]
-for {set i 1} {$i < $ntrks} {incr i} {
+for {set i 1} {$i <= $ntrks} {incr i} {
   if {![info exist activechan($i)]} continue
   if {$activechan($i) > 0 && $i != 10} {lappend chanlist $i}
   }
 
-#puts "chanlist = $chanlist"
 #puts "there are [llength $trklist] channels in the file."
 set h [expr [llength $chanlist]*50 + 40]
 tableauWindow
 .ptableau.frm.can delete all
 # destroy buttons
-for {set i 1} {$i<16} {incr i} {
+for {set i 1} {$i<17} {incr i} {
   destroy .ptableau.frm.chkscan.$i
   }
 
@@ -4550,7 +4576,7 @@ proc determine_chord_sequence {} {
     global exec_out
     global cleanData
 
-    set list_of_chords {}
+    set list_of_chords [dict create]
     if {[winfo exist .piano]} {
       set limits [midi_limits .piano.can]
       set start [lindex $limits 0]
@@ -4572,6 +4598,7 @@ proc determine_chord_sequence {} {
       set stop $midilength
       }
 
+
     set midicmds $pianoresult
     reorganize_midicmd
     
@@ -4583,6 +4610,11 @@ proc determine_chord_sequence {} {
     
     set last_time 0.0
     set last_beat_number 0
+
+    set last_beat [expr int($midilength/$ppqn)]
+    for {set i 0} {$i <$last_beat} {incr i} {
+       dict set list_of_chords $i ""
+       }
     set i 0
     
     foreach midiunit $sorted_midiactions {
@@ -4601,12 +4633,13 @@ proc determine_chord_sequence {} {
             set last_beat_number $beat_number
             set chordstring [label_notelist $onlist]
             set chordstring [chordname $chordstring [root_of $chordstring]]
-            lappend list_of_chords $chordstring
+            dict set list_of_chords $beat_number $chordstring
             set last_time $present_time
         }
         
         switch_note_status $midiunit
     }
+    dict set list_of_chord size $last_beat
     return $list_of_chords
 }
 
@@ -4616,6 +4649,8 @@ global chordcount
 set total_chordcount 0
 array unset chordcount
 set chord_sequence [determine_chord_sequence]
+set last_beat [dict get $list_of_chords size]
+puts "last_beat = $last_beat"
 foreach chord $chord_sequence {
   count_chords $chord}
 set w .chordstats
@@ -4722,7 +4757,10 @@ proc chordgram_plot {source} {
      bind .chordgram.can <Double-Button-1> chordgram_ClearMark
      }
    set chord_sequence [determine_chord_sequence]
-   set seqlength [llength $chord_sequence]
+   #set seqlength [llength $chord_sequence]
+   set last_beat [dict size $chord_sequence]
+   puts "last_beat = $last_beat"
+   set seqlength $last_beat
    call_compute_chordgram $source
 }
 
@@ -4849,8 +4887,9 @@ proc compute_chordgram {start stop} {
    set pixelsperbeat [expr ($xrbx - $xlbx) / double($stop - $start)]
    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx $start $stop 0.0 200.0 
    set chordgram_xfm [Graph::save_transform] 
-   set i 0
-   foreach chord $chord_sequence {
+   for {set j 0} {$j <$seqlength} {incr j} {
+     set chord [dict get $chord_sequence $j]
+     if {$chord == ""} continue
      if {[string index $chord 1] == "#"} {
         set key [string range $chord 0 1]
         set chordtype [string range $chord 2 end]
@@ -4875,7 +4914,7 @@ proc compute_chordgram {start stop} {
          }
      }
      #puts "chord = $key $chordtype $loc"
-     set ix [Graph::ixpos [expr double($i)+$start]]
+     set ix [Graph::ixpos [expr double($j)]]
      set iy [Graph::iypos [expr double($loc*16) + 7 ]]
      set iy1 [expr $iy - 3]
      set iy2 [expr $iy + 3]
@@ -4888,7 +4927,6 @@ proc compute_chordgram {start stop} {
        aug {$c create oval $ix1 $iy1 $ix2 $iy2 -fill purple}
        default {$c create oval $ix1 $iy1 $ix2 $iy2 -fill black}
        }
-     incr i
      }
   set i 0
   set ix 15 
@@ -4926,7 +4964,7 @@ proc compute_chordgram {start stop} {
       }
    }
 
-    set spacing [best_grid_spacing [expr ($stop - $start)]]
+    set spacing [best_grid_spacing $seqlength]
     Graph::draw_x_grid $c $start5 $stop $spacing 1  0 %5.0f $colfg
 
    .chordgram.can create rect -1 -1 -1 -1 -tags mark -fill yellow -stipple gray25
@@ -8025,7 +8063,9 @@ proc midi_statistics {choice} {
     global total
     global exec_out
     global midi
+    global cleanData
 
+    set cleanData 0
     copy_midi_to_tmp
     set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
     catch {eval $cmd} pianoresult
@@ -11160,11 +11200,6 @@ proc get_all_note_patterns {} {
         #set loc [expr $onset / $ppqn4]
         if {[string is double $onset] != 1} continue
 	set channel [lindex $line 3]
-#	if {$midi(midishow_sep) == "track"} {
-#	  set c [lindex $line 2]
-#	} else {
-#          set c [lindex $line 3]
-#        }
         set c [lindex $line 3]
         if {$channel == 10} continue
         if {[lindex $line 5] < 1} continue
@@ -12936,6 +12971,7 @@ proc keymap {} {
     global stripscale
     global sharpflatnotes
     global df
+    global cleanData
 
     #puts "keymap $midi(keySpacing)"
     set sharpflatnotes  {C C# D Eb E F F# G G# A Bb B}
@@ -12959,6 +12995,7 @@ set the path to a midi file."
        }
    # copy selected tracks/channels
    copy_midi_to_tmp
+   set cleanData 0
    set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
     catch {eval $cmd} pianoresult
     set exec_out [append exec_out "keymap:\n\n$cmd\n\n $pianoresult"]
