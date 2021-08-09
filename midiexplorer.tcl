@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.40 2021-08-08 15:00" 
+set midiexplorer_version "MidiExplorer version 2.42 2021-08-09 14:50" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -1036,7 +1036,7 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
 	$ww add command -label "midi structure" -font $df -accelerator "ctrl-s"\
             -command {midi_structure_display}
         $ww add command  -label "pitch class map by channel" -font $df \
-            -command detailed_tableau
+            -command detailed_tableau -accelerator "ctrl-t"
 	$ww add command -label pianoroll -font $df -accelerator "ctrl-r"\
             -command piano_roll_display
 	$ww add command -label drumroll -font $df -command {drumroll_window} -accelerator "ctrl-d"
@@ -1093,8 +1093,8 @@ menu $ww -tearoff 0
         $ww add command  -label "aggregated pitch class map" -font $df \
             -command simple_tableau
 	$ww add command -label chordgram -font $df -command {chordgram_plot none}
-	$ww add command -label "chord histogram" -font $df -command chord_histogram
-        $ww add command -label "chordtext" -font $df -command chordtext_window
+#	$ww add command -label "chord histogram" -font $df -command chord_histogram
+#        $ww add command -label "chordtext" -font $df -command chordtext_window
         $ww add command -label notegram -font $df -command notegram_plot
         $ww add command -label keymap -font $df -command keymap 
 	$ww add command -label "entropy analysis" -font $df -command analyze_note_patterns
@@ -1289,6 +1289,7 @@ bind . <Control-r> piano_roll_display
 bind . <Control-d> drumroll_window
 bind . <Control-k> {show_console_page $exec_out word}
 bind . <Control-w> {playmidifile 0}
+bind . <Control-t> {detailed_tableau}
 bind . <Alt-c> {catch console show}
 
 
@@ -4261,7 +4262,7 @@ proc chordtext_window {} {
      scrollbar .chordview.2.scroll -orient vertical -command {.chordview.2.txt yview}
      pack $f.2.txt $f.2.scroll -side left -fill y
      }
-   textchords
+   make_and_display_chords
 }
 
 
@@ -4352,14 +4353,14 @@ proc print_chordcount {w} {
 }
 
 
-proc reorganize_midicmd {} {
-    global midicmds
+proc reorganize_pianoresult {} {
+    global pianoresult
     global sorted_midiactions
     global midi
     global trksel
     set midiactions {}
     set tsel [count_selected_midi_tracks]
-    foreach cmd $midicmds {
+    foreach cmd $pianoresult {
         if {[llength $cmd] < 5} continue
         set onset [lindex $cmd 0]
         set stop  [lindex $cmd 1]
@@ -4436,7 +4437,6 @@ proc make_and_display_chords {} {
     global midi
     global sorted_midiactions
     global total_chordcount
-    global midicmds
     global chordcount
     global ppqn
     global pianoresult
@@ -4451,8 +4451,7 @@ proc make_and_display_chords {} {
     set v .chordview.2.txt
     $v delete 0.0 end
     
-    set midicmds $pianoresult
-    reorganize_midicmd
+    reorganize_pianoresult
     turn_off_all_notes
     reset_beat_notestatus
     
@@ -4569,7 +4568,6 @@ proc chordname {chordstring root} {
 proc determine_chord_sequence {} {
     global midi
     global sorted_midiactions
-    global midicmds
     global ppqn
     global pianoresult
     global midilength
@@ -4599,8 +4597,7 @@ proc determine_chord_sequence {} {
       }
 
 
-    set midicmds $pianoresult
-    reorganize_midicmd
+    reorganize_pianoresult
     
     set tsel [count_selected_midi_tracks]
     
@@ -4649,10 +4646,10 @@ global chordcount
 set total_chordcount 0
 array unset chordcount
 set chord_sequence [determine_chord_sequence]
-set last_beat [dict get $list_of_chords size]
-puts "last_beat = $last_beat"
-foreach chord $chord_sequence {
-  count_chords $chord}
+set last_beat [dict size $chord_sequence]
+for {set beat 0} {$beat < $last_beat} {incr beat} {
+     set chord [dict get  $chord_sequence $beat]
+     count_chords $chord}
 set w .chordstats
 $w.chords.t delete 0.0 end
 $w.bar delete all
@@ -4710,9 +4707,6 @@ proc chord_histogram {} {
     switch_text_barchart
 }
 
-proc textchords {} {
-    make_and_display_chords 
-}
 
 
 #         chordgram plot 
@@ -8385,6 +8379,9 @@ if {[winfo exists .keypitchclass]} {
 if {[winfo exists .channel9]} {
    compute_drum_pattern
    }
+if {[winfo exists .ptableau]} {
+   detailed_tableau
+   }
 }
 
 proc update_drumroll_pdfs {} {
@@ -11789,7 +11786,6 @@ by a strings and the histogram of the distinct strings are determined.
 
 
 
-bind . <Control-t> analyze_note_patterns 
  
 #   Part 17.0 Playlist support
 #
