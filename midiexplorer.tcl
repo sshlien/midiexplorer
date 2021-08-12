@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.42 2021-08-09 14:50" 
+set midiexplorer_version "MidiExplorer version 2.45 2021-08-12 09:40" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -2807,8 +2807,23 @@ if {![winfo exist $w]} {
   $w.header.dot.items add radiobutton -label 2 -font $df -command {dotmod 2}
   $w.header.dot.items add radiobutton -label 3 -font $df -command {dotmod 3}
   $w.header.dot.items add radiobutton -label 4 -font $df -command {dotmod 4}
+
+ menubutton $w.header.plot -text plot -menu $w.header.plot.items -font $df
+  menu $w.header.plot.items -tearoff 0
+ $w.header.plot.items add command  -label "pitch class plot" -font $df \
+            -command {midi_statistics pitch  
+                      show_note_distribution
+                     } 
+ $w.header.plot.items add command  -label "pitch distribution" -font $df \
+            -command {midi_statistics pitch
+                      plotmidi_pitch_pdf
+                      }
+ $w.header.plot.items add command -label chordgram -font $df -command {chordgram_plot midistructure}
+ $w.header.plot.items add command -label notegram -font $df -command notegram_plot
+ tooltip::tooltip $w.header.plot "Various plots including chordgram and notegram"
+ 
   button $w.header.help -text help -font $df -command {show_message_page $hlp_tableau word}
-  pack $w.header.play $w.header.dot $w.header.help -side left -anchor nw
+  pack $w.header.play $w.header.dot $w.header.plot  $w.header.help -side left -anchor nw
   pack .ptableau.status
   pack $w.header -side top -anchor nw
   pack .ptableau.scr -fill x -side bottom 
@@ -2922,54 +2937,73 @@ set progmapper {
  11 11 11 11 11 11 11 11
 }
 
+proc plot_tableau_data {} {
+# new code follows here
+#
+  global midi
+  global df
+  global midicommands
+  global ppqn
+  global chn2prg
+  global chanlist
+  global progmapper
+  global groupcolors
+  global mlist
 
-proc NoteCodes2Pitches_for {chan } {
-tableauWindow
-global notepat
-global chanlist
-global chanprog
-global progmapper
-global groupcolors
-global majorColors
-global mlist
-global beatsperbar
-global midichannels
-global df
-global midi
+  set dotsize $midi(dotsize)
+  set dotsizehalf [expr $dotsize/2]
+  set ppqn4 [expr $ppqn/4]
+  set maxwidth 0
+  foreach line $midicommands {
+     set begin [lindex $line 0]
+     set end [lindex $line 1]
+     if {[llength $line] == 6} {
+       set begin [expr $begin/$ppqn4]
+       if {$begin > $maxwidth} {set maxwidth $begin}
+       set t [lindex $line 2]
+       set c [lindex $line 3]
+       set pitch [lindex $line 4]
+       set pitchindex [expr $pitch % 12]
+       if {$c == 10} {
+         continue
+       } else {
+         if {[info exist chn2prg($c)]} {
+            set p $chn2prg($c)
+         } else {
+            set p 0
+         }
+         set g [lindex $progmapper $p]
+         set color [lindex $groupcolors $g]
+       }
 
-set dotsize $midi(dotsize)
-set dotsizehalf [expr $dotsize/2]
-if {![dict exists $notepat $chan,size]} {
-  return
-  }
-set prog $chanprog($chan)
-set group [lindex $progmapper $prog]
-#puts "chan = $chan prog = $prog group = $group"
-#set color $majorColors($group)
-set color [lindex $groupcolors $group]
-#puts "progdata = $progdata color = $color"
-#puts "notepat $chan,size = [dict get $notepat $chan,size]"
-set row [lsearch $chanlist $chan]
-set size [dict get $notepat $chan,size]
-for {set i 0} {$i < $size} {incr i} {
-  set code [dict get $notepat $chan,$i]
-  set codes [extractPitchClasses $code]
-  #if {[llength $codes] > 0} {puts "codes for $chan,$i = $codes in row $row"}
-  foreach code $codes {
-    if {$code == 0} continue
-    set ix1 [expr $i ]
-    set iy1 [expr $code*4 + $row*50]
+    set row [lsearch $chanlist $c]
+
+    set ix1 [expr $begin ]
+    set iy1 [expr $pitchindex*4 + $row*50]
     set iy2 [expr $iy1 + 2 + $dotsize]
     set ix2 [expr $ix1 + $dotsizehalf]
     .ptableau.frm.can create rectangle $ix1 $iy1 $ix2 $iy2 -fill $color -width 0
     }
-#  puts "$i codes = $codes"
+
+    if {$end == "Program"} {
+       set c [lindex $line 2]
+       set p [lindex $line 3]
+       set chn2prg($c) $p 
+       set g [lindex $progmapper $p]
+       }
+    }
+foreach c $chanlist {
+  checkbutton .ptableau.frm.chkscan.$c -text $c -background #606070 -width 2 -fg black -variable midichannels($c) -font $df
+  set row [lsearch $chanlist $c]
+  .ptableau.frm.chkscan create window 4 [expr $row*50 +10] -window .ptableau.frm.chkscan.$c -anchor nw
+  set prog $chn2prg($c)
+  tooltip::tooltip .ptableau.frm.chkscan.$c "[lindex $mlist $prog]"
   }
-checkbutton .ptableau.frm.chkscan.$chan -text $chan -background #606070 -width 2 -fg black -variable midichannels($chan) -font $df
-.ptableau.frm.chkscan create window 4 [expr $row*50 +10] -window .ptableau.frm.chkscan.$chan -anchor nw
-tooltip::tooltip .ptableau.frm.chkscan.$chan "[lindex $mlist $prog]"
-return [expr $size ]
+
+return $maxwidth
 }
+
+
 
 proc detailed_tableau {} {
 # creates separate pitch class plots for the different
@@ -2983,9 +3017,6 @@ global lastTableau
 
 loadMidiFile
 set lastTableau "pitch"
-set result [get_all_note_patterns]
-set notepat [lindex $result 0]
-#puts "notepat = $notepat"
 
 
 set chanlist [list]
@@ -3020,14 +3051,9 @@ foreach chan $chanlist {
 }
 
 
-set maxsize 0
-#puts "chanlist = $chanlist"
-foreach chan $chanlist {
-   set lsize [NoteCodes2Pitches_for $chan] 
-   if {$lsize > $maxsize} {set maxsize $lsize}
-   }
+set maxsize [plot_tableau_data]
+
 set region "0 0 $maxsize $h"
-#puts "region = $region"
 .ptableau.frm.can configure -height $h -scrollregion $region
 .ptableau.frm.chkscan configure -height $h
 
@@ -3041,16 +3067,19 @@ displayBeatGrid $h 16 1 .ptableau.frm.can
 }
 
 
+
 proc playExposed {} {
 global midi
 global lastbeat
 global midichannels
+global exec_out
 set scrollregion [.ptableau.frm.can cget -scrollregion]
 set xv [.ptableau.frm.can xview]
 #puts "xv $xv"
 set fbeat [expr [lindex $xv 0] * $lastbeat]
 set tbeat [expr [lindex $xv 1] * $lastbeat]
-copyMidiToTmpForEntropy $fbeat $tbeat
+set exec_out "playExposed\ncopyMidiToTmpForTableau"
+copyMidiToTmpForTableau $fbeat $tbeat
 if {![file exist $midi(path_midiplay)]} {
      set msg "You need to specify the path to a program which plays
 midi files. The box to the right can contain any runtime options."
@@ -3066,13 +3095,17 @@ file."
     }
 append cmd " $midi(midiplay_options) tmp.mid &"
 catch {eval $cmd} midiplayerresult
+set midi(outfilename) tmp.mid
+update_console_page
 #puts $cmd
 #puts $midiplayerresult
 }
 
-proc copyMidiToTmpForEntropy {fbeat tbeat} {
+proc copyMidiToTmpForTableau {fbeat tbeat} {
     global midi
     global midichannels
+    global cleanData
+    global exec_out
     if {![file exist $midi(path_midicopy)]} {
        set msg "cannot find $midi(path_midicopy). Install midicopy
 from the abcMIDI package and set the path to its location."
@@ -3081,8 +3114,9 @@ from the abcMIDI package and set the path to its location."
        }
     set chns ""
     for {set i 0} {$i < 17} {incr i} {
-      if {$midichannels($i)} {append chns " $i"}
+      if {$midichannels($i)} {append chns "$i,"}
       }
+    set chns [string range $chns 0 end-1]
     #puts "chns = $chns"
 
     set cmd "exec [list $midi(path_midicopy)]"
@@ -3092,7 +3126,8 @@ from the abcMIDI package and set the path to its location."
        }
     append cmd " [list $midi(midifilein)] tmp.mid"
     catch {eval $cmd} midicopyresult
-    set exec_out "$cmd\n $midicopyresult\n"
+    append exec_out "$cmd\n $midicopyresult\n"
+    set cleanData 0
     #puts $exec_out
     return $midicopyresult
 }
