@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.45 2021-08-12 09:40" 
+set midiexplorer_version "MidiExplorer version 2.47 2021-08-15 08:35" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -2778,7 +2778,7 @@ The dot size menu controls how prominent these onsets appear in the\
 plots. If the dot sizes are too large, the onsets may overlap.\
 Hovering the mouse pointer on one of the channel checkboxes will\
 pop up the midi program number and name.\n\
-The horizontal scale is measured in beats (quarter notes).
+The horizontal scale is measured in 4 beat units.
 "
 
 
@@ -2829,14 +2829,92 @@ if {![winfo exist $w]} {
   pack .ptableau.scr -fill x -side bottom 
   pack $w.chkscan $w.can -side left
   pack $w
+
+  bind .ptableau.frm.can <ButtonPress-1> {tableau_Button1Press %x %y}
+  bind .ptableau.frm.can <ButtonRelease-1> tableau_Button1Release
+  bind .ptableau.frm.can <Double-Button-1> tableau_ClearMark
+
   }
 }
+
+proc tableau_Button1Press {x y} {
+    global tableauHeight40
+    set xc [.ptableau.frm.can canvasx $x]
+    .ptableau.frm.can raise mark
+    .ptableau.frm.can coords mark $xc 0 $xc $tableauHeight40
+    bind .ptableau.frm.can <Motion> { tableau_Button1Motion %x }
+}
+
+proc tableau_Button1Motion {x} {
+    global tableauHeight40
+    set xc [.ptableau.frm.can canvasx $x]
+    if {$xc < 0} { set xc 0 }
+    set co [.ptableau.frm.can coords mark]
+    .ptableau.frm.can coords mark [lindex $co 0] 0 $xc $tableauHeight40
+}
+
+proc tableau_Button1Release {} {
+    bind .ptableau.frm.can <Motion> {}
+    set co [.ptableau.frm.can coords mark]
+    if {[winfo exist .midistructure]} {
+          tableau_migrate_to_midistruct $co
+      }
+   }
+
+proc tableau_migrate_to_midistruct {co} {
+global midistructureheight
+global pixels_per_beat
+set beatlimits [chordgram_limits $co]
+set beat1 [expr [lindex $beatlimits 0]*$pixels_per_beat]
+set beat2 [expr [lindex $beatlimits 1]*$pixels_per_beat]
+.midistructure.can coords mark $beat1 0 $beat2 $midistructureheight
+}
+
+proc tableau_ClearMark {} {
+    .ptableau.frm.can coords mark -1 -1 -1 -1
+}
+
+
 
 proc dotmod {size} {
 global midi
 set midi(dotsize) $size
 detailed_tableau
 }
+
+proc tableau_midi_limits {can} {
+    global lastpulse
+    global ppqn
+    if {![winfo exists $can]} {return "0 $lastpulse"}
+    set co [$can coords mark]
+    #   is there a marked region of reasonable extent ?
+    set extent [expr [lindex $co 2] - [lindex $co 0]]
+    puts "extent = $extent"
+    if {$extent > 10} {
+        set xvleft [lindex $co 0]
+        set xvright [lindex $co 2]
+    } else {
+        #get start and end time of displayed area
+        set xv [$can xview]
+        #puts $xv
+        set scrollregion [$can cget -scrollregion]
+        #puts $scrollregion
+        set xvleft [lindex $xv 0]
+        set xvright [lindex $xv 1]
+        set width [lindex $scrollregion 2]
+        set xvleft [expr $xvleft*$width]
+        set xvright [expr $xvright*$width]
+    }
+
+    set begin [expr round($xvleft/4)]
+    set end [expr round($xvright/4)]
+    puts "begin = $begin end = $end"
+    if {$begin < 0} {
+        set $begin 0
+    }
+    return [list $begin $end]
+}
+
 
 
 proc displayBeatGrid {height xspacing mag can} {
@@ -3014,6 +3092,7 @@ global activechan
 global chanlist
 global beatsperbar
 global lastTableau
+global tableauHeight40
 
 loadMidiFile
 set lastTableau "pitch"
@@ -3026,7 +3105,8 @@ for {set i 1} {$i <= $ntrks} {incr i} {
   }
 
 #puts "there are [llength $trklist] channels in the file."
-set h [expr [llength $chanlist]*50 + 40]
+set tableauHeight40 [expr [llength $chanlist]*50]
+set tableauHeight [expr $tableauHeight40 + 40]
 tableauWindow
 .ptableau.frm.can delete all
 # destroy buttons
@@ -3035,6 +3115,7 @@ for {set i 1} {$i<17} {incr i} {
   }
 
 
+.ptableau.frm.can create rect -1 -1 -1 -1 -tags mark -fill gray30 -stipple gray12
 
 # outline channel bands
 set i 1
@@ -3053,17 +3134,17 @@ foreach chan $chanlist {
 
 set maxsize [plot_tableau_data]
 
-set region "0 0 $maxsize $h"
-.ptableau.frm.can configure -height $h -scrollregion $region
-.ptableau.frm.chkscan configure -height $h
+set region "0 0 $maxsize $tableauHeight"
+.ptableau.frm.can configure -height $tableauHeight -scrollregion $region
+.ptableau.frm.chkscan configure -height $tableauHeight
 
 set spacing [expr 4*$beatsperbar]
 #put barlines
 for {set ix 0} {$ix < $maxsize} {incr ix $spacing} {
-  .ptableau.frm.can create line $ix 0 $ix $h -fill #606060 -stipple gray25 -width 2
+  .ptableau.frm.can create line $ix 0 $ix $tableauHeight -fill #606060 -stipple gray25 -width 2
   }
 
-displayBeatGrid $h 16 1 .ptableau.frm.can
+displayBeatGrid $tableauHeight 16 1 .ptableau.frm.can
 }
 
 
@@ -3073,11 +3154,17 @@ global midi
 global lastbeat
 global midichannels
 global exec_out
-set scrollregion [.ptableau.frm.can cget -scrollregion]
-set xv [.ptableau.frm.can xview]
-#puts "xv $xv"
-set fbeat [expr [lindex $xv 0] * $lastbeat]
-set tbeat [expr [lindex $xv 1] * $lastbeat]
+set co [.ptableau.frm.can coords mark]
+#   is there a marked region of reasonable extent ?
+set extent [expr [lindex $co 2] - [lindex $co 0]]
+if {$extent > 10} {
+        set fbeat  [expr round([lindex $co 0]/4)]
+        set tbeat [expr round([lindex $co 2]/4)]
+  } else {
+        set xv [.ptableau.frm.can xview]
+        set fbeat [expr [lindex $xv 0] * $lastbeat]
+        set tbeat [expr [lindex $xv 1] * $lastbeat]
+        }
 set exec_out "playExposed\ncopyMidiToTmpForTableau"
 copyMidiToTmpForTableau $fbeat $tbeat
 if {![file exist $midi(path_midiplay)]} {
@@ -4788,7 +4875,6 @@ proc chordgram_plot {source} {
    set chord_sequence [determine_chord_sequence]
    #set seqlength [llength $chord_sequence]
    set last_beat [dict size $chord_sequence]
-   puts "last_beat = $last_beat"
    set seqlength $last_beat
    call_compute_chordgram $source
 }
