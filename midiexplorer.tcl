@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.47 2021-08-15 08:35" 
+set midiexplorer_version "MidiExplorer version 2.53 2021-08-19 13:05" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -2777,8 +2777,14 @@ color coded according to their midi program (musical instrument).\
 The dot size menu controls how prominent these onsets appear in the\
 plots. If the dot sizes are too large, the onsets may overlap.\
 Hovering the mouse pointer on one of the channel checkboxes will\
-pop up the midi program number and name.\n\
-The horizontal scale is measured in 4 beat units.
+pop up the midi program number and name. The beat numbers are
+indicated in the lower horizontal scale.\n\n\
+Like the midi structure view, many of the other functions, play\
+and plots are sensitive to the channels that are selected in the\
+checkboxes and the exposed region. If no channels are ticked then\
+the functions apply to all channels. In addition, you can select\
+a time interval by dragging the mouse pointer over a region while\
+depressing the left mouse button.
 "
 
 
@@ -2811,15 +2817,29 @@ if {![winfo exist $w]} {
  menubutton $w.header.plot -text plot -menu $w.header.plot.items -font $df
   menu $w.header.plot.items -tearoff 0
  $w.header.plot.items add command  -label "pitch class plot" -font $df \
-            -command {midi_statistics pitch  
+            -command {midi_statistics_for_tableau pitch  
                       show_note_distribution
                      } 
  $w.header.plot.items add command  -label "pitch distribution" -font $df \
-            -command {midi_statistics pitch
+            -command {midi_statistics_for_tableau pitch
                       plotmidi_pitch_pdf
                       }
- $w.header.plot.items add command -label chordgram -font $df -command {chordgram_plot midistructure}
+ $w.header.plot.items  add command -label "onset distribution" -font $df\
+            -command {midi_statistics_for_tableau onset
+                      plotmidi_onset_pdf 
+                     }
+ $w.header.plot.items add command  -label "note duration distribution" -font $df \
+            -command {midi_statistics_for_tableau duration
+                      plotmidi_duration_pdf
+                     }
+ $w.header.plot.items add command  -label "velocity distribution" -font $df \
+            -command {midi_statistics_for_tableau velocity
+                      plotmidi_velocity_pdf
+                      }
+ $w.header.plot.items add command -label keymap -font $df -command keymap
+ $w.header.plot.items add command -label chordgram -font $df -command {chordgram_plot tableau}
  $w.header.plot.items add command -label notegram -font $df -command notegram_plot
+ $w.header.plot.items add command -label "pitch class map" -font $df -command simple_tableau
  tooltip::tooltip $w.header.plot "Various plots including chordgram and notegram"
  
   button $w.header.help -text help -font $df -command {show_message_page $hlp_tableau word}
@@ -2859,6 +2879,7 @@ proc tableau_Button1Release {} {
     if {[winfo exist .midistructure]} {
           tableau_migrate_to_midistruct $co
       }
+   updateWindows_for_tableau
    }
 
 proc tableau_migrate_to_midistruct {co} {
@@ -2917,7 +2938,7 @@ proc tableau_midi_limits {can} {
 
 
 
-proc displayBeatGrid {height xspacing mag can} {
+proc displayBeatGrid {height xspacing xmult mag can} {
  global lastbeat
  global df
  set mag 1
@@ -2932,7 +2953,7 @@ proc displayBeatGrid {height xspacing mag can} {
     set x1  [expr $x*$xspacing*$mag]
     if {[expr $x % $spacing] == 0} {
     $can create line $x1 $iy0 $x1 $iy2 -dash {1 1} -fill white
-    $can create text $x1 $iy3 -text $x -fill white -font $df
+    $can create text $x1 $iy3 -text [expr $x * $xmult] -fill white -font $df
     } else {
     $can create line $x1 $iy1 $x1 $iy2 -dash {1 1} -fill white
     }
@@ -2992,7 +3013,7 @@ for {set i 0} {$i < $size} {incr i} {
   }
 set region "0 0 $i 150"
 .ribbon.frm.can configure -height 150 -scrollregion $region
-displayBeatGrid 145 16 1 .ribbon.frm.can
+displayBeatGrid 145 16 4 1 .ribbon.frm.can
 .ribbon.filename configure -text $midi(midifilein)
 }
 
@@ -3032,6 +3053,7 @@ proc plot_tableau_data {} {
   set dotsizehalf [expr $dotsize/2]
   set ppqn4 [expr $ppqn/4]
   set maxwidth 0
+  for {set i 0} {$i < 17} {incr i} {set chn2prg($i) 0}
   foreach line $midicommands {
      set begin [lindex $line 0]
      set end [lindex $line 1]
@@ -3071,7 +3093,7 @@ proc plot_tableau_data {} {
        }
     }
 foreach c $chanlist {
-  checkbutton .ptableau.frm.chkscan.$c -text $c -background #606070 -width 2 -fg black -variable midichannels($c) -font $df
+  checkbutton .ptableau.frm.chkscan.$c -text $c -background #606070 -width 2 -fg black -variable midichannels($c) -font $df -command updateWindows_for_tableau
   set row [lsearch $chanlist $c]
   .ptableau.frm.chkscan create window 4 [expr $row*50 +10] -window .ptableau.frm.chkscan.$c -anchor nw
   set prog $chn2prg($c)
@@ -3115,7 +3137,7 @@ for {set i 1} {$i<17} {incr i} {
   }
 
 
-.ptableau.frm.can create rect -1 -1 -1 -1 -tags mark -fill gray30 -stipple gray12
+.ptableau.frm.can create rect -1 -1 -1 -1 -tags mark -fill gray35 -stipple gray12
 
 # outline channel bands
 set i 1
@@ -3144,7 +3166,7 @@ for {set ix 0} {$ix < $maxsize} {incr ix $spacing} {
   .ptableau.frm.can create line $ix 0 $ix $tableauHeight -fill #606060 -stipple gray25 -width 2
   }
 
-displayBeatGrid $tableauHeight 16 1 .ptableau.frm.can
+displayBeatGrid $tableauHeight 16 4 1 .ptableau.frm.can
 }
 
 
@@ -3154,17 +3176,9 @@ global midi
 global lastbeat
 global midichannels
 global exec_out
-set co [.ptableau.frm.can coords mark]
-#   is there a marked region of reasonable extent ?
-set extent [expr [lindex $co 2] - [lindex $co 0]]
-if {$extent > 10} {
-        set fbeat  [expr round([lindex $co 0]/4)]
-        set tbeat [expr round([lindex $co 2]/4)]
-  } else {
-        set xv [.ptableau.frm.can xview]
-        set fbeat [expr [lindex $xv 0] * $lastbeat]
-        set tbeat [expr [lindex $xv 1] * $lastbeat]
-        }
+set limits [tableau_limits]
+set fbeat [lindex $limits 0]
+set tbeat [lindex $limits 1]
 set exec_out "playExposed\ncopyMidiToTmpForTableau"
 copyMidiToTmpForTableau $fbeat $tbeat
 if {![file exist $midi(path_midiplay)]} {
@@ -3215,8 +3229,84 @@ from the abcMIDI package and set the path to its location."
     catch {eval $cmd} midicopyresult
     append exec_out "$cmd\n $midicopyresult\n"
     set cleanData 0
+
+    set midi(outfilename) tmp.mid
     #puts $exec_out
     return $midicopyresult
+}
+
+proc tableau_limits {} {
+global lastbeat
+set co [.ptableau.frm.can coords mark]
+#   is there a marked region of reasonable extent ?
+set extent [expr [lindex $co 2] - [lindex $co 0]]
+if {$extent > 10} {
+        set fbeat  [expr round([lindex $co 0]/4)]
+        set tbeat [expr round([lindex $co 2]/4)]
+  } else {
+        set xv [.ptableau.frm.can xview]
+        set fbeat [expr [lindex $xv 0] * $lastbeat]
+        set tbeat [expr [lindex $xv 1] * $lastbeat]
+        }
+return [list $fbeat $tbeat]
+}
+
+proc midi_statistics_for_tableau {choice} {
+# derived from pianoroll_statistics
+    global pianoresult midi
+    global histogram
+    global ppqn
+    global total
+    global exec_out
+    global midi
+    global cleanData
+    global lastbeat
+
+    set cleanData 0
+set limits [tableau_limits]
+set fbeat [lindex $limits 0]
+set tbeat [lindex $limits 1]
+set exec_out "midi_statistics_for_tableau\ncopyMidiToTmpForTableau"
+copyMidiToTmpForTableau $fbeat $tbeat
+    set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
+    catch {eval $cmd} pianoresult
+    set exec_out [append exec_out "midi_statistics:\n\n$cmd\n\n $pianoresult"]
+    update_console_page
+
+    for {set i 0} {$i < 128} {incr i} {set histogram($i) 0}
+    
+    set pianoresult [split $pianoresult \n]
+    foreach line $pianoresult  {
+        if {[llength $line] != 6} continue
+        set begin [lindex $line 0]
+        set end [lindex $line 1]
+        set t [lindex $line 2]
+        set c [lindex $line 3]
+        set note [lindex $line 4]
+        set vel [lindex $line 5]
+        switch $choice {
+            pitch {set histogram($note) [expr $histogram($note)+1]}
+            velocity {set histogram($vel) [expr $histogram($vel)+1]}
+            duration {set index [expr int(($end - $begin)*32/$ppqn)]
+                if {$index > 127} {set index 127}
+                set histogram($index) [expr $histogram($index)+1]
+            }
+            onset {set s [expr int((100.0*$begin)/$ppqn) % 100]
+                set histogram($s) [expr $histogram($s) + 1]
+                }
+            offset {set s [expr int((100.0*$end)/$ppqn) % 100]
+                set histogram($s) [expr $histogram($s) + 1]
+                }
+        }
+    }
+    set total 0;
+    for {set i 0} {$i <128} {incr i} {
+        set total [expr $total+$histogram($i)]
+    }
+    if {$total < 1} return
+    for {set i 0} {$i <128} {incr i} {
+        set histogram($i) [expr double($histogram($i))/$total]
+    }
 }
 
 
@@ -4908,6 +4998,13 @@ switch $source {
        set stop [lindex $limits 1]
        }
     }
+  tableau {
+    set limits [tableau_limits]
+    if {$limits != "none"} {
+       set start [lindex $limits 0]
+       set stop [lindex $limits 1]
+       }
+    }
   }
 #puts "$source compute_chordgram $start $stop"
 compute_chordgram $start $stop
@@ -5003,6 +5100,7 @@ proc compute_chordgram {start stop} {
    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx $start $stop 0.0 200.0 
    set chordgram_xfm [Graph::save_transform] 
    for {set j 0} {$j <$seqlength} {incr j} {
+     if {$j < $start || $j > $stop} continue
      set chord [dict get $chord_sequence $j]
      if {$chord == ""} continue
      if {[string index $chord 1] == "#"} {
@@ -5078,8 +5176,8 @@ proc compute_chordgram {start stop} {
          }
       }
    }
-
-    set spacing [best_grid_spacing $seqlength]
+    set graphlength [expr $stop - $start]
+    set spacing [best_grid_spacing $graphlength]
     Graph::draw_x_grid $c $start5 $stop $spacing 1  0 %5.0f $colfg
 
    .chordgram.can create rect -1 -1 -1 -1 -tags mark -fill yellow -stipple gray25
@@ -5172,7 +5270,6 @@ proc compute_notegram {} {
    global fbeat
    global tbeat
    global notegram_xfm
-
    set permut5th {0 7 2 9 4 11 6 1 8 3 10 5}
    # white or black characters
    set colfg [lindex [.info.txt config -fg] 4]
@@ -8519,6 +8616,36 @@ if {[winfo exist .drumanalysis]} {
    }
 }
   
+proc updateWindows_for_tableau {} {
+  if {[winfo exists .pitchclass]} {
+            midi_statistics_for_tableau pitch  
+            show_note_distribution
+            }
+  if {[winfo exists .pitchpdf]} {
+            midi_statistics_for_tableau pitch
+            plotmidi_pitch_pdf
+            }
+  if {[winfo exists .velocitypdf]} {
+            midi_statistics_for_tableau velocity
+            plotmidi_velocity_pdf
+            }
+  if {[winfo exists .chordgram]} {
+           call_compute_chordgram tableau
+           }
+  if {[winfo exists .notegram]} {
+           notegram_plot
+           }
+  if {[winfo exist .keystrip]} {
+           keymap
+           }
+  if {[winfo exists .durpdf]} {
+   midi_statistics_for_tableau pitch  
+   plotmidi_duration_pdf
+   }
+  if {[winfo exists .ribbon]} {
+   simple_tableau 
+   }
+}
 
 proc show_note_distribution {} {
     global histogram
