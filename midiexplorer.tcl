@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.53 2021-08-19 13:05" 
+set midiexplorer_version "MidiExplorer version 2.56 2021-08-24 08:25" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -45,9 +45,9 @@ set midiexplorer_version "MidiExplorer version 2.53 2021-08-19 13:05"
 #        rglob, populatedir, populateTree
 #   Part 4.0 Midi summary listing in table form
 #   Part 5.0 Midi summary header
-#        present_midi_info, interpret_midi...,tinfo_select
+#        presentMidiInfo, interpret_midi...,tinfo_select
 #   Part 6.0 Midi file selection support
-#        selected_midi,  read_midifile_header,
+#        selected_midi,  readMidiFileHeader,
 #        get_midi_info_for, parse_midi_info, get_trkinfo,
 #        midi_type0_table, midi_type1_table
 #   Part 7.0 Program selector and support
@@ -444,12 +444,12 @@ proc ::tooltip::enableCanvas {w args} {
 
 
 
-proc color_scheme {} {
+proc colorScheme {} {
 global midi
 set w .colors
 catch {destroy $w}
 toplevel $w
-position_window $w
+positionWindow $w
 wm title $w "Listbox Demonstration (colors)"
 wm iconname $w "Listbox"
 
@@ -549,7 +549,7 @@ set execpath [pwd]
 
 set cleanData 0
 
-proc setup_midiexplorer {} {
+proc setupMidiexplorer {} {
 # will create midiexplorer_home in the user's directory if
 # it does not already exist and cd to that folder.
 global env
@@ -579,10 +579,10 @@ cd $midiexplorerpath
 puts "active path is $midiexplorerpath"
 }
 
-setup_midiexplorer 
+setupMidiexplorer 
 
 # default values for options
-proc midi_init {} {
+proc midiInit {} {
     global midi df sf dfreset tocf dfi
     global midiexplorer_version
     global tcl_platform
@@ -738,6 +738,7 @@ proc midi_init {} {
     set midi(sortchordnames) key
     set midi(chordgram) fifths
     set midi(notegram) fifths
+    set midi(tableau5) 0
     set midi(chordhist) graphics
  
     # initial search parameters
@@ -809,7 +810,7 @@ proc readMidiexplorerIni {} {
         for {set i 1} {$i < $n} {incr i} {
             set contents [concat $contents [lindex $line $i]]
         }
-        #if param is not already a member of the midi array (set by midi_init),
+        #if param is not already a member of the midi array (set by midiInit),
         #then we ignore it. This prevents midi array filling up with obsolete
         #parameters used in older versions of the program.
         set member [array names midi $param]
@@ -822,11 +823,11 @@ proc readMidiexplorerIni {} {
 
 }
 
-proc find_linux_executables {} {
+proc findLinuxExecutables {} {
 global midi
 global execpath
 set execlist "abc2midi abc2abc abcm2ps midi2abc midicopy"
-puts "find_linux_executables in [pwd]"
+puts "findLinuxExecutables in [pwd]"
 foreach ex  $execlist {
   set cmd "exec which $ex"
   set exx [file join $execpath $ex]
@@ -843,7 +844,7 @@ foreach ex  $execlist {
 }
 
 
-midi_init
+midiInit
 if {[file exists midiexplorer.ini]} {
 	readMidiexplorerIni
 } else {
@@ -858,7 +859,7 @@ if {[file exists midiexplorer.ini]} {
       set midi(path_yaps) [file join $install_folder yaps.exe]
       set midi(path_gs) ""
   } elseif {$tcl_platform(platform) == "unix"} {
-      find_linux_executables
+      findLinuxExecutables
        }
 }
 
@@ -874,7 +875,7 @@ wm protocol . WM_DELETE_WINDOW {
     }
 
 
-proc get_version_number {executable} {
+proc getVersionNumber {executable} {
     set cmd "exec [list $executable] -ver"
     catch {eval $cmd} result
     return $result}
@@ -882,7 +883,7 @@ proc get_version_number {executable} {
 set miditype {{{midi files} {*.mid *.MID *.midi *.kar *.KAR}}}
 
 
-proc position_window {window} {
+proc positionWindow {window} {
    global midi
    if {[string length $midi($window)] < 1} return
    if {$midi(autoposition) == 0} return
@@ -900,7 +901,7 @@ set font [font create -family $font_family -size 11]
 package require Tk
 
 # .top contains both .treebrowser and .info
-position_window "."
+positionWindow "."
 panedwindow .top -orient vertical -showhandle 1 -sashwidth 10 -sashrelief sunken -sashpad 4 
 pack .top -expand 1 -fill both
 
@@ -996,7 +997,7 @@ $ww add command -label "font selector" -font $df -command font_selector
 
 $ww add command -label "midi2abc configuration" -font $df -command midi2abc_config
 
-$ww add command -label "color scheme" -font $df -command color_scheme
+$ww add command -label "color scheme" -font $df -command colorScheme
 
 $ww add checkbutton -label "auto-open" -font $df -variable midi(autoopen)
 
@@ -1035,7 +1036,7 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
         $ww add command -label "pgram" -font $df -command pgram_window -accelerator "ctrl-p"
 	$ww add command -label "midi structure" -font $df -accelerator "ctrl-s"\
             -command {midi_structure_display}
-        $ww add command  -label "pitch class map by channel" -font $df \
+        $ww add command  -label "tableau" -font $df \
             -command detailed_tableau -accelerator "ctrl-t"
 	$ww add command -label pianoroll -font $df -accelerator "ctrl-r"\
             -command piano_roll_display
@@ -1090,7 +1091,7 @@ menu $ww -tearoff 0
             -command {midi_statistics pitch 
                       show_note_distribution
                      } 
-        $ww add command  -label "aggregated pitch class map" -font $df \
+        $ww add command  -label "pitch class map" -font $df \
             -command simple_tableau
 	$ww add command -label chordgram -font $df -command {chordgram_plot none}
 #	$ww add command -label "chord histogram" -font $df -command chord_histogram
@@ -1195,11 +1196,11 @@ button $w.menuline.abc -text abc -font $df -command create_abc_file
 tooltip::tooltip $w.menuline.abc "Convert the selected tracks (channels) or entire\nmidi file to abc notation and open an abc editor."
 
 #        find title 
-button .treebrowser.menuline2.jump -text find -command {find_child_in_tree .treebrowser $findname} -font $df
+button .treebrowser.menuline2.jump -text find -command {findChildInTree .treebrowser $findname} -font $df
 
 entry .treebrowser.menuline2.name -width 16 -textvariable findname -font $df
 
-bind .treebrowser.menuline2.name <Return> {find_child_in_tree .treebrowser $findname}
+bind .treebrowser.menuline2.name <Return> {findChildInTree .treebrowser $findname}
 
 tooltip::tooltip .treebrowser.menuline2.jump "If you know the name of a subfolder
 in this directory, it may be more practical
@@ -1298,7 +1299,7 @@ bind . <Alt-c> {catch console show}
 label .treebrowser.menuline2.messageline -fg red
 pack .treebrowser.menuline2.messageline 
 
-proc clear_messageline {} {
+proc clearMessageLine {} {
 .treebrowser.menuline2.messageline configure -text ""
 }
 
@@ -1314,7 +1315,7 @@ global midi
 set w .fontwindow
 set sizelist {6 7 8 9 10 11 12 13 14}
 toplevel $w
-position_window .fontwindow
+positionWindow .fontwindow
 set fontfamily [lsort [font families]]
 ttk::combobox $w.fontbox -width 24  -textvariable midi(font_family)\
          -values $fontfamily
@@ -1439,10 +1440,6 @@ proc pop_message {text} {
     }
 }
 
-proc remove_message {} {
-  if {[winfo exists ._msg_]} {destroy ._msg_}
-  }
-
 
 #   Part 3.0 Directory Structure Tree View
 #
@@ -1460,12 +1457,12 @@ $w.tree column size -stretch 0 -width [font measure $df "File SizeWW"]
 $w.tree heading criterion -text "Criterion"
 $w.tree column criterion -stretch 0 -width [font measure $df "CriterionWW "]
 $w.tree column \#0 -width [font measure $df "WWWWWWWWWWWWWWWWWWWWWWWWWWW"]
-$w.tree heading criterion -command [list Treebrowser_SortBy criterion 0]
+$w.tree heading criterion -command [list TreeBrowserSortBy criterion 0]
 bind $w.tree <<TreeviewOpen>> {populateTree %W [%W focus]}
 bind $w.tree <<TreeviewSelect>> {selected_midi}
 
 # right click
-bind $w.tree <Button-3> {fill_folder_in_tree %x %y}
+bind $w.tree <Button-3> {FillFolderInTree %x %y}
 
 
 ## Arrange the tree and its scrollbars 
@@ -1590,10 +1587,10 @@ proc populateTree {tree node} {
 
     # Stop this code from rerunning on the current node
     $tree set $node type processedDirectory
-    clear_messageline 
+    clearMessageLine 
 }
 
-proc find_child_in_tree {w name} {
+proc findChildInTree {w name} {
 # in case the root folder is not there
 restore_root_folder 
 #puts "searching for $name"
@@ -1608,7 +1605,7 @@ foreach node $nodes {
  }
 }
 
-proc Treebrowser_SortBy {col direction} {
+proc TreeBrowserSortBy {col direction} {
     set data {}
     foreach row [.treebrowser.tree children {}] {
         lappend data [list [.treebrowser.tree set $row $col] $row]
@@ -1620,7 +1617,7 @@ proc Treebrowser_SortBy {col direction} {
         .treebrowser.tree  move [lindex $info 1] {} [incr r]
     }
     # Switch the heading so that it will sort in the opposite direction
-    .treebrowser.tree heading $col -command [list Treebrowser_SortBy  $col [expr {!$direction}]]
+    .treebrowser.tree heading $col -command [list TreeBrowserSortBy  $col [expr {!$direction}]]
 }
 
 #   Part 4.0 Midi summary listing in table form
@@ -1657,7 +1654,7 @@ proc Tinfo_SortBy {col direction} {
 
 set idlist {}
 
-proc fill_folder_in_tree {x y} {
+proc FillFolderInTree {x y} {
 global idlist
 if {[llength $idlist] > 0} {
   .treebrowser.tree delete $idlist
@@ -1682,7 +1679,7 @@ if {[lindex $c 1] == "file"} {
   } 
 }
 
-proc switch_between_info_and_tinfo {} {
+proc SwitchBetweenInfoAndTinfo {} {
 .top add .info
 .top add .tinfo
 }
@@ -1702,7 +1699,7 @@ pack .info.txt -fill both -expand 1 -side right
 # join .treebrowser and .info in the panedwindow called .top
 .top add .treebrowser 
 
-proc present_midi_info {} {
+proc presentMidiInfo {} {
    global midi
    global ntrks
    global lasttrack
@@ -1892,7 +1889,7 @@ for {set i 1} {$i < 17} {incr i} {
 
 
 proc open_recent_folder {recent_folder} {
-find_child_in_tree .treebrowser [file tail $recent_folder]
+findChildInTree .treebrowser [file tail $recent_folder]
 }
 
 
@@ -1919,8 +1916,8 @@ proc selected_midi {} {
    clear_miditracks_and_channels
    set midi_info [get_midi_info_for]
    parse_midi_info $midi_info
-   switch_between_info_and_tinfo 
-   present_midi_info
+   SwitchBetweenInfoAndTinfo 
+   presentMidiInfo
    loadMidiFile
    set cleanData 1
    if {[winfo exist .piano]} {
@@ -1948,13 +1945,13 @@ proc load_last_midi_file {} {
  set midi_info [get_midi_info_for]
  if {$midi_info == ""} return
  parse_midi_info $midi_info
- switch_between_info_and_tinfo 
- present_midi_info
+ SwitchBetweenInfoAndTinfo 
+ presentMidiInfo
 } 
 
 bind . <Control-m> load_last_midi_file
 
-proc read_midifile_header {openfile} {
+proc readMidiFileHeader {openfile} {
     global ntrk
     global ppqn
     global midihandle
@@ -1975,7 +1972,7 @@ proc read_midifile_header {openfile} {
     }
 
 
-proc normalize_activity {vector} {
+proc normalizeActivity {vector} {
 set fnorm 0.0
 if {[llength $vector] < 1} {return vector}
 foreach pc $vector {
@@ -2055,7 +2052,7 @@ foreach line [split $midi_info '\n'] {
  set sharps [expr [lindex $pitchcl 1] + [lindex $pitchcl 6]]
  set useflats 0
  if {$flats > $sharps} {set useflats 1}
- set cprogsact [normalize_activity $cprogsact]
+ set cprogsact [normalizeActivity $cprogsact]
  return 0
 }
 
@@ -2424,7 +2421,7 @@ global midi
 set w .channel9
 if {[winfo exist $w]} return
 toplevel .channel9 
-position_window .channel9
+positionWindow .channel9
 
 frame $w.header 
 pack $w.header
@@ -2699,7 +2696,7 @@ if {![file exist $midi(path_midi2abc)]} {
       return -1
       }
 
-read_midifile_header $midi(midifilein); # read midi header
+readMidiFileHeader $midi(midifilein); # read midi header
 set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
 catch {eval $cmd} pianoresult
 #puts "midifilein = $midi(midifilein)"
@@ -2723,21 +2720,32 @@ for {set i 0} {$i < 17} {incr i} {
    }
 }
 
+set hlp_PitchClassMap "Pitch Class Map\n\n\
+Like the tableau, this diagram plots the note onsets as a\
+function of the beat number. The channels are not separated\
+here and there is more room to indicate the note pitch names.
+"
 
-
+proc updateTableauWindows {} {
+ if {[winfo exist .ribbon]} simple_tableau
+ if {[winfo exist .ptableau]} detailed_tableau
+ }
 
 proc noteRibbon {} {
 # creates window for the simple and detailed tableau
 global df
+global midie
+global hlp_PitchClassMap
 if {![winfo exist .ribbon]} {
   toplevel .ribbon
-  position_window ".ribbon"
+  positionWindow ".ribbon"
   label .ribbon.filename -text "" -font $df
   set v .ribbon.buttonfrm
   frame  $v 
-  button $v.help -text help -font $df
+  button $v.help -text help -font $df -command {show_message_page $hlp_PitchClassMap word}
   button $v.play -text play -font $df
-  pack $v.play $v.help -side left -anchor nw
+  checkbutton $v.circle -text "circle of fifths" -variable midi(tableau5) -font $df -command updateTableauWindows
+  pack $v.play $v.circle $v.help -side left -anchor nw
   
   set w .ribbon.frm
   frame $w
@@ -2756,10 +2764,16 @@ if {![winfo exist .ribbon]} {
 }
 
 proc fillRibbonSideBar {} {
+global midi
 global sharpnotes
+set sharp5notes {C G D A E B F# C# G# D# A# F}
 set dfsmall [font create -size 8]
 for {set i 0} {$i < 12} {incr i} {
-  label .ribbon.frm.labcan.$i -text [lindex $sharpnotes $i] -width 2 -fg white -font $dfsmall -bg black
+  if {$midi(tableau5)} {
+    label .ribbon.frm.labcan.$i -text [lindex $sharp5notes $i] -width 2 -fg white -font $dfsmall -bg black
+   } else {
+    label .ribbon.frm.labcan.$i -text [lindex $sharpnotes $i] -width 2 -fg white -font $dfsmall -bg black
+   }  
    if {[expr $i % 2] == 0} {
       .ribbon.frm.labcan create window 8 [expr  ($i*8) + 2] -window .ribbon.frm.labcan.$i -anchor nw
      } else {
@@ -2769,7 +2783,7 @@ for {set i 0} {$i < 12} {incr i} {
 .ribbon.frm.labcan configure -height 150 
 }
 
-set hlp_tableau "Pitch Class Map
+set hlp_tableau "Tableau - Pitch Class Map
 
 For each channel, the pitch classes of each note onset are shown as\
 function of time up to a resolution of 1/16 note. These onsets are\
@@ -2777,15 +2791,28 @@ color coded according to their midi program (musical instrument).\
 The dot size menu controls how prominent these onsets appear in the\
 plots. If the dot sizes are too large, the onsets may overlap.\
 Hovering the mouse pointer on one of the channel checkboxes will\
-pop up the midi program number and name. The beat numbers are
-indicated in the lower horizontal scale.\n\n\
+pop up the midi program number and name. The lower horizontal scale\
+indicates the beat number (quarter note) position.\n\n\
+Ticking the circle of fifths checkbutton, will lay out the note\
+onsets according to the circle of fifths (C,G,D, etc) instead of\
+sequentially (C,C#,D, etc). This may produce a more compact\
+representation making it easier to detect key changes.\n\n\
 Like the midi structure view, many of the other functions, play\
 and plots are sensitive to the channels that are selected in the\
 checkboxes and the exposed region. If no channels are ticked then\
 the functions apply to all channels. In addition, you can select\
 a time interval by dragging the mouse pointer over a region while\
-depressing the left mouse button.
+depressing the left mouse button. The width of the tableau can\
+be adjusted and only the visible portion is played or plotted.
 "
+
+# for handling x scrolling for tableau
+proc BindXview_for_tableau {lists args} {
+    foreach l $lists {
+        eval {$l xview} $args
+    }
+    updateWindows_for_tableau
+}
 
 
 
@@ -2796,12 +2823,12 @@ global df
 set w .ptableau
 if {![winfo exist $w]} {
   toplevel $w
-  position_window $w
+  positionWindow $w
   set w .ptableau.frm
   frame $w
   canvas $w.can -height 60 -width 1000 -scrollregion {0. 0. 10000.0 50.} -xscrollcommand {.ptableau.scr set} -bg grey20
   scrollbar .ptableau.scr -orient horiz -bg #002000\
-   -activebackground #004000 -command {.ptableau.frm.can xview}
+   -activebackground #004000 -command [list BindXview_for_tableau [list .ptableau.frm.can]]
   canvas $w.chkscan -width 50 -height 300 -bg #002000
   label .ptableau.status -text "$midi(midifilein)"
   frame $w.header
@@ -2841,9 +2868,12 @@ if {![winfo exist $w]} {
  $w.header.plot.items add command -label notegram -font $df -command notegram_plot
  $w.header.plot.items add command -label "pitch class map" -font $df -command simple_tableau
  tooltip::tooltip $w.header.plot "Various plots including chordgram and notegram"
+
+
+  checkbutton $w.header.circle -text "circle of fifths" -variable midi(tableau5) -font $df -command updateTableauWindows
  
   button $w.header.help -text help -font $df -command {show_message_page $hlp_tableau word}
-  pack $w.header.play $w.header.dot $w.header.plot  $w.header.help -side left -anchor nw
+  pack $w.header.play $w.header.dot $w.header.circle $w.header.plot $w.header.help -side left -anchor nw
   pack .ptableau.status
   pack $w.header -side top -anchor nw
   pack .ptableau.scr -fill x -side bottom 
@@ -2992,6 +3022,7 @@ proc simple_tableau {} {
 global midi
 global df
 
+set permut5th {0 7 2 9 4 11 6 1 8 3 10 5}
 loadMidiFile
 noteRibbon
 .ribbon.frm.can delete all
@@ -3003,6 +3034,11 @@ for {set i 0} {$i < $size} {incr i} {
   set notecode [dict get $notepat $i]
   set codes [extractPitchClasses $notecode]
   foreach code $codes {
+
+  if {$midi(tableau5)} {
+        set code [lindex $permut5th $code]
+     } 
+
     set ix1 $i
     #set ix1 [expr $i*2]
     set iy1 [expr $code*8 + 4]
@@ -3049,6 +3085,7 @@ proc plot_tableau_data {} {
   global groupcolors
   global mlist
 
+  set permut5th {0 7 2 9 4 11 6 1 8 3 10 5}
   set dotsize $midi(dotsize)
   set dotsizehalf [expr $dotsize/2]
   set ppqn4 [expr $ppqn/4]
@@ -3064,6 +3101,9 @@ proc plot_tableau_data {} {
        set c [lindex $line 3]
        set pitch [lindex $line 4]
        set pitchindex [expr $pitch % 12]
+       if {$midi(tableau5)} {
+          set pitchindex [lindex $permut5th $pitchindex]
+          } 
        if {$c == 10} {
          continue
        } else {
@@ -3334,7 +3374,7 @@ proc show_console_page {text wrapmode} {
         foreach t $taglist {$p.t tag delete $t}
     } else {
         toplevel $p
-        position_window $p
+        positionWindow $p
         text $p.t -height 15 -width 50 -wrap $wrapmode -font $df -yscrollcommand {
             .notice.ysbar set}
         scrollbar $p.ysbar -orient vertical -command {.notice.t yview}
@@ -3370,7 +3410,7 @@ proc show_tmpfile {} {
     set num 0
     if [winfo exist $p] {destroy $p}
     toplevel $p
-    position_window ".tmpfile"
+    positionWindow ".tmpfile"
     text $p.t -height 15 -width 80 -wrap char \
             -font $df -yscrollcommand ".tmpfile.ysbar set"
     scrollbar $p.ysbar -orient vertical -command {.tmpfile.t yview}
@@ -3433,7 +3473,7 @@ proc show_message_page {text wrapmode} {
         #   $p.t configure -state disabled -wrap $wrapmode
     } else {
         toplevel $p
-        position_window $p
+        positionWindow $p
         text $p.t -height 15 -width 50 -wrap $wrapmode -font $df -yscrollcommand {.notice.ysbar set}
         scrollbar $p.ysbar -orient vertical -command {.notice.t yview}
         pack $p.ysbar -side right -fill y -in $p
@@ -3453,7 +3493,7 @@ if {[winfo exist $w]} {
   return}
 
 toplevel $w
-position_window $w
+positionWindow $w
 
 button $w.abcmidibut -text "abcmidi folder" -width 14 -command {locate_abcmidi_executables} -font $df
 entry $w.abcmidient -width 48 -relief sunken -textvariable midi(dir_abcmidi) -font $df
@@ -3495,7 +3535,7 @@ if {[winfo exist $w]} {
   return}
 
 toplevel $w
-position_window $w
+positionWindow $w
 
 radiobutton $w.player1rad -command set_midiplayer -variable midi(player_sel) -value 1
 button $w.player1but -text "midiplayer 1" -width 14 -font $df\
@@ -3645,7 +3685,7 @@ if {[winfo exist $w]} {
   return
   }
 toplevel $w
-position_window $w
+positionWindow $w
 #label $w.lab4 -text "segment gap" -font $df
 #entry $w.segmentgap -width 2 -textvariable midi(segment_gap) -font $df
 #label $w.lab4a -text "beats" -font $df
@@ -3722,7 +3762,7 @@ if {[winfo exist $w]} {
   raise $w .
   return}
 toplevel $w 
-position_window $w
+positionWindow $w
 for {set i 0} {$i < 128} {incr i} {
  set g [lindex $progmapper $i]
  set kolor [lindex $groupcolors $g]
@@ -3750,7 +3790,7 @@ if {[winfo exist $w]} {
   raise $w .
   return}
 toplevel $w 
-position_window $w
+positionWindow $w
 canvas $w.c -width 680 -height 512
 pack $w.c
 for {set i 0} {$i < 128} {incr i} {
@@ -3875,13 +3915,13 @@ Note that if any of these functions\
 proc check_midi2abc_and_midicopy_versions {} {
     global midi
     #puts "check_midi2abc : $midi(path_midi2abc)"
-    set result [get_version_number $midi(path_midi2abc)]
+    set result [getVersionNumber $midi(path_midi2abc)]
     #puts $result
     set err [scan $result "%f" ver]
     set msg "You need midi2abc.exe version 3.42.\n"
     if {$err == 0 || $ver < 3.42} { .info.txt insert insert $msg red
                     return $msg}
-    set result [get_version_number $midi(path_midicopy)]
+    set result [getVersionNumber $midi(path_midicopy)]
     set err [scan $result "%f" ver]
     #puts $result
     set msg "You need midicopy.exe version 1.34 or higher.\n"
@@ -3975,7 +4015,7 @@ proc piano_window {} {
     global midispeed
     if {[winfo exist .piano]} {destroy .piano}
     toplevel .piano
-    position_window .piano
+    positionWindow .piano
    
     # menu bar  
     set p .piano.f
@@ -4365,7 +4405,7 @@ proc beat_graph {} {
     set bgraph .beatgraph.c
     if {[winfo exists .beatgraph] == 0} {
         toplevel .beatgraph
-        position_window .beatgraph
+        positionWindow .beatgraph
         pack [canvas .beatgraph.c -width $scanwidth -height $scanheight]\
                 -expand yes -fill both
     } else {.beatgraph.c delete all}
@@ -4404,7 +4444,7 @@ proc ppqn_adjustment_window {} {
     global df
     if {[winfo exist .ppqn]} return
     toplevel .ppqn
-    position_window .ppqn
+    positionWindow .ppqn
     button .ppqn.1 -text "increase ppqn" -font  $df -repeatdelay 500\
             -repeatinterval 50 -command {qnote_spacing_adjustment 1}
     button .ppqn.2 -text "decrease ppqn" -font $df -repeatdelay 500\
@@ -4426,7 +4466,7 @@ proc chord_histogram_window {} {
     if {[winfo exist .chordstats]} return
     set w .chordstats
     toplevel $w
-    position_window .chordstats
+    positionWindow .chordstats
     
     frame $w.head
     label $w.head.lab -text "sort by" -font $df
@@ -4466,7 +4506,7 @@ proc chordtext_window {} {
    if {[winfo exist .chordview] == 0} {
      set f .chordview
      toplevel $f
-     position_window $f
+     positionWindow $f
      frame $f.1 
      frame $f.2
      pack $f.1 $f.2 -side top
@@ -4945,14 +4985,13 @@ proc chordgram_plot {source} {
    global seqlength
    if {![winfo exist .chordgram]} {
      toplevel .chordgram
-     position_window .chordgram
+     positionWindow .chordgram
      frame .chordgram.head
-     radiobutton .chordgram.head.1 -text sequential -variable midi(chordgram) -value seq -font $df -command "call_compute_chordgram $source"
-     radiobutton .chordgram.head.2 -text "circle of fifths" -variable midi(chordgram) -value fifths -font $df -command "call_compute_chordgram $source"
+     checkbutton .chordgram.head.2 -text "circle of fifths" -variable midi(chordgram) -font $df -command "call_compute_chordgram $source"
      button .chordgram.head.zoom -text zoom -command zoom_chordgram -font $df
      button .chordgram.head.unzoom -text unzoom -command unzoom_chordgram -font $df 
      button .chordgram.head.help -text help -font $df -command {show_message_page $hlp_chordgram word}
-     pack  .chordgram.head.1 .chordgram.head.2 .chordgram.head.zoom .chordgram.head.unzoom .chordgram.head.help -side left -anchor w
+     pack  .chordgram.head.2 .chordgram.head.zoom .chordgram.head.unzoom .chordgram.head.help -side left -anchor w
      pack  .chordgram.head -side top -anchor w 
      set c .chordgram.can
      canvas $c -width $pianorollwidth -height 250 -border 3 -relief sunken
@@ -5113,7 +5152,7 @@ proc compute_chordgram {start stop} {
         set key [string index $chord 0]
         set chordtype [string range $chord 1 end]
         }
-     if {$midi(chordgram) == "fifths"} {
+     if {$midi(chordgram) == 1} {
        if {$useflats == 1} {
          set loc [lsearch $flatnotes5 $key]
          } else { 
@@ -5190,7 +5229,7 @@ proc notegram_plot {} {
    global df
    if {![winfo exist .notegram]} {
      toplevel .notegram
-     position_window .notegram
+     positionWindow .notegram
      frame .notegram.head
      radiobutton .notegram.head.1 -text sequential -variable midi(notegram) -value seq -font $df -command compute_notegram
      radiobutton .notegram.head.2 -text "circle of fifths" -variable midi(notegram) -value fifths -font $df -command compute_notegram
@@ -5431,7 +5470,7 @@ proc midi_structure_window {} {
     return
     }
   toplevel $w
-  position_window $w
+  positionWindow $w
   wm title $w "midi structure "
   set entrywidth [expr int(800/double($midi(font_size)))]
   set wm $w.menuline
@@ -6819,7 +6858,7 @@ if {[winfo exist $w]} {
   raise $w .
   return}
 toplevel $w 
-position_window $w
+positionWindow $w
 button .drumsel.47 -command clear_drum_select -font $df -text "clear all"
 for {set i 0} {$i < 47} {incr i} {
  set elem [lindex $drumpatches $i]
@@ -6932,7 +6971,7 @@ proc drumroll_window {} {
     if {[winfo exist .drumroll]} return
     set midispeed 1.0
     toplevel .drumroll
-    position_window ".drumroll"
+    positionWindow ".drumroll"
     #Create top level menu bar.
     set p .drumroll.f
     frame $p
@@ -7035,7 +7074,7 @@ proc drumroll_config {} {
     global df midi
     if {[winfo exist $p]} return
     toplevel $p
-    position_window $p
+    positionWindow $p
     radiobutton $p.normal -text "play everything" -variable midi(playdrumdata) -value normaldrum -font $df 
     radiobutton $p.nodrum -text "do not play the percussion lines" -variable midi(playdrumdata) -font $df -value nodrums
     radiobutton $p.onlydrum -text "play only the percussion lines" -variable midi(playdrumdata) -font $df -value onlydrums
@@ -7101,7 +7140,7 @@ proc show_drum_events {} {
     .drumroll.txt configure -text drumgram -font $df -foreground black
 
     set pixels_per_file $drumrollwidth
-    read_midifile_header $midi(midifilein); # read midi header
+    readMidiFileHeader $midi(midifilein); # read midi header
 
     set exec_options "[list $midi(midifilein)] -midigram"
 
@@ -7701,7 +7740,7 @@ set drumpat [get_drum_patterns $simple]
 if {[winfo exists $d] == 0} {
   setup_i2l
   toplevel .drumanalysis
-  position_window .drumanalysis
+  positionWindow .drumanalysis
   frame .drumanalysis.blk
   pack .drumanalysis.blk -side top
   frame $d 
@@ -8350,7 +8389,7 @@ proc plotmidi_pitch_pdf {} {
     set maxhgraph [expr $maxhgraph + 0.1]
     if {[winfo exists .pitchpdf] == 0} {
         toplevel .pitchpdf
-        position_window .pitchpdf
+        positionWindow .pitchpdf
         pack [canvas $statc -width $scanwidth -height $scanheight]\
                 -expand yes -fill both
     } else {
@@ -8380,7 +8419,7 @@ proc plotmidi_velocity_pdf {} {
     set maxhgraph [expr $maxhgraph + 0.1]
     if {[winfo exists .velocitypdf] == 0} {
         toplevel .velocitypdf
-        position_window .velocitypdf
+        positionWindow .velocitypdf
         pack [canvas $statc -width $scanwidth -height $scanheight]\
                 -expand yes -fill both
     } else {
@@ -8411,7 +8450,7 @@ proc plotmidi_onset_pdf {} {
     set maxhgraph [expr $maxhgraph + 0.1]
     if {[winfo exists .onsetpdf] == 0} {
         toplevel .onsetpdf
-        position_window .onsetpdf
+        positionWindow .onsetpdf
         pack [canvas .onsetpdf.c -width $scanwidth -height $scanheight]\
                 -expand yes -fill both
     } else {
@@ -8443,7 +8482,7 @@ proc plotmidi_offset_pdf {} {
     set maxhgraph [expr $maxhgraph + 0.1]
     if {[winfo exists .offsetpdf] == 0} {
         toplevel .offsetpdf
-        position_window .offsetpdf
+        positionWindow .offsetpdf
         pack [canvas .offsetpdf.c -width $scanwidth -height $scanheight]\
                 -expand yes -fill both
     } else {
@@ -8475,7 +8514,7 @@ proc plotmidi_duration_pdf {} {
     set colfg [lindex [.info.txt config -fg] 4]
     if {[winfo exists .durpdf] == 0} {
         toplevel .durpdf
-        position_window .durpdf
+        positionWindow .durpdf
         pack [canvas .durpdf.c -width $scanwidth -height $scanheight]\
                 -expand yes -fill both
     } else {
@@ -8715,7 +8754,7 @@ proc plot_pitch_class_histogram {} {
     set pitchc .pitchclass.c
     if {[winfo exists .pitchclass] == 0} {
         toplevel .pitchclass
-        position_window .pitchclass
+        positionWindow .pitchclass
         pack [canvas $pitchc -width 425 -height 100]\
                 -expand yes -fill both
     } else {.pitchclass.c delete all}
@@ -9169,7 +9208,7 @@ proc plot_velocity_map {} {
     set velmap .midivelocity.c
     if {[winfo exists .midivelocity] == 0} {
         toplevel .midivelocity
-        position_window .midivelocity
+        positionWindow .midivelocity
         wm title .midivelocity "midi velocity versus beat number"        
         pack [canvas $velmap]
     } else {
@@ -9239,7 +9278,7 @@ proc mftextwindow {midifilein nofile} {
       }
 
     toplevel $f
-    position_window $f
+    positionWindow $f
     frame $f.1
     label $f.fillab -text $midifilein  -font $df -width 60
     button $f.1.browse -text browse -font $df -command {
@@ -9654,10 +9693,9 @@ if {[winfo exist $w]} {
   raise $w .
   return}
 
-#switch_between_info_and_tinfo 
 
 toplevel $w
-position_window $w
+positionWindow $w
 
 frame $w.matchcriterion
 radiobutton $w.matchcriterion.cosine -text "1 - cosine" -font $df\
@@ -10049,7 +10087,7 @@ proc plot_match_histogram {} {
     set graph .graph.c
     if {[winfo exists .graph] == 0} {
         toplevel .graph
-        position_window .graph
+        positionWindow .graph
         pack [canvas $graph]
     } else {
         $graph delete all}
@@ -10335,7 +10373,7 @@ global indexnum
 set w .indexwindow
 if {![winfo exist $w]} {
   toplevel $w
-  position_window $w
+  positionWindow $w
   set indexnum 1
   frame $w.indexframe
   label $w.indexframe.lab -text "enter database index number" -font $df
@@ -10513,7 +10551,7 @@ for {set i 1} {$i < $descsize} {incr i} {
   puts $outhandle $drumdata(81)
   }
 close $outhandle 
-switch_between_info_and_tinfo 
+SwitchBetweenInfoAndTinfo 
 .info.txt insert insert "\ndata stored in $csvfile"
 }
 
@@ -10545,7 +10583,7 @@ for {set i 1} {$i < $descsize} {incr i} {
   #puts $feat
   }
 close $outhandle
-switch_between_info_and_tinfo 
+SwitchBetweenInfoAndTinfo 
 .info.txt insert insert "\ndata stored in $csvfile"
 }
 
@@ -10575,7 +10613,7 @@ for {set i 1} {$i < $descsize} {incr i} {
   #puts $feat
   }
 close $outhandle
-switch_between_info_and_tinfo 
+SwitchBetweenInfoAndTinfo 
 .info.txt insert insert "\ndata stored in $csvfile"
 }
 
@@ -10621,7 +10659,7 @@ for {set i 1} {$i < $descsize} {incr i} {
   #puts $feat
   }
 close $outhandle
-switch_between_info_and_tinfo 
+SwitchBetweenInfoAndTinfo 
 .info.txt insert insert "\ndata stored in $csvfile"
 }
 
@@ -10651,7 +10689,7 @@ for {set i 1} {$i < $descsize} {incr i} {
   #puts $feat
   }
 close $outhandle
-switch_between_info_and_tinfo 
+SwitchBetweenInfoAndTinfo 
 .info.txt insert insert "\ndata stored in $csvfile"
 }
 
@@ -10675,7 +10713,7 @@ for {set i 1} {$i < $descsize} {incr i} {
   puts $outhandle "$i\t$nbeats\t$tempo\t$pitchbends\t$pitchentropy\t$ndrums\t$filepath"
   }
 close $outhandle
-switch_between_info_and_tinfo 
+SwitchBetweenInfoAndTinfo 
 .info.txt insert insert "\ndata stored in $csvfile"
 }
 
@@ -10692,7 +10730,7 @@ for {set i 1} {$i < $descsize} {incr i} {
   puts $outhandle "$i\t$filepath"
   }
 close $outhandle
-switch_between_info_and_tinfo 
+SwitchBetweenInfoAndTinfo 
 .info.txt insert insert "\ndata stored in $csvfile"
 }
 
@@ -10723,7 +10761,7 @@ global df
 global genre_entry
 if {[winfo exists .wiki] == 0} {
   toplevel .wiki
-  position_window .wiki
+  positionWindow .wiki
   text .wiki.t -height 10 -width 50 -font $df
   frame .wiki.f
   button .wiki.f.b -text "search wikipedia" -command {open_wikipedia} -font $df 
@@ -10906,7 +10944,7 @@ for {set i 0} {$i < $max_x} {incr i} {
 set graph .graph.c
   if {[winfo exists .graph] == 0} {
       toplevel .graph
-      position_window .graph
+      positionWindow .graph
       pack [canvas $graph]
   } else {
       $graph delete all}
@@ -11021,7 +11059,7 @@ for {set i 0} {$i < 46} {incr i} {
 set graph .graph.c
   if {[winfo exists .graph] == 0} {
       toplevel .graph
-      position_window .graph
+      positionWindow .graph
       pack [canvas $graph]
   } else {
       $graph delete all}
@@ -11096,7 +11134,7 @@ for {set i 0} {$i < 200} {incr i} {
 set graph .graph.c
   if {[winfo exists .graph] == 0} {
       toplevel .graph
-      position_window .graph
+      positionWindow .graph
       pack [canvas $graph]
   } else {
       $graph delete all}
@@ -11141,7 +11179,7 @@ proc plot_program_distribution {} {
     set graph .graph.c
     if {[winfo exists .graph] == 0} {
         toplevel .graph
-        position_window .graph
+        positionWindow .graph
         pack [canvas $graph]
     } else {
         $graph delete all}
@@ -11166,7 +11204,7 @@ proc plot_program_distribution {} {
 
 #Main
 set ntrk 1
-switch_between_info_and_tinfo 
+SwitchBetweenInfoAndTinfo 
 check_midi2abc_and_midicopy_versions 
 if {$midi(rootfolder) == ""} {
   .info.txt insert insert $welcome
@@ -11670,7 +11708,7 @@ global lasttrack
 set b .barmap.txt
 if {![winfo exist .barmap]} {
    toplevel .barmap
-   position_window .barmap
+   positionWindow .barmap
    text $b -width 80 -xscrollcommand {.barmap.xsbar set} -wrap none
    scrollbar .barmap.xsbar -orient horizontal -command {.barmap.txt xview}
    pack $b .barmap.xsbar -side top -fill x
@@ -11810,7 +11848,7 @@ proc dictview_window {} {
    if {[winfo exist .dictview] == 0} {
      set f .dictview
      toplevel $f
-     position_window $f
+     positionWindow $f
      frame $f.1 
      label $f.1.lab -text ""
      pack $f.1.lab
@@ -12066,7 +12104,7 @@ proc make_playlist_manager {} {
 
   if {![winfo exist .playmanage]} {
     toplevel .playmanage
-    position_window .playmanage
+    positionWindow .playmanage
     button .playmanage.help -text help -command {show_message_page $hlp_playlist word}
     pack .playmanage.help
     set f .playmanage.left
@@ -12134,7 +12172,7 @@ close $inhandle
 proc playlist_artist_selected {loc} {
 global findname
 set findname [.playmanage.right.list get $loc]
-find_child_in_tree .treebrowser $findname
+findChildInTree .treebrowser $findname
 }
 
 
@@ -12525,7 +12563,7 @@ global df
 set w .cfgmidi2abc
 if {![winfo exist $w]} {
   toplevel $w
-  position_window $w
+  positionWindow $w
   label $w.minrestlab -text "minimum rest" -font $df
   entry $w.minrestent -textvariable midi(midirest) -width 2 -font $df
   grid $w.minrestlab $w.minrestent
@@ -12595,7 +12633,7 @@ global midi
 global midichannels
 if {![winfo exist .pgram]} {
   toplevel .pgram
-  position_window .pgram
+  positionWindow .pgram
   frame .pgram.hdr
   pack .pgram.hdr -anchor w
   button .pgram.hdr.cfg -text configure -font $df -command pgram_cfg
@@ -13121,7 +13159,7 @@ global df
 
     set w .keystrip
     toplevel $w
-    position_window ".keystrip"
+    positionWindow ".keystrip"
 #    frame $w.head
 #    button $w.head.but -text configure -font $df
 #    pack $w.head.but -side left -anchor w
@@ -13440,7 +13478,7 @@ proc keymapPlotPitchClassHistogram {} {
     set pitchc .keypitchclass.c
     if {[winfo exists .keypitchclass] == 0} {
         toplevel .keypitchclass
-        position_window ".keypitchclass"
+        positionWindow ".keypitchclass"
         pack [canvas $pitchc -width [expr $scanwidth +130] -height $scanheight]\
                 -expand yes -fill both
     } else {.keypitchclass.c delete all}
@@ -13544,7 +13582,7 @@ proc show_data_page {text wrapmode clean} {
         $p.t delete 1.0 end
     } else {
         toplevel $p
-        position_window ".data_info"
+        positionWindow ".data_info"
         text $p.t -height 20 -width 80 -wrap $wrapmode -font $df -yscrollcommand {
             .data_info.ysbar set}
         scrollbar $p.ysbar -orient vertical -command {.data_info.t yview}
@@ -13588,7 +13626,7 @@ proc show_checkversion_summary {} {
         $p.t delete 1.0 end
     } else {
         toplevel $p
-        position_window ".data_info"
+        positionWindow ".data_info"
         text $p.t -height 20 -width 80 -wrap char -font $df -yscrollcommand {
             .data_info.ysbar set}
         scrollbar $p.ysbar -orient vertical -command {.data_info.t yview}
@@ -13600,7 +13638,7 @@ proc show_checkversion_summary {} {
     $p.t insert end "$msg\n\n"
 
     foreach {path ver} $abcmidilist {
-        set result [get_version_number $midi($path)]
+        set result [getVersionNumber $midi($path)]
         # add this line for abcm2ps
         set result [lindex [split $result \n] 0]
         #set msg "$midi($path)\t $result"
