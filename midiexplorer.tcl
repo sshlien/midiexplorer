@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.56 2021-08-24 08:25" 
+set midiexplorer_version "MidiExplorer version 2.58 2021-08-25 09:55" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -993,7 +993,7 @@ $ww add command -label "supporting executables" -font $df -command {
 $ww add command -label "midi player" -font $df -command {
   set_midi_players}
 
-$ww add command -label "font selector" -font $df -command font_selector
+$ww add command -label "font selector" -font $df -command fontSelector
 
 $ww add command -label "midi2abc configuration" -font $df -command midi2abc_config
 
@@ -1007,7 +1007,7 @@ $ww add checkbutton -label "tooltips" -font $df -variable midi(tooltips)\
 $ww add checkbutton -label "remember locations of windows" -font $df\
  -variable midi(autoposition)
 
-$ww add command -label "clear recents" -font $df -command delete_history
+$ww add command -label "clear recents" -font $df -command deleteHistory
 
 $ww add command -label "help" -font $df -command {show_message_page $hlp_settings word}
 
@@ -1310,7 +1310,7 @@ proc messagetxt {txt} {
 
 #        font selector
 
-proc font_selector {} {
+proc fontSelector {} {
 global midi
 set w .fontwindow
 set sizelist {6 7 8 9 10 11 12 13 14}
@@ -1331,7 +1331,7 @@ label $w.fontsizelab -text "font size"
 ttk::combobox $w.fontsize -width 8  -textvariable midi(font_size)\
          -values $sizelist
 grid $w.fontsizelab $w.fontsize
-button $w.fontset -text "font set" -command change_font
+button $w.fontset -text "font set" -command changeFont
 button $w.fontreset -text "font reset" -command reset_font
 grid $w.fontset $w.fontreset
 }
@@ -1354,7 +1354,7 @@ if {[winfo exist .midistructure]} {
   }
 }
 
-proc change_font {} {
+proc changeFont {} {
 global midi
 global df
 global dfi
@@ -1382,7 +1382,7 @@ proc cfgtooltips {} {
 # enable or disable tooltips
 cfgtooltips
 
-proc update_history {openfile} {
+proc updateHistory {openfile} {
     global midi history_index df
     set w .treebrowser.menuline.file.items.recent
     #check if file is in history
@@ -1415,7 +1415,7 @@ proc update_history {openfile} {
 
 
 
-proc delete_history {} {
+proc deleteHistory {} {
 global midi
 for {set i 1} {$i < $midi(history_length)} {incr i} {
   unset midi(history$i)}
@@ -1424,7 +1424,7 @@ set midi(history_length) 0
 }
 
 
-proc pop_message {text} {
+proc popMessage {text} {
   set b ._msg_
   if {![winfo exists $b]} {
     toplevel $b -class Tooltip
@@ -1513,7 +1513,7 @@ proc populatedir {tree root} {
 
 
 
-proc formatsize {size} {
+proc formatSize {size} {
       if {$size >= 1024*1024*1024} {
 	set size [format %.1f\ GB [expr {$size/1024/1024/1024.}]]
       } elseif {$size >= 1024*1024} {
@@ -1560,7 +1560,7 @@ proc populateTree {tree node} {
 	             -values [list $folder_item file] -tag fnt]
 	           $tree item $id -text "[file tail $f]/[file tail $folder_item]" -tag fnt
 	           set size [file size $folder_item]
-	           $tree set $id size [formatsize $size]
+	           $tree set $id size [formatSize $size]
 	           }
                 } 
             } else { 
@@ -1577,7 +1577,7 @@ proc populateTree {tree node} {
 		-values [list $f $type] -tag fnt]
 	      set size [file size $f]
 	    ## Format the file size nicely
-	      set size [formatsize $size] 
+	      set size [formatSize $size] 
 	      $tree set $id size $size
               }
 	}
@@ -1912,7 +1912,7 @@ proc selected_midi {} {
    .treebrowser.menuline.rhythm configure -state normal
    .treebrowser.menuline.pitch configure -state normal
    set midi(midifilein) $f
-   update_history [file dirname $f]
+   updateHistory [file dirname $f]
    clear_miditracks_and_channels
    set midi_info [get_midi_info_for]
    parse_midi_info $midi_info
@@ -2102,7 +2102,7 @@ proc list_progammod {} {
       append msg "$i\t$b\t[lindex $mlist $p]\n"
       }
     }
-  pop_message $msg
+  popMessage $msg
   }
 
 proc list_pitchbends {} {
@@ -2114,7 +2114,7 @@ proc list_pitchbends {} {
     set nbends [lindex $bend 1]
     append msg "$chan\t$nbends\n"
     }
-  pop_message $msg
+  popMessage $msg
   }
 
 proc list_tempomod {} {
@@ -2126,7 +2126,7 @@ proc list_tempomod {} {
     set b [lindex $tempocmd 1]
     append msg "$t\t$b\n"
     }
-  pop_message $msg
+  popMessage $msg
   }  
   
 proc list_timesigmod {} {
@@ -2138,7 +2138,7 @@ proc list_timesigmod {} {
     set b [lindex $tsigcmd 1]
     append msg "$t\t$b\n"
     }
-  pop_message $msg
+  popMessage $msg
   }  
 
 proc list_keysigmod {} {
@@ -2150,7 +2150,7 @@ proc list_keysigmod {} {
     set b [lindex $ksigcmd 1]
     append msg "$k\t$b\n"
     }
-  pop_message $msg
+  popMessage $msg
   }  
  
 
@@ -4213,6 +4213,7 @@ proc piano_Button1Motion {x} {
 proc piano_Button1Release {} {
     bind .piano.can <Motion> {}
     set co [.piano.can coords mark]
+    update_displayed_pdf_windows .piano.can
 }
 
 proc piano_ClearMark {} {
@@ -5018,14 +5019,14 @@ switch $source {
   chordgram {
     set co [.chordgram.can coords mark]
     set limits [chordgram_limits $co]
-       if {[lindex $limits 0] > 0} {
+       if {[lindex $limits 0] >= 0} {
        set start [expr [lindex $limits 0]]
        set stop  [expr [lindex $limits 1]]
        }
     }
   pianoroll {
     set limits [midi_limits .piano.can]
-    if {[lindex $limits 0] > 0} {
+    if {[lindex $limits 0] >= 0} {
        set start [expr [lindex $limits 0]/double($ppqn)]
        set stop  [expr [lindex $limits 1]/double($ppqn)]
        }
@@ -5045,14 +5046,12 @@ switch $source {
        }
     }
   }
-#puts "$source compute_chordgram $start $stop"
 compute_chordgram $start $stop
 }
 
 proc chordgram_Button1Press {x y} {
     set xc [.chordgram.can canvasx $x]
     .chordgram.can raise mark
-    .chordgram.can coords mark $xc 20 $xc 220
     bind .chordgram.can <Motion> { chordgram_Button1Motion %x }
 }
 
@@ -5130,7 +5129,7 @@ proc compute_chordgram {start stop} {
    set c .chordgram.can
    $c delete all
    $c create rectangle $xlbx $ybbx $xrbx $ytbx -outline black -width 2 -fill lightgrey 
-  set start5 [expr (1 + int($start)/5)*5.0]
+  set start5 [expr (int($start)/5)*5.0]
 
    # white or black characters
   set colfg [lindex [.info.txt config -fg] 4]
@@ -6341,19 +6340,20 @@ proc midi_limits {can} {
     if {$extent > 10} {
         set xvleft [lindex $co 0]
         set xvright [lindex $co 2]
+        if {$xvleft < 0} {set xvleft 0}
     } else {
         #get start and end time of displayed area
         set xv [$can xview]
-        #puts $xv
+        #puts "xv = $xv"
         set scrollregion [$can cget -scrollregion]
-        #puts $scrollregion
+        #puts "scrollregion = $scrollregion"
         set xvleft [lindex $xv 0]
         set xvright [lindex $xv 1]
         set width [lindex $scrollregion 2]
         set xvleft [expr $xvleft*$width]
         set xvright [expr $xvright*$width]
     }
-    #    puts "xvleft = $xvleft xvright=$xvright"
+        #puts "xvleft = $xvleft xvright=$xvright"
     
     set begin [expr round($xvleft*$pianoxscale)]
     set end [expr round($xvright*$pianoxscale)]
@@ -8564,7 +8564,7 @@ if {[winfo exists .chordstats]} {
    chord_histogram
    }
 if {[winfo exists .chordgram]} {
-   chordgram_plot none
+   chordgram_plot pianoroll
    }
 if {[winfo exists .entropy]} {
    analyze_note_patterns
@@ -10454,7 +10454,7 @@ if {$descsize < 2} {.info.txt insert insert "midi descriptors are empty\n\n" red
 set threshold [expr 50.0 /$nfiles]
 if {$threshold > 1.0} {set threshold 1.0}
 set size [file size $midi(midifilein)]
-set size [formatsize $size] 
+set size [formatSize $size] 
 set id [.treebrowser.tree insert {} end -text $midi(midifilein) -values [list $midi(midifilein) file $size 0.0 "" $position] -tag purple]
 for {set i 1} {$i < $descsize} {incr i} {
   #puts $i
