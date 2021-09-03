@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.58 2021-08-25 09:55" 
+set midiexplorer_version "MidiExplorer version 2.62 2021-09-03 08:35" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -1084,11 +1084,11 @@ menubutton $w.menuline.pitch -text pitch\nanalysis -menu $w.menuline.pitch.items
 set ww $w.menuline.pitch.items
 menu $ww -tearoff 0
         $ww add command  -label "pitch distribution" -font $df \
-            -command {midi_statistics pitch 
+            -command {midi_statistics pitch none
                       plotmidi_pitch_pdf
                       }
         $ww add command  -label "pitch class plot" -font $df \
-            -command {midi_statistics pitch 
+            -command {midi_statistics pitch none
                       show_note_distribution
                      } 
         $ww add command  -label "pitch class map" -font $df \
@@ -1096,8 +1096,8 @@ menu $ww -tearoff 0
 	$ww add command -label chordgram -font $df -command {chordgram_plot none}
 #	$ww add command -label "chord histogram" -font $df -command chord_histogram
 #        $ww add command -label "chordtext" -font $df -command chordtext_window
-        $ww add command -label notegram -font $df -command notegram_plot
-        $ww add command -label keymap -font $df -command keymap 
+        $ww add command -label notegram -font $df -command {notegram_plot none}
+        $ww add command -label keymap -font $df -command {keymap none}
 	$ww add command -label "entropy analysis" -font $df -command analyze_note_patterns
 tooltip::tooltip $w.menuline.pitch "Computes the and plots the distribution
 of various pitch related parameters of the selected midi file."
@@ -1109,19 +1109,19 @@ menubutton $w.menuline.rhythm -text rhythm\nanalysis -menu $w.menuline.rhythm.it
 set ww $w.menuline.rhythm.items
 menu $ww -tearoff 0
 	$ww add command -label "onset distribution" -font $df\
-            -command {midi_statistics onset
+            -command {midi_statistics onset none
                       plotmidi_onset_pdf 
                      }
 	$ww add command -label "offset distribution" -font $df\
-            -command {midi_statistics offset
+            -command {midi_statistics offset none
                       plotmidi_offset_pdf 
                      }
         $ww add command  -label "note duration distribution" -font $df \
-            -command {midi_statistics duration
+            -command {midi_statistics duration none
                       plotmidi_duration_pdf 
                      }
         $ww add command  -label "velocity distribution" -font $df \
-            -command {midi_statistics velocity
+            -command {midi_statistics velocity none
                 plotmidi_velocity_pdf}
         $ww add command  -label "velocity map" -font $df \
             -command plot_velocity_map
@@ -1192,7 +1192,7 @@ menu $ww -tearoff 0
        $ww add command -label "pitch class entropy distribution" -command pitch_entropy_distribution -font $df
 
 
-button $w.menuline.abc -text abc -font $df -command create_abc_file
+button $w.menuline.abc -text abc -font $df -command {create_abc_file none}
 tooltip::tooltip $w.menuline.abc "Convert the selected tracks (channels) or entire\nmidi file to abc notation and open an abc editor."
 
 #        find title 
@@ -1863,7 +1863,7 @@ foreach i $indices {
   #        }
     }
 midistructure_select
-updateAllWindows
+updateAllWindows none
 }
 
 
@@ -1930,7 +1930,7 @@ proc selected_midi {} {
 	    }
    if {[winfo exist .mftext]} {mftextwindow $midi(midifilein) 0}
    if {[winfo exist .drumroll]} {show_drum_events}
-   updateAllWindows 
+   updateAllWindows pianoroll
    }
 }
 
@@ -2844,29 +2844,35 @@ if {![winfo exist $w]} {
  menubutton $w.header.plot -text plot -menu $w.header.plot.items -font $df
   menu $w.header.plot.items -tearoff 0
  $w.header.plot.items add command  -label "pitch class plot" -font $df \
-            -command {midi_statistics_for_tableau pitch  
+            -command {
+                      midi_statistics pitch tableau
                       show_note_distribution
                      } 
  $w.header.plot.items add command  -label "pitch distribution" -font $df \
-            -command {midi_statistics_for_tableau pitch
+            -command {
+                      midi_statistics pitch tableau
                       plotmidi_pitch_pdf
                       }
  $w.header.plot.items  add command -label "onset distribution" -font $df\
-            -command {midi_statistics_for_tableau onset
+            -command {
+                      midi_statistics onset tableau
                       plotmidi_onset_pdf 
                      }
  $w.header.plot.items add command  -label "note duration distribution" -font $df \
-            -command {midi_statistics_for_tableau duration
+            -command {
+                      midi_statistics duration tableau
                       plotmidi_duration_pdf
                      }
  $w.header.plot.items add command  -label "velocity distribution" -font $df \
-            -command {midi_statistics_for_tableau velocity
+            -command {
+                      midi_statistics velocity tableau
                       plotmidi_velocity_pdf
                       }
- $w.header.plot.items add command -label keymap -font $df -command keymap
+ $w.header.plot.items add command -label keymap -font $df -command {keymap tableau}
  $w.header.plot.items add command -label chordgram -font $df -command {chordgram_plot tableau}
- $w.header.plot.items add command -label notegram -font $df -command notegram_plot
+ $w.header.plot.items add command -label notegram -font $df -command {notegram_plot tableau}
  $w.header.plot.items add command -label "pitch class map" -font $df -command simple_tableau
+ $w.header.plot.items add command -label "chordtext" -font $df -command {chordtext_window tableau}
  tooltip::tooltip $w.header.plot "Various plots including chordgram and notegram"
 
 
@@ -3122,7 +3128,7 @@ proc plot_tableau_data {} {
     set iy1 [expr $pitchindex*4 + $row*50]
     set iy2 [expr $iy1 + 2 + $dotsize]
     set ix2 [expr $ix1 + $dotsizehalf]
-    .ptableau.frm.can create rectangle $ix1 $iy1 $ix2 $iy2 -fill $color -width 0
+    .ptableau.frm.can create rectangle $ix1 $iy1 $ix2 $iy2 -fill $color -width 0 -tag r$row
     }
 
     if {$end == "Program"} {
@@ -3180,7 +3186,7 @@ for {set i 1} {$i<17} {incr i} {
 .ptableau.frm.can create rect -1 -1 -1 -1 -tags mark -fill gray35 -stipple gray12
 
 # outline channel bands
-set i 1
+set i 0
 foreach chan $chanlist {
    set iy2 [expr $i*50]
    set iy1 [expr $iy2 - 50] 
@@ -3190,6 +3196,8 @@ foreach chan $chanlist {
    } else {
      .ptableau.frm.can create rectangle 0 $iy1 10000 $iy2 -fill #05050A -width 0
    }
+     .ptableau.frm.can bind r$i <Enter> "highlightTableauStrip $i"
+     .ptableau.frm.can bind r$i <Leave> "unhighlightTableauStrip $i"
    incr i
 }
 
@@ -3209,6 +3217,16 @@ for {set ix 0} {$ix < $maxsize} {incr ix $spacing} {
 displayBeatGrid $tableauHeight 16 4 1 .ptableau.frm.can
 }
 
+proc highlightTableauStrip {i} {
+global tableauRowColor
+set tableauRowColor [.ptableau.frm.can itemcget r$i -fill]
+.ptableau.frm.can itemconfigure r$i -fill white 
+}
+
+proc unhighlightTableauStrip {i} {
+global tableauRowColor
+.ptableau.frm.can itemconfigure r$i -fill $tableauRowColor 
+}
 
 
 proc playExposed {} {
@@ -3216,11 +3234,8 @@ global midi
 global lastbeat
 global midichannels
 global exec_out
-set limits [tableau_limits]
-set fbeat [lindex $limits 0]
-set tbeat [lindex $limits 1]
-set exec_out "playExposed\ncopyMidiToTmpForTableau"
-copyMidiToTmpForTableau $fbeat $tbeat
+copyMidiToTmp tableau
+set exec_out "playExposed\ncopyMidiToTmp tableau"
 if {![file exist $midi(path_midiplay)]} {
      set msg "You need to specify the path to a program which plays
 midi files. The box to the right can contain any runtime options."
@@ -3242,38 +3257,6 @@ update_console_page
 #puts $midiplayerresult
 }
 
-proc copyMidiToTmpForTableau {fbeat tbeat} {
-    global midi
-    global midichannels
-    global cleanData
-    global exec_out
-    if {![file exist $midi(path_midicopy)]} {
-       set msg "cannot find $midi(path_midicopy). Install midicopy
-from the abcMIDI package and set the path to its location."
-       tk_messageBox -message $msg
-       return
-       }
-    set chns ""
-    for {set i 0} {$i < 17} {incr i} {
-      if {$midichannels($i)} {append chns "$i,"}
-      }
-    set chns [string range $chns 0 end-1]
-    #puts "chns = $chns"
-
-    set cmd "exec [list $midi(path_midicopy)]"
-    append cmd " -frombeat $fbeat -tobeat $tbeat"
-    if {[string length $chns] > 0} {
-       append cmd " -chns $chns"
-       }
-    append cmd " [list $midi(midifilein)] tmp.mid"
-    catch {eval $cmd} midicopyresult
-    append exec_out "$cmd\n $midicopyresult\n"
-    set cleanData 0
-
-    set midi(outfilename) tmp.mid
-    #puts $exec_out
-    return $midicopyresult
-}
 
 proc tableau_limits {} {
 global lastbeat
@@ -3291,63 +3274,6 @@ if {$extent > 10} {
 return [list $fbeat $tbeat]
 }
 
-proc midi_statistics_for_tableau {choice} {
-# derived from pianoroll_statistics
-    global pianoresult midi
-    global histogram
-    global ppqn
-    global total
-    global exec_out
-    global midi
-    global cleanData
-    global lastbeat
-
-    set cleanData 0
-set limits [tableau_limits]
-set fbeat [lindex $limits 0]
-set tbeat [lindex $limits 1]
-set exec_out "midi_statistics_for_tableau\ncopyMidiToTmpForTableau"
-copyMidiToTmpForTableau $fbeat $tbeat
-    set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
-    catch {eval $cmd} pianoresult
-    set exec_out [append exec_out "midi_statistics:\n\n$cmd\n\n $pianoresult"]
-    update_console_page
-
-    for {set i 0} {$i < 128} {incr i} {set histogram($i) 0}
-    
-    set pianoresult [split $pianoresult \n]
-    foreach line $pianoresult  {
-        if {[llength $line] != 6} continue
-        set begin [lindex $line 0]
-        set end [lindex $line 1]
-        set t [lindex $line 2]
-        set c [lindex $line 3]
-        set note [lindex $line 4]
-        set vel [lindex $line 5]
-        switch $choice {
-            pitch {set histogram($note) [expr $histogram($note)+1]}
-            velocity {set histogram($vel) [expr $histogram($vel)+1]}
-            duration {set index [expr int(($end - $begin)*32/$ppqn)]
-                if {$index > 127} {set index 127}
-                set histogram($index) [expr $histogram($index)+1]
-            }
-            onset {set s [expr int((100.0*$begin)/$ppqn) % 100]
-                set histogram($s) [expr $histogram($s) + 1]
-                }
-            offset {set s [expr int((100.0*$end)/$ppqn) % 100]
-                set histogram($s) [expr $histogram($s) + 1]
-                }
-        }
-    }
-    set total 0;
-    for {set i 0} {$i <128} {incr i} {
-        set total [expr $total+$histogram($i)]
-    }
-    if {$total < 1} return
-    for {set i 0} {$i <128} {incr i} {
-        set histogram($i) [expr double($histogram($i))/$total]
-    }
-}
 
 
 
@@ -4083,10 +4009,12 @@ proc piano_window {} {
             -command plot_velocity_map
     $p.action.items add command  -label "beat graph" -font $df \
             -command beat_graph
+    $p.action.items add command  -label "notegram" -font $df \
+            -command {notegram_plot pianoroll}
     $p.action.items add command  -label "chordtext" -font $df \
-            -command chordtext_window
+            -command {chordtext_window pianoroll}
     $p.action.items add command  -label "chord histogram" -font $df \
-            -command chord_histogram
+            -command {chord_histogram none}
     $p.action.items add command  -label "chordgram plot " -font $df \
             -command {chordgram_plot pianoroll}
     $p.action.items add command -label "help" -font $df\
@@ -4396,7 +4324,7 @@ proc beat_graph {} {
     set stop  [expr double([lindex $limits 1])/$ppqn]
     set tsel [count_selected_midi_tracks]
 
-    copy_midi_to_tmp
+    copyMidiToTmp pianoroll
     set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
     catch {eval $cmd} pianoresult
     set nrec [llength $pianoresult]
@@ -4501,7 +4429,7 @@ proc chord_histogram_window {} {
 
 
 
-proc chordtext_window {} {
+proc chordtext_window {source} {
    global df
 
    if {[winfo exist .chordview] == 0} {
@@ -4515,7 +4443,7 @@ proc chordtext_window {} {
      scrollbar .chordview.2.scroll -orient vertical -command {.chordview.2.txt yview}
      pack $f.2.txt $f.2.scroll -side left -fill y
      }
-   make_and_display_chords
+   make_and_display_chords $source
 }
 
 
@@ -4613,6 +4541,7 @@ proc reorganize_pianoresult {} {
     global trksel
     set midiactions {}
     set tsel [count_selected_midi_tracks]
+    #puts "reorganize_pianoresult for [llength $pianoresult] records"
     foreach cmd $pianoresult {
         if {[llength $cmd] < 5} continue
         set onset [lindex $cmd 0]
@@ -4686,7 +4615,7 @@ proc switch_note_status {midicmd} {
 }
 
 
-proc make_and_display_chords {} {
+proc make_and_display_chords {source} {
     global midi
     global sorted_midiactions
     global total_chordcount
@@ -4695,11 +4624,11 @@ proc make_and_display_chords {} {
     global pianoresult
     global useflats
     
-    set limits [midi_limits .piano.can]
+    set limits [getCanvasLimits $source] 
     set start [lindex $limits 0]
     set stop  [lindex $limits 1]
-    set nbeats [expr ($stop - $start)/double($ppqn)]
-    set tsel [count_selected_midi_tracks]
+    set nbeats [expr ($stop - $start)]
+    #puts "make_and_display_chords: nbeats = $nbeats" 
     
     set v .chordview.2.txt
     $v delete 0.0 end
@@ -4711,7 +4640,10 @@ proc make_and_display_chords {} {
     set last_time 0.0
     set last_beat_number 0
     set i 0
-    
+   
+    set start [expr $start*$ppqn]
+    set stop   [expr $stop  *$ppqn]
+ 
     foreach midiunit $sorted_midiactions {
         set begin [lindex $midiunit 0]
         if {[string is double $begin] != 1} continue
@@ -4732,6 +4664,7 @@ proc make_and_display_chords {} {
             set last_beat_number $beat_number
             } 
 
+         # detailed list if less than 20 beats were selected
          if {$nbeats < 20.1} { 
            if {[expr $present_time - $last_time] > 0.2} {
              set onlist [list_on_notes]
@@ -4818,7 +4751,7 @@ proc chordname {chordstring root} {
   }
 
 
-proc determine_chord_sequence {} {
+proc determine_chord_sequence {source} {
     global midi
     global sorted_midiactions
     global ppqn
@@ -4828,15 +4761,30 @@ proc determine_chord_sequence {} {
     global cleanData
 
     set list_of_chords [dict create]
-    if {[winfo exist .piano]} {
+    #Force loadMidiFile in case notegram alters pianoresult
+    set midilength 0
+    set cleanData 0
+    if {$source == "pianoroll"} {
       set limits [midi_limits .piano.can]
+      set start [lindex $limits 0]
+      set stop  [lindex $limits 1]
+      if {$midilength == 0} loadMidiFile
+      set cleanData 1
+      } elseif {$source == "tableau"} {
+      set limits [midi_limits .ptableau.frm.can]
+      set start [lindex $limits 0]
+      set stop  [lindex $limits 1]
+      if {$midilength == 0} loadMidiFile
+      set cleanData 1
+      } elseif {$source == "midistructure"} {
+      set limits [midi_limits .midistructure.can]
       set start [lindex $limits 0]
       set stop  [lindex $limits 1]
       if {$midilength == 0} loadMidiFile
       set cleanData 1
       } else {
 # if not called from .piano window
-      copy_midi_to_tmp
+      copyMidiToTmp $source
       set cleanData 0
       set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
       catch {eval $cmd} pianoresult
@@ -4893,12 +4841,12 @@ proc determine_chord_sequence {} {
     return $list_of_chords
 }
 
-proc make_chord_histogram {} {
+proc make_chord_histogram {source} {
 global total_chordcount
 global chordcount
 set total_chordcount 0
 array unset chordcount
-set chord_sequence [determine_chord_sequence]
+set chord_sequence [determine_chord_sequence $source]
 set last_beat [dict size $chord_sequence]
 for {set beat 0} {$beat < $last_beat} {incr beat} {
      set chord [dict get  $chord_sequence $beat]
@@ -4954,9 +4902,9 @@ if {$midi(chordhist) == "bar"} {
   }
 }
 
-proc chord_histogram {} {
+proc chord_histogram {source} {
     chord_histogram_window
-    make_chord_histogram
+    make_chord_histogram $source
     switch_text_barchart
 }
 
@@ -5002,19 +4950,18 @@ proc chordgram_plot {source} {
      bind .chordgram.can <ButtonRelease-1> chordgram_Button1Release
      bind .chordgram.can <Double-Button-1> chordgram_ClearMark
      }
-   set chord_sequence [determine_chord_sequence]
+   set chord_sequence [determine_chord_sequence $source]
    #set seqlength [llength $chord_sequence]
    set last_beat [dict size $chord_sequence]
    set seqlength $last_beat
    call_compute_chordgram $source
 }
 
-proc call_compute_chordgram {source} {
-global midi
-global seqlength
+proc getCanvasLimits {source} {
+global lastbeat
 global ppqn
 set start -1
-set stop $seqlength
+set stop $lastbeat
 switch $source {
   chordgram {
     set co [.chordgram.can coords mark]
@@ -5045,13 +4992,25 @@ switch $source {
        set stop [lindex $limits 1]
        }
     }
+  default {
+    set start -1
+    set stop $lastbeat
+    }
   }
+return [list $start $stop]
+}
+
+proc call_compute_chordgram {source} {
+set limits [getCanvasLimits $source]
+set start [lindex $limits 0]
+set stop  [lindex $limits 1]
 compute_chordgram $start $stop
 }
 
 proc chordgram_Button1Press {x y} {
     set xc [.chordgram.can canvasx $x]
     .chordgram.can raise mark
+    .chordgram.can coords mark $xc 20 $xc 220
     bind .chordgram.can <Motion> { chordgram_Button1Motion %x }
 }
 
@@ -5222,7 +5181,7 @@ proc compute_chordgram {start stop} {
 }
 
 
-proc notegram_plot {} {
+proc notegram_plot {source} {
    global pianorollwidth
    global midi
    global df
@@ -5230,8 +5189,8 @@ proc notegram_plot {} {
      toplevel .notegram
      positionWindow .notegram
      frame .notegram.head
-     radiobutton .notegram.head.1 -text sequential -variable midi(notegram) -value seq -font $df -command compute_notegram
-     radiobutton .notegram.head.2 -text "circle of fifths" -variable midi(notegram) -value fifths -font $df -command compute_notegram
+     radiobutton .notegram.head.1 -text sequential -variable midi(notegram) -value seq -font $df -command {compute_notegram none}
+     radiobutton .notegram.head.2 -text "circle of fifths" -variable midi(notegram) -value fifths -font $df -command {compute_notegram none}
      pack  .notegram.head.1 .notegram.head.2 -side left -anchor w
      pack  .notegram.head -side top -anchor w 
      set c .notegram.can
@@ -5242,7 +5201,7 @@ proc notegram_plot {} {
      bind .notegram.can <ButtonRelease-1> notegram_Button1Release
      bind .notegram.can <Double-Button-1> notegram_ClearMark
 
-    compute_notegram
+    compute_notegram $source
 }
 
 
@@ -5294,7 +5253,7 @@ set beat2 [expr [lindex $beatlimits 1]*$pixels_per_beat]
 .midistructure.can coords mark $beat1 0 $beat2 $midistructureheight
 }
 
-proc compute_notegram {} {
+proc compute_notegram {source} {
    global pianorollwidth
    global pianoresult
    global lastbeat
@@ -5308,10 +5267,12 @@ proc compute_notegram {} {
    global fbeat
    global tbeat
    global notegram_xfm
+   global cleanData
    set permut5th {0 7 2 9 4 11 6 1 8 3 10 5}
    # white or black characters
    set colfg [lindex [.info.txt config -fg] 4]
-   copy_midi_to_tmp
+   copyMidiToTmp $source
+   set cleanData 0
    set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
    catch {eval $cmd} pianoresult
    set exec_out [append exec_out "notegram:\n\n$cmd\n\n $pianoresult"]
@@ -5495,19 +5456,19 @@ function"
   menubutton $wm.plot -text plot -menu $wm.plot.items -font $df
   menu $wm.plot.items -tearoff 0
  $wm.plot.items add command  -label "pitch class plot" -font $df \
-            -command {midi_statistics pitch 
+            -command {midi_statistics pitch midistructure
                       show_note_distribution
                      } 
  $wm.plot.items add command  -label "pitch distribution" -font $df \
-            -command {midi_statistics pitch 
+            -command {midi_statistics pitch midistructure
                       plotmidi_pitch_pdf
                       }
  $wm.plot.items add command -label chordgram -font $df -command {chordgram_plot midistructure}
- $wm.plot.items add command -label notegram -font $df -command notegram_plot
+ $wm.plot.items add command -label notegram -font $df -command {notegram_plot midistructure}
  tooltip::tooltip $wm.plot "Various plots including chordgram and notegram"
 
 
-  button $wm.abc -text abc -font $df -command create_abc_file
+  button $wm.abc -text abc -font $df -command {create_abc_file midistructure}
   tooltip::tooltip $wm.abc "Convert the selected tracks (channels) or entire\nmidi file to abc notation and open an abc editor."
 
   button $wm.help -text help -font $df -command {show_message_page $hlp_midistructure word}
@@ -5526,10 +5487,10 @@ function"
 
   set f [frame $w.leftbuttons -bd 3 -relief sunken]
   for {set i 2} {$i <40} {incr i} {
-    checkbutton .midistructure.leftbuttons.$i -text "trk$i" -variable miditracks($i) -font $df -command updateAllWindows
+    checkbutton .midistructure.leftbuttons.$i -text "trk$i" -variable miditracks($i) -font $df -command {updateAllWindows midistructure}
     }
   for {set i 0} {$i <17} {incr i} {
-    checkbutton .midistructure.leftbuttons.c$i -text "chan$i" -variable midichannels($i) -font $df -command updateAllWindows
+    checkbutton .midistructure.leftbuttons.c$i -text "chan$i" -variable midichannels($i) -font $df -command {updateAllWindows midistructure}
     }
   set yspacing [winfo reqheight .midistructure.leftbuttons.2]
   canvas $w.can -width $midistructurewidth -height 200 -border 3 -relief sunken
@@ -5569,7 +5530,7 @@ proc mstruct_Button1Motion {x} {
 proc mstruct_Button1Release {} {
     bind .midistructure.can <Motion> {}
     set co [.midistructure.can coords mark]
-    updateAllWindows
+    updateAllWindows midistructure
     }
 
 proc mstruct_ClearMark {} {
@@ -6332,7 +6293,9 @@ proc update_piano_txt {x y} {
 proc midi_limits {can} {
     global pianoxscale
     global lastpulse
+    global pixels_per_beat
     global ppqn
+    set ppqn4 [expr $ppqn/4]
     if {![winfo exists $can]} {return "0 $lastpulse"}
     set co [$can coords mark]
     #   is there a marked region of reasonable extent ?
@@ -6355,8 +6318,18 @@ proc midi_limits {can} {
     }
         #puts "xvleft = $xvleft xvright=$xvright"
     
-    set begin [expr round($xvleft*$pianoxscale)]
-    set end [expr round($xvright*$pianoxscale)]
+    if {$can == ".piano.can"} {
+      set begin [expr round($xvleft*$pianoxscale)]
+      set end [expr round($xvright*$pianoxscale)]
+      } elseif {$can == ".ptableau.frm.can"} {
+      set begin [expr round($xvleft * $ppqn4)]
+      set end   [expr round($xvright* $ppqn4)]
+      } elseif {$can == ".midistructure.can"} {
+      set structxscale [expr $ppqn/double($pixels_per_beat)]
+      set begin [expr round($xvleft * $structxscale)]
+      set end [expr round($xvright * $structxscale)]
+      #puts "midi_limits returns $begin $end for midistructure"
+     }
     if {$begin < 0} {
         set $begin 0
     }
@@ -6522,31 +6495,23 @@ update_console_page
 
 proc play_selected_lines {} {
 global midi
-copy_midi_to_tmp
+copyMidiToTmp none
 play_midi_file $midi(outfilename)
 update_console_page
 }
 
 
-proc copy_midi_to_tmp {} {
+proc copyMidiToTmp {source} {
 global midi
-global midichannels
 global miditracks
+global midichannels
 global lasttrack
-global exec_out
 global midispeed
 global fbeat
 global tbeat
-set limits "none"
-set tbeat 0
-set fbeat 0
-if {[winfo exist .midistructure]} {
-    set limits [midistruct_limits .midistructure.can]
-    if {$limits != "none"} {
-	    set fbeat [lindex $limits 0]
-	    set tbeat [lindex $limits 1]
-    }
-}
+set limits [getCanvasLimits $source]
+set fbeat [lindex $limits 0]
+set tbeat  [lindex $limits 1]
 set trkchn ""
 set option ""
 if {$midi(midishow_sep) == "track"} {
@@ -6573,7 +6538,7 @@ if {$limits != "none"} {
 # in case windows is still playing it.
 set cmd "file delete -force -- $midi(outfilename)"
 catch {eval $cmd} done
-set midi(outfilename) [tmpname]
+set midi(outfilename) tmp.mid
 # create temporary file
 #puts "play_selected_lines option = $option"
 if {[string length $option] > 0} {
@@ -6584,9 +6549,10 @@ if {[string length $option] > 0} {
   } else {
   set cmd "file copy $midi(midifilein) $midi(outfilename)"
   file copy $midi(midifilein) $midi(outfilename)
-  set exec_out copy_midi_to_tmp:\n$cmd\n
+  set exec_out copyMidiToTmp:\n$cmd\n
   }
 }
+
 
 proc play_and_exclude_selected_lines {} {
 global trksel
@@ -6768,7 +6734,6 @@ proc create_midi_file {} {
 
 proc mftext_local_analysis {} {
     global midi
-    #copy_midi_to_tmp
     set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -mftext"
     mftextwindow $midi(outfilename) 1
 }
@@ -8306,7 +8271,7 @@ proc drumroll_statistics {choice} {
 }
 
 
-proc midi_statistics {choice} {
+proc midi_statistics {choice source} {
 # derived from pianoroll_statistics
     global pianoresult midi
     global histogram
@@ -8317,7 +8282,7 @@ proc midi_statistics {choice} {
     global cleanData
 
     set cleanData 0
-    copy_midi_to_tmp
+    copyMidiToTmp $source
     set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
     catch {eval $cmd} pianoresult
     set exec_out [append exec_out "midi_statistics:\n\n$cmd\n\n $pianoresult"]
@@ -8558,10 +8523,10 @@ if {[winfo exists .midivelocity]} {
    plot_velocity_map 
    }
 if {[winfo exists .chordview]} {
-   chordtext_window 
+   chordtext_window $canvs
    }
 if {[winfo exists .chordstats]} {
-   chord_histogram
+   chord_histogram pianoroll
    }
 if {[winfo exists .chordgram]} {
    chordgram_plot pianoroll
@@ -8575,51 +8540,55 @@ if {[winfo exists .beatgraph]} {
 if {[winfo exists .channel9]} {
    compute_drum_pattern
    }
+if {[winfo exists .notegram]} {
+   notegram_plot pianoroll
+   }
 }
 
 
-proc updateAllWindows {} {
+proc updateAllWindows {source} {
+#puts "updateAllWindows $source"
 if {[winfo exists .pitchpdf]} {
-   midi_statistics pitch 
+   midi_statistics pitch $source
    plotmidi_pitch_pdf
    }
 if {[winfo exists .pitchclass]} {
-   midi_statistics pitch 
+   midi_statistics pitch $source
    show_note_distribution
    }
 if {[winfo exists .velocitypdf]} {
-   midi_statistics velocity 
+   midi_statistics velocity $source
    plotmidi_velocity_pdf
    }
 if {[winfo exists .onsetpdf]} {
-   midi_statistics onset
+   midi_statistics onset $source
    plotmidi_onset_pdf
    }
 if {[winfo exists .offsetpdf]} {
-   midi_statistics offset
+   midi_statistics offset $source
    plotmidi_offset_pdf
    }
 if {[winfo exists .durpdf]} {
-   midi_statistics duration
+   midi_statistics duration $source
    plotmidi_duration_pdf
    }
 if {[winfo exists .midivelocity]} {
    plot_velocity_map 
    }
 if {[winfo exists .chordview]} {
-   chordtext_window 
+   chordtext_window $source
    }
 if {[winfo exists .chordstats]} {
    chord_histogram
    }
 if {[winfo exists .chordgram]} {
-   chordgram_plot none
+   chordgram_plot $source 
    }
 if {[winfo exists .entropy]} {
    analyze_note_patterns
    }
 if {[winfo exists .notegram]} {
-   notegram_plot
+   notegram_plot $source
    }
 if {[winfo exists .beatgraph]} {
    beat_graph
@@ -8657,32 +8626,39 @@ if {[winfo exist .drumanalysis]} {
   
 proc updateWindows_for_tableau {} {
   if {[winfo exists .pitchclass]} {
-            midi_statistics_for_tableau pitch  
+            midi_statistics pitch tableau
             show_note_distribution
             }
   if {[winfo exists .pitchpdf]} {
-            midi_statistics_for_tableau pitch
+            midi_statistics pitch tableau
             plotmidi_pitch_pdf
             }
+  if {[winfo exists .onsetpdf]} {
+           midi_statistics onset tableau
+           plotmidi_onset_pdf
+           }
   if {[winfo exists .velocitypdf]} {
-            midi_statistics_for_tableau velocity
+            midi_statistics velocity tableau
             plotmidi_velocity_pdf
             }
   if {[winfo exists .chordgram]} {
-           call_compute_chordgram tableau
-           }
+            chordgram_plot tableau
+            }
   if {[winfo exists .notegram]} {
-           notegram_plot
+           notegram_plot tableau
            }
   if {[winfo exist .keystrip]} {
-           keymap
+           keymap tableau
            }
   if {[winfo exists .durpdf]} {
-   midi_statistics_for_tableau pitch  
-   plotmidi_duration_pdf
+          midi_statistics pitch tableau
+          plotmidi_duration_pdf
    }
   if {[winfo exists .ribbon]} {
    simple_tableau 
+   }
+if {[winfo exists .chordview]} {
+   chordtext_window tableau
    }
 }
 
@@ -11629,8 +11605,8 @@ global last_dictview
 
 entropyInterface 
 
-# copy_midi_to_tmp deals with the selected tracks and time interval
-copy_midi_to_tmp
+# copyMidiToTmp deals with the selected tracks and time interval
+copyMidiToTmp none
 set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
 catch {eval $cmd} pianoresult
 set nrec [llength $pianoresult]
@@ -12258,11 +12234,11 @@ speakers and follow the score.\n\n\
 "
 
 
-proc create_abc_file {} {
+proc create_abc_file {source} {
 global midi
 global exec_out
 set title [file root [file tail $midi(midifilein)]]
-copy_midi_to_tmp
+copyMidiToTmp $source
 # -sr 2 swallow small rests
 set options " "
 if {$midi(splits) == 1} {set options [concat $options -splitbars]}
@@ -13180,13 +13156,13 @@ global df
     frame $w.cfg.spc
     label $w.cfg.spc.spclab -text keySpacing -font $df
     entry $w.cfg.spc.spcent -textvariable midi(keySpacing) -width 3 -font $df 
-    bind $w.cfg.spc.spcent <Return> {keymap; focus .keystrip}
+    bind $w.cfg.spc.spcent <Return> {keymap tableau; focus .keystrip}
     pack  $w.cfg.spc -side top -anchor w
     pack $w.cfg.spc.spclab -side left -anchor w
     pack $w.cfg.spc.spcent -side left -anchor w
-    radiobutton $w.cfg.spc.kk -text kk -value kk -variable midi(pitchcoef) -command keymap -font $df
-    radiobutton $w.cfg.spc.ss -text ss -value ss -variable midi(pitchcoef) -command keymap -font $df
-    checkbutton $w.cfg.spc.w -text pitchWeighting -variable midi(pitchWeighting) -command keymap -font $df
+    radiobutton $w.cfg.spc.kk -text kk -value kk -variable midi(pitchcoef) -command {keymap tableau} -font $df
+    radiobutton $w.cfg.spc.ss -text ss -value ss -variable midi(pitchcoef) -command {keymap tableau} -font $df
+    checkbutton $w.cfg.spc.w -text pitchWeighting -variable midi(pitchWeighting) -command {keymap tableau} -font $df
     button $w.cfg.spc.h -text help -command keymap_help -font $df
     button $w.cfg.spc.c -text colors -command keyscape_keyboard -font $df
     pack $w.cfg.spc.kk $w.cfg.spc.ss $w.cfg.spc.w $w.cfg.spc.c $w.cfg.spc.h -side left -anchor w
@@ -13240,7 +13216,7 @@ proc segment_histogram {beatfrom} {
 
 
 
-proc keymap {} {
+proc keymap {source} {
 # derived from pianoroll_statistics
     global pianoresult midi
     global histogram
@@ -13276,7 +13252,7 @@ set the path to a midi file."
        return
        }
    # copy selected tracks/channels
-   copy_midi_to_tmp
+   copyMidiToTmp $source
    set cleanData 0
    set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
     catch {eval $cmd} pianoresult
