@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.62 2021-09-03 08:35" 
+set midiexplorer_version "MidiExplorer version 2.65 2021-09-06 08:45" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -45,11 +45,11 @@ set midiexplorer_version "MidiExplorer version 2.62 2021-09-03 08:35"
 #        rglob, populatedir, populateTree
 #   Part 4.0 Midi summary listing in table form
 #   Part 5.0 Midi summary header
-#        presentMidiInfo, interpret_midi...,tinfo_select
+#        presentMidiInfo, interpret_midi...,tinfoSelect
 #   Part 6.0 Midi file selection support
 #        selected_midi,  readMidiFileHeader,
 #        get_midi_info_for, parse_midi_info, get_trkinfo,
-#        midi_type0_table, midi_type1_table
+#        midi_type0_table, midiType1Table
 #   Part 7.0 Program selector and support
 #   Part 8.0 Piano Roll window
 #         beat graph
@@ -1183,13 +1183,13 @@ $ww add cascade -label "plots" -font $df -menu $ww.plots
 
 set ww $w.menuline.database.items.plots
 menu $ww -tearoff 0
-       $ww add command -label "tempo distribution" -font $df -command {univariate_distribution tempo 300 50 "beats per minute"}
-       $ww add command -label "distribution of number of beats" -font $df -command {univariate_distribution midilength 1000 200 "number of beats"}
-       $ww add command -label "pitchbend distribution" -font $df -command {univariate_distribution pitchbend 1000 300 "number of pitchbends"}
-       $ww add command -label "program distribution" -font $df -command program_statistics
-       $ww add command -label "drum complexity distribution" -font $df -command drum_complexity_distribution
-       $ww add command -label "drum distribution" -font $df -command drum_distribution
-       $ww add command -label "pitch class entropy distribution" -command pitch_entropy_distribution -font $df
+       $ww add command -label "tempo distribution" -font $df -command {univariateDistribution tempo 300 50 "beats per minute"}
+       $ww add command -label "distribution of number of beats" -font $df -command {univariateDistribution midilength 1000 200 "number of beats"}
+       $ww add command -label "pitchbend distribution" -font $df -command {univariateDistribution pitchbend 1000 300 "number of pitchbends"}
+       $ww add command -label "program distribution" -font $df -command programStatistics
+       $ww add command -label "drum complexity distribution" -font $df -command drumComplexityDistribution
+       $ww add command -label "drum distribution" -font $df -command drumDistribution
+       $ww add command -label "pitch class entropy distribution" -command pitchEntropyDistribution -font $df
 
 
 button $w.menuline.abc -text abc -font $df -command {create_abc_file none}
@@ -1628,16 +1628,16 @@ ttk::treeview $w.tree -columns {trk chn program notes activity pavg duration } -
 ttk::scrollbar $w.vsb -orient vertical -command ".tinfo.tree yview"
 foreach col {trk chn program notes activity pavg duration} {
   $w.tree heading $col -text $col
-  $w.tree heading $col -command [list Tinfo_SortBy $col 0]
+  $w.tree heading $col -command [list TinfoSortBy $col 0]
   $w.tree column $col -width [expr [font measure $df $col] + 13]
   }
 $w.tree column program -width [font measure $df "WWWWWWWWWWWWWWWWWW"]
 $w.tree column notes -width [font measure $df "WWWWWW"]
 $w.tree tag configure fnt -font $df
 pack $w.tree $w.vsb -side left -expand 1 -fill both 
-bind $w.tree <<TreeviewSelect>> {tinfo_select}
+bind $w.tree <<TreeviewSelect>> {tinfoSelect}
 
-proc Tinfo_SortBy {col direction} {
+proc TinfoSortBy {col direction} {
     set data {}
     foreach row [.tinfo.tree children {}] {
         lappend data [list [.tinfo.tree set $row $col] $row]
@@ -1649,7 +1649,7 @@ proc Tinfo_SortBy {col direction} {
         .tinfo.tree  move [lindex $info 1] {} [incr r]
     }
     # Switch the heading so that it will sort in the opposite direction
-    .tinfo.tree heading $col -command [list Tinfo_SortBy  $col [expr {!$direction}]]
+    .tinfo.tree heading $col -command [list TinfoSortBy  $col [expr {!$direction}]]
 }
 
 set idlist {}
@@ -1706,14 +1706,14 @@ proc presentMidiInfo {} {
    grab_all_program_commands
    if {$ntrks == 0} return
    if {$ntrks == 1} {
-     interpret_midi_type0
+     interpretMidiType0
    } else {
-     interpret_midi_type1
+     interpretMidiType1
    }
    set lasttrack $ntrks
 }
 
-proc interpret_midi_type0 {} {
+proc interpretMidiType0 {} {
 global trkinfo
 global midi
 global tempo
@@ -1738,7 +1738,7 @@ set addendum ""
 set i 1
 set miditxt(0) "[file tail $midi(midifilein)] is a type 0 midi file containing only 1 track. A beat is divided into $ppqn pulses. "
 
-gather_midi_summary 
+gatherMidiSummary 
 #update_table_header
 
 if {![info exist tempo]} {set tempo 120
@@ -1760,7 +1760,7 @@ if {[string length $midierror]>0} {
 .info.txt insert insert $txtbuf 
 }
 
-proc clear_miditracks_and_channels {} {
+proc clearMidiTracksAndChannels {} {
 global miditracks
 global midichannels
 global midispeed
@@ -1773,9 +1773,9 @@ for {set i 0} {$i < 17} {incr i} {
 set midispeed 1.0
 }
 
-clear_miditracks_and_channels
+clearMidiTracksAndChannels
 
-proc interpret_midi_type1 {} {
+proc interpretMidiType1 {} {
   global ntrks
   global trkinfo
   global mlist
@@ -1803,13 +1803,13 @@ proc interpret_midi_type1 {} {
   array unset track2program
   array unset programmod
 
-  midi_type1_table
+  midiType1Table
 
   set miditxt(0) "[file tail $midi(midifilein)] contains $ntrks tracks. A\
  beat is divided into $ppqn pulses. "
   set addendum ""
 
-gather_midi_summary 
+gatherMidiSummary 
 #update_table_header
 if {$nkeysig > 0} {append miditxt(0) " The key signature was set to $keysig."}
 if {$nkeysig > 1} {append miditxt(0) " There are $nkeysig key signatures in the file."}
@@ -1837,7 +1837,7 @@ if {$ntimesig > 1} {append miditxt(0) " There are $ntimesig time signatures in t
 
 }
 
-proc tinfo_select {} {
+proc tinfoSelect {} {
 global midi
 global miditracks
 global midichannels
@@ -1846,7 +1846,7 @@ global cleanData
 set cleanData 0
 #puts "tinfo selection"
 set indices [.tinfo.tree selection]
-clear_miditracks_and_channels
+clearMidiTracksAndChannels
 foreach i $indices {
   set iline [.tinfo.tree item $i -values]
   set chn [lindex $iline 1]
@@ -1862,12 +1862,12 @@ foreach i $indices {
   #	     .midistructure.leftbuttons.c$chn select
   #        }
     }
-midistructure_select
+midiStructureSelect
 updateAllWindows none
 }
 
 
-proc midistructure_select {} {
+proc midiStructureSelect {} {
 global miditracks
 global midichannels
 global cleanData
@@ -1913,7 +1913,7 @@ proc selected_midi {} {
    .treebrowser.menuline.pitch configure -state normal
    set midi(midifilein) $f
    updateHistory [file dirname $f]
-   clear_miditracks_and_channels
+   clearMidiTracksAndChannels
    set midi_info [get_midi_info_for]
    parse_midi_info $midi_info
    SwitchBetweenInfoAndTinfo 
@@ -2173,7 +2173,7 @@ proc get_trkinfo {channel nnotes nharmony pmean duration token} {
 }
 
 
-proc gather_midi_summary {} {
+proc gatherMidiSummary {} {
 global trkinfo
 global ppqn
 global ntrks
@@ -2290,7 +2290,7 @@ foreach token $trkinfo(1) {
   $w.tree configure -height $nlines
 }
 
-proc midi_type1_table {} {
+proc midiType1Table {} {
 global trkinfo
 global mlist
 global midi
@@ -2877,9 +2877,11 @@ if {![winfo exist $w]} {
 
 
   checkbutton $w.header.circle -text "circle of fifths" -variable midi(tableau5) -font $df -command updateTableauWindows
+
+  button $w.header.abc -text abc -font $df -command tableau_abc
  
   button $w.header.help -text help -font $df -command {show_message_page $hlp_tableau word}
-  pack $w.header.play $w.header.dot $w.header.circle $w.header.plot $w.header.help -side left -anchor nw
+  pack $w.header.play $w.header.dot $w.header.circle $w.header.plot $w.header.abc  $w.header.help -side left -anchor nw
   pack .ptableau.status
   pack $w.header -side top -anchor nw
   pack .ptableau.scr -fill x -side bottom 
@@ -3257,6 +3259,37 @@ update_console_page
 #puts $midiplayerresult
 }
 
+proc tableau_abc {} {
+global midi
+global midichannels
+global exec_out
+set exec_out ""
+set limits  [tableau_limits]
+set options ""
+if {[llength $limits] > 1} {
+  set fbeat [lindex $limits 0]
+  set tbeat [lindex $limits 1]
+  append options " -frombeat $fbeat -tobeat $tbeat "
+  } 
+  set trkchn ""
+  for {set i 1} {$i < 17} {incr i} {
+     if {$midichannels($i)} {append trkchn "$i,"}
+     }
+  if {[string length $trkchn] > 0} {
+         append options "-chns $trkchn"}
+  set cmd "exec [list $midi(path_midicopy)]  $options"
+  lappend cmd  $midi(midifilein) tmp.mid
+  catch {eval $cmd} miditime
+  append exec_out "$cmd\n\$miditime"
+
+  set title [file root [file tail $midi(midifilein)]]
+  set options ""
+  if {$midi(midirest) > 0} {set options [concat $options "-sr $midi(midirest)"]}
+  set cmd "exec [list $midi(path_midi2abc)] tmp.mid $options -noly -title [list $title]" 
+  catch {eval $cmd} result
+  append exec_out "\n$cmd"
+  edit_abc_output $result
+}
 
 proc tableau_limits {} {
 global lastbeat
@@ -3678,7 +3711,7 @@ set mlist {"0 Acoustic Grand" "1 Bright Acoustic" "2 Electric Grand" "3 Honky-To
 "124 Telephone ring" "125 Helicopter" "126 Applause" "127 Gunshot" 
 }
 
-proc program_selector {} {
+proc programSelector {} {
 global mlist
 global progmapper
 global groupcolors
@@ -4189,7 +4222,7 @@ proc show_events {} {
     global piano_yview_pos
     global exec_out
     global pianorollwidth
-    global pixels_per_file
+    global pianoPixelsPerFile
     global df
     global last_checked_button
     focus .
@@ -4200,7 +4233,7 @@ proc show_events {} {
                 -foreground red -font $df
         return
     }
-    set pixels_per_file $pianorollwidth
+    set pianoPixelsPerFile $pianorollwidth
     compute_pianoroll
     .piano.can yview moveto $piano_yview_pos
     .piano.cany yview moveto $piano_yview_pos
@@ -4211,21 +4244,21 @@ proc show_events {} {
 
 #horizontal zoom of piano roll
 proc piano_zoom {} {
-    global pixels_per_file
+    global pianoPixelsPerFile
     set co [.piano.can coords mark]
     set zoomregion [expr [lindex $co 2] - [lindex $co 0]]
     set displayregion [winfo width .piano.can]
     set scrollregion [.piano.can cget -scrollregion]
     if {$zoomregion > 5} {
         set mag [expr $displayregion/$zoomregion]
-        set pixels_per_file [expr $pixels_per_file*$mag]
+        set pianoPixelsPerFile [expr $pianoPixelsPerFile*$mag]
         compute_pianoroll
         set xv [expr double([lindex $co 0])/double([lindex $scrollregion 2])]
         piano_horizontal_scroll $xv
     } else {
-        set pixels_per_file [expr $pixels_per_file*1.5]
-        if {$pixels_per_file > 250000} {
-            set $pixels_per_file 250000}
+        set pianoPixelsPerFile [expr $pianoPixelsPerFile*1.5]
+        if {$pianoPixelsPerFile > 250000} {
+            set $pianoPixelsPerFile 250000}
         set xv [lindex [.piano.can xview] 0]
         compute_pianoroll
         piano_horizontal_scroll $xv
@@ -4235,8 +4268,8 @@ proc piano_zoom {} {
 
 
 proc piano_unzoom {factor} {
-    global pixels_per_file
-    set pixels_per_file [expr $pixels_per_file /$factor]
+    global pianoPixelsPerFile
+    set pianoPixelsPerFile [expr $pianoPixelsPerFile /$factor]
     set xv [.piano.can xview]
     set xvl [lindex $xv 0]
     set xvr [lindex $xv 1]
@@ -4250,11 +4283,11 @@ proc piano_unzoom {factor} {
 }
 
 proc piano_total_unzoom {} {
-    global pixels_per_file
+    global pianoPixelsPerFile
     set displayregion [winfo width .piano.can]
     #puts "displayregion $displayregion"
     # subtract 8 to allow for growth of bbox of .piano.can
-    set pixels_per_file [expr $displayregion -8]
+    set pianoPixelsPerFile [expr $displayregion -8]
     compute_pianoroll
     .piano.can configure -scrollregion [.piano.can bbox all]
     update_displayed_pdf_windows .piano.can
@@ -4262,11 +4295,11 @@ proc piano_total_unzoom {} {
 
 proc piano_zoom_to {beginbeat endbeat} {
     global lastbeat
-    global pixels_per_file
+    global pianoPixelsPerFile
     global pianorollwidth
     set fraction [expr ($endbeat - $beginbeat)/$lastbeat]
     if {$fraction < 0.05} {set fraction 0.05}
-    set pixels_per_file [expr $pianorollwidth/$fraction]
+    set pianoPixelsPerFile [expr $pianorollwidth/$fraction]
     compute_pianoroll
     set xvl [expr $beginbeat/$lastbeat]
     piano_horizontal_scroll $xvl
@@ -4274,12 +4307,12 @@ proc piano_zoom_to {beginbeat endbeat} {
     }
  
 proc piano_resize {} {
-global pixels_per_file
+global pianoPixelsPerFile
 set displayregion [winfo width .piano.can]
-if {$pixels_per_file < $displayregion} {
-   # shrink pixels_per_file since the bbox of .drumroll.can tends
+if {$pianoPixelsPerFile < $displayregion} {
+   # shrink pianoPixelsPerFile since the bbox of .drumroll.can tends
    # to grow on account of the thick lines.
-   set pixels_per_file [expr $displayregion -20]
+   set pianoPixelsPerFile [expr $displayregion -20]
    compute_pianoroll
    .piano.can configure -scrollregion [.piano.can bbox all]
    }
@@ -4985,6 +5018,13 @@ switch $source {
        set stop [lindex $limits 1]
        }
     }
+  pgram {
+    set limits  [pgram_limits .pgram.c]
+    if {[llength $limits] > 1} {
+       set start [lindex $limits 0]
+       set tbeat [lindex $limits 1]
+       }
+   }
   tableau {
     set limits [tableau_limits]
     if {$limits != "none"} {
@@ -5493,7 +5533,7 @@ function"
     checkbutton .midistructure.leftbuttons.c$i -text "chan$i" -variable midichannels($i) -font $df -command {updateAllWindows midistructure}
     }
   set yspacing [winfo reqheight .midistructure.leftbuttons.2]
-  canvas $w.can -width $midistructurewidth -height 200 -border 3 -relief sunken
+  canvas $w.can -width $midistructurewidth -height 200 -border 3 -relief sunken -scrollregion "0. 0. $midistructurewidth 200"
   canvas $w.canx -width $midistructurewidth -height 20  -border 3 -relief sunken
   grid $w.leftbuttons $w.can -sticky news
   grid $w.beat $w.canx -sticky news
@@ -5506,7 +5546,7 @@ function"
     bind .midistructure.can <Double-Button-1> mstruct_ClearMark
 
 
-   midistructure_select
+   midiStructureSelect
    show_prog_structure
 }
 
@@ -5925,7 +5965,7 @@ proc adjust_vert_spacing {vspace} {
 proc compute_pianoroll {} {
     global midi
     global midilength
-    global pixels_per_file
+    global pianoPixelsPerFile
     global pianoresult pianoxscale
     global activechan
     global ppqn
@@ -5952,9 +5992,9 @@ proc compute_pianoroll {} {
     if {![winfo exist .piano]} return
     set piano_qnote_offset 0
     # subtract 4 to prevent growing bbox of .piano.can
-    set pianoxscale [expr ($midilength / double($pixels_per_file -4))]
+    set pianoxscale [expr ($midilength / double($pianoPixelsPerFile -4))]
     
-    set qnspacing  [expr $pixels_per_file*$ppqn/double($midilength)]
+    set qnspacing  [expr $pianoPixelsPerFile*$ppqn/double($midilength)]
     set piano_vert_lines [expr 40.0/$qnspacing]
     set piano_vert_lines [adjust_vert_spacing $piano_vert_lines]
     #puts "piano_vert_lines = $piano_vert_lines"
@@ -5976,11 +6016,11 @@ proc compute_pianoroll {} {
             6 -
             8 -
             10 {
-                $p.can create rectangle 0 [expr 724-$i*8] $pixels_per_file\
+                $p.can create rectangle 0 [expr 724-$i*8] $pianoPixelsPerFile\
                         [expr 716-$i*8] -fill gray80 -outline ""
             }
             default {
-                $p.can create rectangle 0 [expr 724-$i*8] $pixels_per_file\
+                $p.can create rectangle 0 [expr 724-$i*8] $pianoPixelsPerFile\
                         [expr 716-$i*8] -fill LemonChiffon1 -outline ""
             }
         }
@@ -6292,6 +6332,7 @@ proc update_piano_txt {x y} {
 
 proc midi_limits {can} {
     global pianoxscale
+    global drumxscale
     global lastpulse
     global pixels_per_beat
     global ppqn
@@ -6307,16 +6348,13 @@ proc midi_limits {can} {
     } else {
         #get start and end time of displayed area
         set xv [$can xview]
-        #puts "xv = $xv"
         set scrollregion [$can cget -scrollregion]
-        #puts "scrollregion = $scrollregion"
         set xvleft [lindex $xv 0]
         set xvright [lindex $xv 1]
         set width [lindex $scrollregion 2]
         set xvleft [expr $xvleft*$width]
         set xvright [expr $xvright*$width]
     }
-        #puts "xvleft = $xvleft xvright=$xvright"
     
     if {$can == ".piano.can"} {
       set begin [expr round($xvleft*$pianoxscale)]
@@ -6329,7 +6367,12 @@ proc midi_limits {can} {
       set begin [expr round($xvleft * $structxscale)]
       set end [expr round($xvright * $structxscale)]
       #puts "midi_limits returns $begin $end for midistructure"
-     }
+     } elseif {$can == ".drumroll.can"} {
+      set begin [expr round($xvleft*$drumxscale)]
+      set end [expr round($xvright*$drumxscale)]
+      #puts "drumxscale = $drumxscale"
+      }
+
     if {$begin < 0} {
         set $begin 0
     }
@@ -7090,7 +7133,7 @@ drum loudness.
 "
 
 proc show_drum_events {} {
-    global pixels_per_file
+    global drumPixelsPerFile
     global midi
     global pianoresult
     global df
@@ -7104,7 +7147,7 @@ proc show_drum_events {} {
     }
     .drumroll.txt configure -text drumgram -font $df -foreground black
 
-    set pixels_per_file $drumrollwidth
+    set drumPixelsPerFile $drumrollwidth
     readMidiFileHeader $midi(midifilein); # read midi header
 
     set exec_options "[list $midi(midifilein)] -midigram"
@@ -7126,8 +7169,12 @@ proc show_drum_events {} {
 
 
 proc drumroll_qnotelines {} {
-    global ppqn midilength pianoxscale piano_vert_lines
-    global piano_qnote_offset vspace
+    global ppqn
+    global midilength
+    global drumxscale
+    global piano_vert_lines
+    global piano_qnote_offset
+    global vspace
     set p .drumroll
     $p.canx delete all
     set bounding_box [$p.can bbox all]
@@ -7137,19 +7184,19 @@ proc drumroll_qnotelines {} {
     if {$piano_vert_lines > 0} {
         set vspace [expr $ppqn*$piano_vert_lines]
         set txspace $vspace
-        while {[expr $txspace/$pianoxscale] < 40} {
+        while {[expr $txspace/$drumxscale] < 40} {
             set txspace [expr $txspace + $vspace]
         }
         
         
         for {set i $piano_qnote_offset} {$i < $midilength} {incr i $vspace} {
-            set ix1 [expr $i/$pianoxscale]
+            set ix1 [expr $i/$drumxscale]
             if {$ix1 < 0} continue
             $p.can create line $ix1 $top $ix1 $bot -width 1 -tag barline -dash {1 2}
         }
         
         for {set i $piano_qnote_offset} {$i < $midilength} {incr i $txspace} {
-            set ix1 [expr $i/$pianoxscale]
+            set ix1 [expr $i/$drumxscale]
             if {$ix1 < 0} continue
             $p.canx create text $ix1 5 -text [expr $piano_vert_lines*int($i/$vspace)]
         }
@@ -7160,8 +7207,9 @@ proc drumroll_qnotelines {} {
 proc compute_drumroll {} {
     global midi
     global midilength
-    global pixels_per_file
-    global pianoresult pianoxscale
+    global drumPixelsPerFile
+    global pianoresult
+    global drumxscale
     global activechan
     global ppqn
     global piano_vert_lines
@@ -7183,9 +7231,9 @@ proc compute_drumroll {} {
 
     
     set p .drumroll
-    set pianoxscale [expr ($midilength / double($pixels_per_file))]
+    set drumxscale [expr ($midilength / double($drumPixelsPerFile))]
     
-    set qnspacing  [expr $pixels_per_file*$ppqn/double($midilength)]
+    set qnspacing  [expr $drumPixelsPerFile*$ppqn/double($midilength)]
     set piano_vert_lines [expr 40.0/$qnspacing]
     set piano_vert_lines [adjust_vert_spacing $piano_vert_lines]
     if {$piano_vert_lines <1} {set piano_vert_lines 1}
@@ -7204,7 +7252,7 @@ proc compute_drumroll {} {
    if {$gram_ndrums < 1} {.drumroll.txt configure -text "no drum notes" \
                 -foreground red -font $df}
     for {set i 0} {$i <$gram_ndrums} {incr i} {
-            $p.can create line 0 [expr $i*20 +20] $pixels_per_file\
+            $p.can create line 0 [expr $i*20 +20] $drumPixelsPerFile\
                         [expr $i*20+20] -dash {1 1}
             set jj $rdrumstrip($i)
             set j [expr $jj - 35]
@@ -7241,9 +7289,9 @@ proc compute_drumroll {} {
         if {[lindex $line 5] < 1} continue
         if {$note < 35 || $note > 81 || $velocity < 32} continue
         if {$velocity < 64} {set velocity 64}
-        set ix1 [expr $begin/$pianoxscale]
+        set ix1 [expr $begin/$drumxscale]
         set ix2 [expr $ix1+3]
-        if {$ix2 > $pixels_per_file} {
+        if {$ix2 > $drumPixelsPerFile} {
            #puts "$begin $note $ix1 $ix2"
            continue
            }
@@ -7341,21 +7389,21 @@ proc drumroll_horizontal_scroll {val} {
 
 #horizontal zoom of piano roll
 proc drumroll_zoom {} {
-    global pixels_per_file
+    global drumPixelsPerFile
     set co [.drumroll.can coords mark]
     set zoomregion [expr [lindex $co 2] - [lindex $co 0]]
     set displayregion [winfo width .drumroll.can]
     set scrollregion [.drumroll.can cget -scrollregion]
     if {$zoomregion > 5} {
         set mag [expr $displayregion/$zoomregion]
-        set pixels_per_file [expr $pixels_per_file*$mag]
+        set drumPixelsPerFile [expr $drumPixelsPerFile*$mag]
         compute_drumroll
         set xv [expr double([lindex $co 0])/double([lindex $scrollregion 2])]
         drumroll_horizontal_scroll $xv
     } else {
-        set pixels_per_file [expr $pixels_per_file*1.5]
-        if {$pixels_per_file > 250000} {
-            set $pixels_per_file 250000}
+        set drumPixelsPerFile [expr $drumPixelsPerFile*1.5]
+        if {$drumPixelsPerFile > 250000} {
+            set $drumPixelsPerFile 250000}
         set xv [lindex [.drumroll.can xview] 0]
         compute_drumroll
         drumroll_horizontal_scroll $xv
@@ -7364,8 +7412,8 @@ proc drumroll_zoom {} {
 
 
 proc drumroll_unzoom {factor} {
-    global pixels_per_file
-    set pixels_per_file [expr $pixels_per_file /$factor]
+    global drumPixelsPerFile
+    set drumPixelsPerFile [expr $drumPixelsPerFile /$factor]
     set xv [.drumroll.can xview]
     set xvl [lindex $xv 0]
     set xvr [lindex $xv 1]
@@ -7378,21 +7426,21 @@ proc drumroll_unzoom {factor} {
 }
 
 proc drumroll_total_unzoom {} {
-    global pixels_per_file
+    global drumPixelsPerFile
     set displayregion [winfo width .drumroll.can]
     #puts "displayregion $displayregion"
-    set pixels_per_file [expr $displayregion -20]
+    set drumPixelsPerFile [expr $displayregion -20]
     compute_drumroll
     .drumroll.can configure -scrollregion [.drumroll.can bbox all]
 }
 
 proc drumroll_zoom_to {beginbeat endbeat} {
     global lastbeat
-    global pixels_per_file
+    global drumPixelsPerFile
     global drumrollwidth
     set fraction [expr ($endbeat - $beginbeat)/$lastbeat]
     if {$fraction < 0.05} {set fraction 0.05}
-    set pixels_per_file [expr $drumrollwidth/$fraction]
+    set drumPixelsPerFile [expr $drumrollwidth/$fraction]
     compute_drumroll
     set xvl [expr $beginbeat/$lastbeat]
     drumroll_horizontal_scroll $xvl
@@ -7400,12 +7448,12 @@ proc drumroll_zoom_to {beginbeat endbeat} {
 
 
 proc drumroll_resize {} {
-global pixels_per_file
+global drumPixelsPerFile
 set displayregion [winfo width .drumroll.can]
-if {$pixels_per_file < $displayregion} {
-   # shrink pixels_per_file since the bbox of .drumroll.can tends
+if {$drumPixelsPerFile < $displayregion} {
+   # shrink drumPixelsPerFile since the bbox of .drumroll.can tends
    # to grow on account of the thick lines.
-   set pixels_per_file [expr $displayregion -20]
+   set drumPixelsPerFile [expr $displayregion -20]
    compute_drumroll
    .drumroll.can configure -scrollregion [.drumroll.can bbox all]
    }
@@ -7812,7 +7860,7 @@ for {set i 0} {$i < 65} {incr i} {
  }
 #puts $curve
 if {[winfo exists $graph] == 1} {$graph delete all}
-plot_univariate_distribution $graph $curve 0.0 16.0 2.0 "beat lag"
+plotUnivariateDistribution $graph $curve 0.0 16.0 2.0 "beat lag"
 return [expr [maxindex $peaks]+1]
 }
 
@@ -8597,7 +8645,7 @@ if {[winfo exists .pgram]} {
    compute_pgram
    }
 if {[winfo exist .keystrip]} {
-   keymap
+   keymap $source
    }
 if {[winfo exists .keypitchclass]} {
    displayKeyPitchHistogram
@@ -9688,7 +9736,7 @@ grid $w.checkname $w.labname $w.name -sticky nsew
 
 
 checkbutton $w.checkprogs -variable searchstate(checkprogs) -command searchprogs
-button $w.labprogs -text "contains programs" -font $df -command program_selector
+button $w.labprogs -text "contains programs" -font $df -command programSelector
 entry $w.progsin -textvariable midi(proglist) -font $df -state disabled
 grid $w.checkprogs $w.labprogs $w.progsin -sticky nsew
 
@@ -10879,7 +10927,7 @@ populatedir .treebrowser.tree $midi(rootfolder)
 
 # end ReadMidiDescriptors
 
-proc univariate_distribution {featname max_x xspace xlabel} {
+proc univariateDistribution {featname max_x xspace xlabel} {
 global desc
 load_desc
 array unset featcount
@@ -10925,11 +10973,11 @@ set graph .graph.c
   } else {
       $graph delete all}
 raise .graph .
-plot_univariate_distribution $graph $curve 0.0 $max_x $xspace $xlabel
+plotUnivariateDistribution $graph $curve 0.0 $max_x $xspace $xlabel
 }
 
 
-proc plot_univariate_distribution {graph curve min_x max_x xspace xlabel} {
+proc plotUnivariateDistribution {graph curve min_x max_x xspace xlabel} {
     global df
     set start $min_x
     set stop  $max_x
@@ -10998,7 +11046,7 @@ proc plot_line_graph {graph curve min_x max_x xspace xlabel min_y max_y title} {
 
 
 
-proc drum_complexity_distribution {} {
+proc drumComplexityDistribution {} {
 load_desc
 global desc
 array unset featcount
@@ -11040,10 +11088,10 @@ set graph .graph.c
   } else {
       $graph delete all}
 raise .graph .
-plot_univariate_distribution $graph $curve 0 46 10 "number of percussion instruments"
+plotUnivariateDistribution $graph $curve 0 46 10 "number of percussion instruments"
 }
 
-proc drum_distribution {} {
+proc drumDistribution {} {
 load_desc
 global desc
 global drumpatches
@@ -11074,7 +11122,7 @@ for {set i 35} {$i < 82} {incr i} {
 }
 
 
-proc pitch_entropy_distribution {} {
+proc pitchEntropyDistribution {} {
 global desc
 load_desc
 array unset featcount
@@ -11115,10 +11163,10 @@ set graph .graph.c
   } else {
       $graph delete all}
 raise .graph .
-plot_univariate_distribution $graph $curve 2.0 4.0 0.5 "pitchclass entropy"
+plotUnivariateDistribution $graph $curve 2.0 4.0 0.5 "pitchclass entropy"
 }
 
-proc program_statistics {} {
+proc programStatistics {} {
 load_desc
 global desc
 global mlist
@@ -11133,9 +11181,8 @@ for {set i 0} {$i < 129} {incr i} {
   }
 for {set i 1} {$i < $descsize} {incr i} {
   if {[dict exists $desc($i) damaged]} continue
-  if {[dict exists $desc($i) progs] == 0} continue
-  set proglist [dict get $desc($i) progs]
-  #puts "$i  $proglist"
+  if {[dict exists $desc($i) programs] == 0} continue
+  set proglist [dict get $desc($i) programs]
   foreach prog $proglist {
     if {$prog > 128} continue
     set progcount($prog) [expr $progcount($prog) + 1]
@@ -11144,11 +11191,11 @@ for {set i 1} {$i < $descsize} {incr i} {
 for {set i 0} {$i < 128} {incr i} {
    $w insert insert "[lindex $mlist $i] $progcount($i)\n"
    }
-plot_program_distribution
+plotProgramDistribution
 }
 
 
-proc plot_program_distribution {} {
+proc plotProgramDistribution {} {
     global df
     global progcount
     set xspace 16
