@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.65 2021-09-06 08:45" 
+set midiexplorer_version "MidiExplorer version 2.66 2021-09-12 23:15" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -1034,6 +1034,7 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
 	$ww add command -label "duckduckgo search" -font $df -accelerator "ctrl-u"\
 	    -command duckduckgo_search
         $ww add command -label "pgram" -font $df -command pgram_window -accelerator "ctrl-p"
+        $ww add command -label keymap -font $df -command {keymap none} -accelerator "ctrl-y"
 	$ww add command -label "midi structure" -font $df -accelerator "ctrl-s"\
             -command {midi_structure_display}
         $ww add command  -label "tableau" -font $df \
@@ -1285,13 +1286,18 @@ pack .treebrowser.menuline2.jump .treebrowser.menuline2.name -side left
 pack .treebrowser.menuline -anchor w
 pack .treebrowser.menuline2 -anchor w
 
+proc bind_accelerators {} {
 bind . <Control-s> {midi_structure_display}
 bind . <Control-r> piano_roll_display
 bind . <Control-d> drumroll_window
+bind . <Control-y> {keymap none}
 bind . <Control-k> {show_console_page $exec_out word}
 bind . <Control-w> {playmidifile 0}
 bind . <Control-t> {detailed_tableau}
+bind . <Control-o> google_search
+bind . <Control-u> duckduckgo_search
 bind . <Alt-c> {catch console show}
+}
 
 
 
@@ -1920,6 +1926,7 @@ proc selected_midi {} {
    presentMidiInfo
    loadMidiFile
    set cleanData 1
+   bind_accelerators 
    if {[winfo exist .piano]} {
             zero_trksel
             compute_pianoroll
@@ -1936,8 +1943,6 @@ proc selected_midi {} {
 
 
 proc load_last_midi_file {} {
- global midi
- global ntrks
  .treebrowser.menuline.view configure -state normal
  .treebrowser.menuline.play configure -state normal
  .treebrowser.menuline.rhythm configure -state normal
@@ -1947,6 +1952,7 @@ proc load_last_midi_file {} {
  parse_midi_info $midi_info
  SwitchBetweenInfoAndTinfo 
  presentMidiInfo
+ bind_accelerators 
 } 
 
 bind . <Control-m> load_last_midi_file
@@ -13674,9 +13680,6 @@ proc show_checkversion_summary {} {
 
 
 
-bind . <Control-p> pgram_window
-bind . <Control-o> google_search
-bind . <Control-u> duckduckgo_search
 #trace add execution compute_pianoroll leave "cmdstr"
 
 restore_root_folder 
