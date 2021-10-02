@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.66 2021-09-12 23:15" 
+set midiexplorer_version "MidiExplorer version 2.67 2021-09-14 13:05" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -2200,6 +2200,7 @@ global pitchbendsplit
 global tempomod
 global timesigmod
 global keysigmod
+global midiTempo
 
 set nkeysig 0
 set ntimesig 0
@@ -2236,6 +2237,7 @@ for {set i 1} {$i <= $ntrks} {incr i} {
       if {$nprogramchange > 1} {append addendum " The program assignment for any channel was modified $nprogramchange times."}
      } elseif {[lindex $token 0] == "tempo"} {
         set tempo [lindex $token 1]
+        set midiTempo $tempo
         append miditxt(0) "The tempo is set to $tempo beats/minute."
      } elseif {[lindex $token 0] == "npulses"} {
 	set lastpulse [lindex $token 1]
@@ -4790,7 +4792,7 @@ proc chordname {chordstring root} {
   }
 
 
-proc determine_chord_sequence {source} {
+proc determineChordSequence {source} {
     global midi
     global sorted_midiactions
     global ppqn
@@ -4827,7 +4829,7 @@ proc determine_chord_sequence {source} {
       set cleanData 0
       set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
       catch {eval $cmd} pianoresult
-      set exec_out [append exec_out "determine_chord_seq:\n\n$cmd\n\n $pianoresult"]
+      set exec_out [append exec_out "determineChordSeq:\n\n$cmd\n\n $pianoresult"]
       update_console_page
       set nrec [llength $pianoresult]
       set midilength [lindex $pianoresult [expr $nrec -1]]
@@ -4885,7 +4887,7 @@ global total_chordcount
 global chordcount
 set total_chordcount 0
 array unset chordcount
-set chord_sequence [determine_chord_sequence $source]
+set chord_sequence [determineChordSequence $source]
 set last_beat [dict size $chord_sequence]
 for {set beat 0} {$beat < $last_beat} {incr beat} {
      set chord [dict get  $chord_sequence $beat]
@@ -4962,7 +4964,10 @@ of fifths.\n\n
 To zoom into an area, sweep the mouse pointer over the region holding\
 the left mouse button down. Then press the zoom button. The chordgram\
 may be linked to the midi structure window or the piano roll window\
-if they are exposed.
+if they are exposed.\n\n
+Clicking the save data button will record the plotted results in the\
+file chordgram.txt which can be found in the midiexplorer_home folder.
+
 "
 
 proc chordgram_plot {source} {
@@ -4978,8 +4983,9 @@ proc chordgram_plot {source} {
      checkbutton .chordgram.head.2 -text "circle of fifths" -variable midi(chordgram) -font $df -command "call_compute_chordgram $source"
      button .chordgram.head.zoom -text zoom -command zoom_chordgram -font $df
      button .chordgram.head.unzoom -text unzoom -command unzoom_chordgram -font $df 
+     button .chordgram.head.save -text "save data" -font $df -command saveChordgramData
      button .chordgram.head.help -text help -font $df -command {show_message_page $hlp_chordgram word}
-     pack  .chordgram.head.2 .chordgram.head.zoom .chordgram.head.unzoom .chordgram.head.help -side left -anchor w
+     pack  .chordgram.head.2 .chordgram.head.zoom .chordgram.head.unzoom .chordgram.head.save .chordgram.head.help -side left -anchor w
      pack  .chordgram.head -side top -anchor w 
      set c .chordgram.can
      canvas $c -width $pianorollwidth -height 250 -border 3 -relief sunken
@@ -4989,8 +4995,7 @@ proc chordgram_plot {source} {
      bind .chordgram.can <ButtonRelease-1> chordgram_Button1Release
      bind .chordgram.can <Double-Button-1> chordgram_ClearMark
      }
-   set chord_sequence [determine_chord_sequence $source]
-   #set seqlength [llength $chord_sequence]
+   set chord_sequence [determineChordSequence $source]
    set last_beat [dict size $chord_sequence]
    set seqlength $last_beat
    call_compute_chordgram $source
@@ -5126,6 +5131,8 @@ proc compute_chordgram {start stop} {
    global chordgram_xfm
    global chord_sequence
    global seqlength
+   global chordgramLimits
+   set chordgramLimits [list $start $stop]
    # useflats is set by plot_pitch_class_histogram
    set xrbx [expr $pianorollwidth - 3]
    set xlbx  40
@@ -5134,7 +5141,7 @@ proc compute_chordgram {start stop} {
    set c .chordgram.can
    $c delete all
    $c create rectangle $xlbx $ybbx $xrbx $ytbx -outline black -width 2 -fill lightgrey 
-  set start5 [expr (int($start)/5)*5.0]
+  set start5 [expr (1 + int($start)/5)*5.0]
 
    # white or black characters
   set colfg [lindex [.info.txt config -fg] 4]
@@ -5186,7 +5193,7 @@ proc compute_chordgram {start stop} {
      }
   set i 0
   set ix 15 
-  if {$midi(chordgram) == "fifths"} {
+  if {$midi(chordgram) == 1} {
     if {$useflats} {
       foreach name $flatnotes5 {
          set iy [Graph::iypos [expr double($i * 16)]] 
@@ -5224,6 +5231,27 @@ proc compute_chordgram {start stop} {
     Graph::draw_x_grid $c $start5 $stop $spacing 1  0 %5.0f $colfg
 
    .chordgram.can create rect -1 -1 -1 -1 -tags mark -fill yellow -stipple gray25
+}
+
+proc saveChordgramData {} {
+global midi
+global chord_sequence
+global seqlength
+global chordgramLimits
+global midiTempo
+set beats2seconds [expr 60.0/double($midiTempo)]
+set start [lindex $chordgramLimits 0]
+set stop [lindex $chordgramLimits 1]
+set outhandle [open "chordgram.txt" w]
+puts $outhandle "chordgram results for $midi(midifilein)"
+for {set j 0} {$j <$seqlength} {incr j} {
+  if {$j < $start} continue
+  if {$j > $stop} break
+  set chord [dict get $chord_sequence $j]
+  set seconds [format "%5.2f" [expr $j * $beats2seconds]]
+  puts $outhandle "$j\t$seconds\t$chord"
+  }
+close $outhandle
 }
 
 
