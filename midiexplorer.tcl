@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.67 2021-09-14 13:05" 
+set midiexplorer_version "MidiExplorer version 2.68 2021-11-12 12:35" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -13237,7 +13237,7 @@ global df
     frame $w.cfg.spc
     label $w.cfg.spc.spclab -text keySpacing -font $df
     entry $w.cfg.spc.spcent -textvariable midi(keySpacing) -width 3 -font $df 
-    bind $w.cfg.spc.spcent <Return> {keymap tableau; focus .keystrip}
+    bind $w.cfg.spc.spcent <Return> {keymap keystrip; focus .keystrip}
     pack  $w.cfg.spc -side top -anchor w
     pack $w.cfg.spc.spclab -side left -anchor w
     pack $w.cfg.spc.spcent -side left -anchor w
