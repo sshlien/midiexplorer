@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.68 2021-11-12 12:35" 
+set midiexplorer_version "MidiExplorer version 2.69 2021-09-14 20:50" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -1546,7 +1546,8 @@ proc populateTree {tree node} {
     $tree delete [$tree children $node]
     set i 0
     set filelist [lsort -dictionary [glob -nocomplain -dir $path *]] 
-    messagetxt "scanning [llength $filelist] files. Could take a while."
+    set nfiles [llength $filelist]
+    messagetxt "scanning $nfiles files. Could take a while."
     foreach f $filelist {
 	set type [file type $f]
 	if {$type eq "directory"} {
@@ -1588,7 +1589,9 @@ proc populateTree {tree node} {
               }
 	}
     incr i
-    if {[expr $i % 20] == 0} {update}
+    if {[expr $i % 50] == 0} {
+         messagetxt "scanning [expr $nfiles -$i] files. Could take a while."
+	  update}
     }
 
     # Stop this code from rerunning on the current node
@@ -13237,7 +13240,7 @@ global df
     frame $w.cfg.spc
     label $w.cfg.spc.spclab -text keySpacing -font $df
     entry $w.cfg.spc.spcent -textvariable midi(keySpacing) -width 3 -font $df 
-    bind $w.cfg.spc.spcent <Return> {keymap keystrip; focus .keystrip}
+    bind $w.cfg.spc.spcent <Return> {keymap tableau; focus .keystrip}
     pack  $w.cfg.spc -side top -anchor w
     pack $w.cfg.spc.spclab -side left -anchor w
     pack $w.cfg.spc.spcent -side left -anchor w
