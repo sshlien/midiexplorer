@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.69 2021-09-14 20:50" 
+set midiexplorer_version "MidiExplorer version 2.71 2021-09-17 19:55" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -740,6 +740,7 @@ proc midiInit {} {
     set midi(notegram) fifths
     set midi(tableau5) 0
     set midi(chordhist) graphics
+    set midi(pitchclassfifths) 0
  
     # initial search parameters
     set midi(tempo) 120 
@@ -8783,6 +8784,7 @@ proc plot_pitch_class_histogram {} {
     global sharpnotes
     global flatnotes
     global pitchcl
+    global midi
     
     set w 400
     set h 65 
@@ -8816,6 +8818,9 @@ proc plot_pitch_class_histogram {} {
     if {[winfo exists .pitchclass] == 0} {
         toplevel .pitchclass
         positionWindow .pitchclass
+        
+        checkbutton .pitchclass.circle -text "circle of fifths" -variable midi(pitchclassfifths) -font $df -command plot_pitch_class_histogram
+        pack .pitchclass.circle
         pack [canvas $pitchc -width 425 -height 100]\
                 -expand yes -fill both
     } else {.pitchclass.c delete all}
@@ -8827,18 +8832,23 @@ proc plot_pitch_class_histogram {} {
     
     set iy [expr $ybbx +10]
     set iy2 [Graph::iypos $maxgraph]
-    set i 0
+    set j 0
     foreach note $notes {
+        if {$midi(pitchclassfifths)} {
+          set i [expr ($j*7) % 12]
+          } else {
+          set i $j
+          }
         set ix [Graph::ixpos [expr $i +0.5]]
         $pitchc create text $ix $iy -text $note -font $df
-        set iyb [Graph::iypos $notedist($i)]
-        set count [expr round($notedist($i)*$total)]
+        set iyb [Graph::iypos $notedist($j)]
+        set count [expr round($notedist($j)*$total)]
         append exec_out  "$note $count\n"
         set ix [Graph::ixpos [expr double($i)]]
         set ix2 [Graph::ixpos [expr double($i+1)]]
         $pitchc create rectangle $ix $ybbx $ix2 $iy2 -outline blue
         $pitchc create rectangle $ix $ybbx $ix2 $iyb -fill gray
-        incr i
+        incr j
     }
     $pitchc create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
             -width 2
@@ -13240,7 +13250,7 @@ global df
     frame $w.cfg.spc
     label $w.cfg.spc.spclab -text keySpacing -font $df
     entry $w.cfg.spc.spcent -textvariable midi(keySpacing) -width 3 -font $df 
-    bind $w.cfg.spc.spcent <Return> {keymap tableau; focus .keystrip}
+    bind $w.cfg.spc.spcent <Return> {keymap keystrip; focus .keystrip}
     pack  $w.cfg.spc -side top -anchor w
     pack $w.cfg.spc.spclab -side left -anchor w
     pack $w.cfg.spc.spcent -side left -anchor w
