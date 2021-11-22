@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.74 2021-11-21 12:40" 
+set midiexplorer_version "MidiExplorer version 2.75 2021-11-22 08:30" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -10507,6 +10507,8 @@ global searchstate
 global midi
 global rcriterion
 #global rootnode
+set rootfolder $midi(rootfolder)
+set rootfolderbytes [string length $rootfolder]
 set n [prepare_filter]
 if {$n < 1} {.searchbox.msg configure -text "First check one of the boxes"\
  -foreground red
@@ -10547,7 +10549,8 @@ for {set i 1} {$i < $descsize} {incr i} {
      incr j
      if {$j > 200} break
      set midifile [dict get $desc($i) file]
-     set id [.treebrowser.tree insert {} end -text $midifile -values [list $midifile "file" 0.0 "" $position]]
+     set compactMidifile [string range $midifile $rootfolderbytes end]
+     set id [.treebrowser.tree insert {} end -text $compactMidifile -values [list $midifile "file" 0.0 "" $position]]
      incr position
      if {[file exist $midifile]} {
        set size [file size $midifile]
