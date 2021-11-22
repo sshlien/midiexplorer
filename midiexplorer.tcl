@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.71 2021-09-17 19:55" 
+set midiexplorer_version "MidiExplorer version 2.74 2021-11-21 12:40" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -2844,7 +2844,7 @@ if {![winfo exist $w]} {
   canvas $w.chkscan -width 50 -height 300 -bg #002000
   label .ptableau.status -text "$midi(midifilein)"
   frame $w.header
-  button $w.header.play -text play -command playExposed -font $df
+  button $w.header.play -text play -command {playExposed tableau} -font $df
   menubutton $w.header.dot -text "dot size" -font $df -menu $w.header.dot.items
   menu $w.header.dot.items -tearoff 0
   $w.header.dot.items add radiobutton -label 0 -font $df -command {dotmod 0}
@@ -3243,12 +3243,12 @@ global tableauRowColor
 }
 
 
-proc playExposed {} {
+proc playExposed {source} {
 global midi
 global lastbeat
 global midichannels
 global exec_out
-copyMidiToTmp tableau
+copyMidiToTmp $source
 set exec_out "playExposed\ncopyMidiToTmp tableau"
 if {![file exist $midi(path_midiplay)]} {
      set msg "You need to specify the path to a program which plays
@@ -4985,11 +4985,12 @@ proc chordgram_plot {source} {
      positionWindow .chordgram
      frame .chordgram.head
      checkbutton .chordgram.head.2 -text "circle of fifths" -variable midi(chordgram) -font $df -command "call_compute_chordgram $source"
+     button .chordgram.head.play -text play -font $df -command {playExposed chordgram}
      button .chordgram.head.zoom -text zoom -command zoom_chordgram -font $df
      button .chordgram.head.unzoom -text unzoom -command unzoom_chordgram -font $df 
      button .chordgram.head.save -text "save data" -font $df -command saveChordgramData
      button .chordgram.head.help -text help -font $df -command {show_message_page $hlp_chordgram word}
-     pack  .chordgram.head.2 .chordgram.head.zoom .chordgram.head.unzoom .chordgram.head.save .chordgram.head.help -side left -anchor w
+     pack  .chordgram.head.2 .chordgram.head.play .chordgram.head.zoom .chordgram.head.unzoom .chordgram.head.save .chordgram.head.help -side left -anchor w
      pack  .chordgram.head -side top -anchor w 
      set c .chordgram.can
      canvas $c -width $pianorollwidth -height 250 -border 3 -relief sunken
@@ -5014,6 +5015,14 @@ switch $source {
   chordgram {
     set co [.chordgram.can coords mark]
     set limits [chordgram_limits $co]
+       if {[lindex $limits 0] >= 0} {
+       set start [expr [lindex $limits 0]]
+       set stop  [expr [lindex $limits 1]]
+       }
+    }
+  notegram {
+    set co [.notegram.can coords mark]
+    set limits [notegram_limits $co]
        if {[lindex $limits 0] >= 0} {
        set start [expr [lindex $limits 0]]
        set stop  [expr [lindex $limits 1]]
@@ -5269,7 +5278,8 @@ proc notegram_plot {source} {
      frame .notegram.head
      radiobutton .notegram.head.1 -text sequential -variable midi(notegram) -value seq -font $df -command {compute_notegram none}
      radiobutton .notegram.head.2 -text "circle of fifths" -variable midi(notegram) -value fifths -font $df -command {compute_notegram none}
-     pack  .notegram.head.1 .notegram.head.2 -side left -anchor w
+     button .notegram.head.play -text play -font $df -command {playExposed notegram}
+     pack  .notegram.head.1 .notegram.head.2 .notegram.head.play -side left -anchor w
      pack  .notegram.head -side top -anchor w 
      set c .notegram.can
      canvas $c -width $pianorollwidth -height 250 -border 3 -relief sunken
@@ -13224,6 +13234,7 @@ array set majorColors {
 proc keystrip_window {} {
 global midi
 global df
+set spacelist {3 4 6 8 12 16 18 24 32 36 48 64}
  if {![winfo exist .keystrip.c]} {
 
 
@@ -13249,11 +13260,11 @@ global df
   frame $w.cfg
     frame $w.cfg.spc
     label $w.cfg.spc.spclab -text keySpacing -font $df
-    entry $w.cfg.spc.spcent -textvariable midi(keySpacing) -width 3 -font $df 
-    bind $w.cfg.spc.spcent <Return> {keymap keystrip; focus .keystrip}
+    ttk::combobox $w.cfg.spc.spcbox -textvariable midi(keySpacing) -values $spacelist -width 3
+    bind $w.cfg.spc.spcbox <<ComboboxSelected>> {keymap keystrip; focus .keystrip}
     pack  $w.cfg.spc -side top -anchor w
     pack $w.cfg.spc.spclab -side left -anchor w
-    pack $w.cfg.spc.spcent -side left -anchor w
+    pack $w.cfg.spc.spcbox -side left -anchor w
     radiobutton $w.cfg.spc.kk -text kk -value kk -variable midi(pitchcoef) -command {keymap tableau} -font $df
     radiobutton $w.cfg.spc.ss -text ss -value ss -variable midi(pitchcoef) -command {keymap tableau} -font $df
     checkbutton $w.cfg.spc.w -text pitchWeighting -variable midi(pitchWeighting) -command {keymap tableau} -font $df
@@ -13537,6 +13548,7 @@ proc keymapPlotPitchClassHistogram {} {
     global xlbx ytbx xrbx ybbx
     global histogram
     global df
+    global midi
     set notes {C C# D D# E F F# G G# A A# B}
     set maxgraph 0.0
     set xpos [expr $xrbx -40]
@@ -13549,6 +13561,8 @@ proc keymapPlotPitchClassHistogram {} {
     if {[winfo exists .keypitchclass] == 0} {
         toplevel .keypitchclass
         positionWindow ".keypitchclass"
+        checkbutton .keypitchclass.circle -text "circle of fifths" -variable midi(pitchclassfifths) -font $df -command keymapPlotPitchClassHistogram
+        pack .keypitchclass.circle
         pack [canvas $pitchc -width [expr $scanwidth +130] -height $scanheight]\
                 -expand yes -fill both
     } else {.keypitchclass.c delete all}
@@ -13559,15 +13573,20 @@ proc keymapPlotPitchClassHistogram {} {
     Graph::draw_y_ticks $pitchc 0.0 $maxgraph 0.1 2 %3.1f
 
     set iy [expr $ybbx +10]
-    set i 0
+    set j 0
     foreach note $notes {
+        if {$midi(pitchclassfifths)} {
+          set i [expr ($j*7) % 12]
+          } else {
+          set i $j
+          }
         set ix [Graph::ixpos [expr $i +0.5]]
         $pitchc create text $ix $iy -text $note -font $df
-        set iyb [Graph::iypos $histogram($i)]
+        set iyb [Graph::iypos $histogram($j)]
         set ix [Graph::ixpos [expr double($i)]]
         set ix2 [Graph::ixpos [expr double($i+1)]]
         $pitchc create rectangle $ix $ybbx $ix2 $iyb -fill blue
-        incr i
+        incr j
     }
     $pitchc create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
             -width 2
