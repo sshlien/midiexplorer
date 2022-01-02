@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.75 2021-11-22 08:30" 
+set midiexplorer_version "MidiExplorer version 2.76 2022-01-02 08:30" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -13298,7 +13298,7 @@ proc segment_histogram {beatfrom} {
         set t [lindex $line 2]
         set c [lindex $line 3]
         # ignore percussion channel
-        if {$c == 9} continue
+        if {$c == 10} continue
         set note [expr [lindex $line 4] % 12]
         set vel [lindex $line 5]
         if {$midi(pitchWeighting)} {
