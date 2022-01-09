@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.76 2022-01-02 08:30" 
+set midiexplorer_version "MidiExplorer version 2.78 2022-01-09 08:10" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -7851,6 +7851,7 @@ set period 4
 set nbeats [expr $mlength/$ppqn]
 set ntatums [expr $nbeats*4]
 set period [graph_drum_periodicity $drumpat $graph]
+if {$period < 2} {set period 2}
 $d.1a configure -text $nbeats
 $d.2a configure -text $ntatums
 $d.3a configure -text "$period beats"
@@ -7962,10 +7963,15 @@ foreach  {key value} $h {
   }
 set nbars [llength $freqlist]
 set dnbars [expr double($nbars+1)]
+if {$nbars < 25} {
+   set step 4
+   } else {
+   set step [expr $nbars/6]
+  }
 $graph create rectangle 50 20 350 200 -outline black\
             -width 2 -fill white
 Graph::alter_transformation 50 350 200 20 0 $dnbars 0.0 3.1
-Graph::draw_x_grid $graph 0 $dnbars 4 1  0 %4.1f
+Graph::draw_x_grid $graph 0 $dnbars $step 1  0 %4.0f
 Graph::draw_y_log10ticks $graph 0.0 3.0 %3.0f
 set iyb [Graph::iypos 0.0]
 for {set i 0} {$i < $nbars} {incr i} {
