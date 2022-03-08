@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.78 2022-01-09 08:10" 
+set midiexplorer_version "MidiExplorer version 2.79 2022-03-08 15:00" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -1634,9 +1634,9 @@ proc TreeBrowserSortBy {col direction} {
 
 set w .tinfo
 frame $w 
-ttk::treeview $w.tree -columns {trk chn program notes activity pavg duration } -show headings -height 14 -yscroll "$w.vsb set"
+ttk::treeview $w.tree -columns {trk chn program notes activity pavg duration bends controls pressure } -show headings -height 14 -yscroll "$w.vsb set"
 ttk::scrollbar $w.vsb -orient vertical -command ".tinfo.tree yview"
-foreach col {trk chn program notes activity pavg duration} {
+foreach col {trk chn program notes activity pavg duration bends controls pressure} {
   $w.tree heading $col -text $col
   $w.tree heading $col -command [list TinfoSortBy $col 0]
   $w.tree column $col -width [expr [font measure $df $col] + 13]
@@ -1739,6 +1739,7 @@ global timesig
 global ntimesig
 global df
 
+gatherMidiSummary
 midi_type0_table 
 
 array unset miditext
@@ -1748,7 +1749,6 @@ set addendum ""
 set i 1
 set miditxt(0) "[file tail $midi(midifilein)] is a type 0 midi file containing only 1 track. A beat is divided into $ppqn pulses. "
 
-gatherMidiSummary 
 #update_table_header
 
 if {![info exist tempo]} {set tempo 120
@@ -1813,13 +1813,13 @@ proc interpretMidiType1 {} {
   array unset track2program
   array unset programmod
 
+  gatherMidiSummary 
   midiType1Table
 
   set miditxt(0) "[file tail $midi(midifilein)] contains $ntrks tracks. A\
  beat is divided into $ppqn pulses. "
   set addendum ""
 
-gatherMidiSummary 
 #update_table_header
 if {$nkeysig > 0} {append miditxt(0) " The key signature was set to $keysig."}
 if {$nkeysig > 1} {append miditxt(0) " There are $nkeysig key signatures in the file."}
@@ -2055,7 +2055,8 @@ foreach line [split $midi_info '\n'] {
            }
     activetrack {set ntrks [lindex $line 1]
                  append midierror "only $ntrks valid tracks"}
-    default {if {[info exist t]} {lappend trkinfo($t) $line }}
+    default {if {[info exist t]} {lappend trkinfo($t) $line }
+            }
     }
  }
  set flats [expr [lindex $pitchcl 3] + [lindex $pitchcl 10]]
@@ -2115,17 +2116,6 @@ proc list_progammod {} {
   popMessage $msg
   }
 
-proc list_pitchbends {} {
-  global pitchbendsplit
-  set msg ""
-  append msg "channel\tpitchbends\n"
-  foreach bend $pitchbendsplit {
-    set chan [lindex $bend 0]
-    set nbends [lindex $bend 1]
-    append msg "$chan\t$nbends\n"
-    }
-  popMessage $msg
-  }
 
 proc list_tempomod {} {
   global tempomod
@@ -2164,13 +2154,17 @@ proc list_keysigmod {} {
   }  
  
 
-proc get_trkinfo {channel nnotes nharmony pmean duration token} {
+proc get_trkinfo {channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount token} {
  global ppqn
+ global pitchbendsplit
  upvar 1 $channel c
  upvar 1 $nnotes n
  upvar 1 $nharmony h
  upvar 1 $pmean pavg
  upvar 1 $duration dur 
+ upvar 1 $cntlparamCount cntlCount
+ upvar 1 $pressureCount pressCount
+ upvar 1 $pitchbendCount pbend
  set c [lindex $token 1]
  set n [lindex $token 3]
  set h [lindex $token 4]
@@ -2180,6 +2174,13 @@ proc get_trkinfo {channel nnotes nharmony pmean duration token} {
  set dur [expr $dur / ($n + $h)]
  set dur [expr double($dur) / $ppqn]
  set dur [format %5.3f $dur]
+ set cntlCount [lindex $token 7]
+ set pressCount [lindex $token 8]
+ if {[info exist pitchbendsplit($c)]} {
+       set pbend $pitchbendsplit($c)
+   } else {
+       set pbend 0
+   }
 }
 
 
@@ -2211,7 +2212,7 @@ set ntimesig 0
 set nprogramchange 0
 set tempocmds 1
 set addendum ""
-set pitchbendsplit {}
+if {[info exist pitchbendsplit]} {unset pitchbendsplit} 
 set tempomod {}
 set timesigmod {}
 set keysigmod {}
@@ -2229,7 +2230,7 @@ for {set i 1} {$i <= $ntrks} {incr i} {
       if {$nvalue > 0} {append addendum " There are $pitchbends pitchbends split between channels"}
      } elseif {[lindex $token 0] == "pitchbendin"} {
       append addendum " [lindex $token 1] ([lindex $token 2]),"
-      lappend pitchbendsplit [lrange $token 1 end]
+      set pitchbendsplit([lindex $token 1]) [lindex $token 2]
      } elseif {[lindex $token 0] == "tempocmds"} {
       set nvalue [lindex $token 1]
       set tempocmds $nvalue
@@ -2282,7 +2283,7 @@ set trknum 1
 set nlines 1
 foreach token $trkinfo(1) {
   if {[lindex $token 0] == "trkinfo"} {
-    get_trkinfo channel nnotes nharmony pmean duration $token
+    get_trkinfo channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount $token
     set activechan($channel) 1
     set totalnotes [expr $nnotes+$nharmony]
     set channel2program($channel) $xchannel2program($channel)
@@ -2294,7 +2295,7 @@ foreach token $trkinfo(1) {
       set prog [lindex $mlist $prog]
     }
     set outline "$trknum $channel [list $prog ]"
-    append outline " $nnotes/$totalnotes $chan_action $pmean $duration"
+    append outline " $nnotes/$totalnotes $chan_action $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
     set id [$w.tree insert {} end -values $outline -tag fnt]
     incr nlines
     }
@@ -2323,7 +2324,7 @@ $w.tree delete [$w.tree children {}]
 for {set i 1} {$i <= $ntrks} {incr i} {
   foreach token $trkinfo($i) {
     if {[lindex $token 0] == "trkinfo"} {
-      get_trkinfo channel nnotes nharmony pmean duration $token
+      get_trkinfo channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount $token
       set activechan($channel) 1
       set track2channel($i) $channel
       set totalnotes [expr $nnotes+$nharmony]
@@ -2336,7 +2337,7 @@ for {set i 1} {$i <= $ntrks} {incr i} {
         set prog [lindex $mlist $prog]
       }
       set outline "$i $channel [list $prog ]"
-      append outline " $nnotes/$totalnotes $chan_action $pmean $duration"
+      append outline " $nnotes/$totalnotes $chan_action $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
       set id [$w.tree insert {} end -values $outline -tag fnt]
       }
    }
@@ -3889,8 +3890,8 @@ proc check_midi2abc_and_midicopy_versions {} {
     set result [getVersionNumber $midi(path_midi2abc)]
     #puts $result
     set err [scan $result "%f" ver]
-    set msg "You need midi2abc.exe version 3.42.\n"
-    if {$err == 0 || $ver < 3.42} { .info.txt insert insert $msg red
+    set msg "You need midi2abc.exe version 3.52.\n"
+    if {$err == 0 || $ver < 3.52} { .info.txt insert insert $msg red
                     return $msg}
     set result [getVersionNumber $midi(path_midicopy)]
     set err [scan $result "%f" ver]
@@ -13709,7 +13710,7 @@ proc show_data_page {text wrapmode clean} {
 
 
 set abcmidilist {path_abc2midi 4.26\
-            path_midi2abc 3.42\
+            path_midi2abc 3.52\
             path_midicopy 1.35\
             path_abcm2ps 8.14.6}
 
