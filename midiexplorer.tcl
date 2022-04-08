@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.79 2022-03-08 15:00" 
+set midiexplorer_version "MidiExplorer version 2.80 2022-03-10 15:50" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -1747,7 +1747,7 @@ array unset programmod
 if {[info exist tempo]} {unset tempo}
 set addendum ""
 set i 1
-set miditxt(0) "[file tail $midi(midifilein)] is a type 0 midi file containing only 1 track. A beat is divided into $ppqn pulses. "
+set miditxt(0) "$midi(midifilein) is a type 0 midi file containing only 1 track. A beat is divided into $ppqn pulses. "
 
 #update_table_header
 
@@ -1816,7 +1816,7 @@ proc interpretMidiType1 {} {
   gatherMidiSummary 
   midiType1Table
 
-  set miditxt(0) "[file tail $midi(midifilein)] contains $ntrks tracks. A\
+  set miditxt(0) "$midi(midifilein) contains $ntrks tracks. A\
  beat is divided into $ppqn pulses. "
   set addendum ""
 
