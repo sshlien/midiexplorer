@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.80 2022-03-10 15:50" 
+set midiexplorer_version "MidiExplorer version 2.81 2022-04-15 08:35" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -566,7 +566,7 @@ if {[info exist env(MIDIEXPLORERPATH)]} {
      set msg "midiexplorer is creating the folder $midiexplorerpath\
      to store midiexplorer.ini and various temporary midi files."
      tk_messageBox -message $msg  -type ok
-     file mkdir $midiexplorerpath
+     file mkdir $midiexplorerpat
      set handle [open $midiexplorerpath/README.txt w]
      puts $handle "This folder is used by midiexplorer to store\n
             preferences and temporary data.\n\n\
@@ -678,6 +678,7 @@ proc midiInit {} {
     set midi(.channel9) ""
     set midi(.ribbon) ""
     set midi(.ptableau) ""
+    set midi(.touchplot) ""
 
     
     set midi(player1) ""
@@ -1044,6 +1045,7 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
             -command piano_roll_display
 	$ww add command -label drumroll -font $df -command {drumroll_window} -accelerator "ctrl-d"
 	$ww add command -label percView -font $df -command percMapInterface
+        $ww add command -label afterTouch -font $df
 	$ww add command -label "mftext by beats" -font $df -command {
              set midi(mftextunits) 2
              mftextwindow $midi(midifilein) 0}
@@ -9281,6 +9283,20 @@ namespace eval Graph {
             }
         }
     }
+
+    namespace export draw_points_from_list
+    proc draw_points_from_list {can datalist color} {
+        #can canvas
+        #datalist {x y x y x y ...}
+        foreach {xdata ydata} $datalist {
+                set ix1 [expr [ixpos $xdata] - 3]
+                set iy1 [expr [iypos $ydata] - 3]
+                set ix2 [expr [ixpos $xdata] + 3]
+                set iy2 [expr [iypos $ydata] + 3]
+                $can create oval  $ix1 $iy1 $ix2 $iy2 -fill $color -width 0
+        }
+   }
+
 } ;# end of namespace declaration
 
 namespace import Graph::*
@@ -11399,7 +11415,8 @@ proc getGeometryOfAllToplevels {} {
                ".ppqn" ".drumrollconfig" ".indexwindow" ".wiki"
                ".dictview" ".notegram" ".barmap" ".playmanage" ".data_info"
                ".midiplayer" ".tmpfile" ".cfgmidi2abc" ".pgram" ".keystrip"
-               ".keypitchclass" ".channel9" ".ribbon" ".ptableau"}
+               ".keypitchclass" ".channel9" ".ribbon" ".ptableau"
+               ".touchplot"  }
   foreach top $toplevellist {
     if {[winfo exist $top]} {
       set g [wm geometry $top]"
@@ -13753,3 +13770,5 @@ proc show_checkversion_summary {} {
 #trace add execution compute_pianoroll leave "cmdstr"
 
 restore_root_folder 
+
+#source aftertouch.tcl
