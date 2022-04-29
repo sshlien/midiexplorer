@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.81 2022-04-15 08:35" 
+set midiexplorer_version "MidiExplorer version 2.82 2022-04-28 20:20" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -80,6 +80,7 @@ set midiexplorer_version "MidiExplorer version 2.81 2022-04-15 08:35"
 #   Part 23.0 PitchClass Map
 #   Part 24.0 Console Support
 #   Part 25.0 internals
+#   Part 26.0 aftertouch
 #
 
 set welcome "Welcome to $midiexplorer_version. This application\
@@ -1045,7 +1046,7 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
             -command piano_roll_display
 	$ww add command -label drumroll -font $df -command {drumroll_window} -accelerator "ctrl-d"
 	$ww add command -label percView -font $df -command percMapInterface
-        $ww add command -label afterTouch -font $df
+        $ww add command -label afterTouch -font $df -command aftertouch
 	$ww add command -label "mftext by beats" -font $df -command {
              set midi(mftextunits) 2
              mftextwindow $midi(midifilein) 0}
@@ -3893,7 +3894,7 @@ proc check_midi2abc_and_midicopy_versions {} {
     #puts $result
     set err [scan $result "%f" ver]
     set msg "You need midi2abc.exe version 3.52.\n"
-    if {$err == 0 || $ver < 3.52} { .info.txt insert insert $msg red
+    if {$err == 0 || $ver < 3.54} { .info.txt insert insert $msg red
                     return $msg}
     set result [getVersionNumber $midi(path_midicopy)]
     set err [scan $result "%f" ver]
@@ -13765,10 +13766,665 @@ proc show_checkversion_summary {} {
 }
 
 
+#   Part 26.0 aftertouch
+#process_event load_mflines extract_all_event_clusters
+#countDistinctEventClusters showListOfNumberOfClusters
+#showEffectWindow minList maxList createTouchPlot
+#plotWideData #vertical_scale
+#touchplot_Button1Press, touchplot_Button1Motion
+#touchplot_Button1Release
+#touchplot_ClearMark
+#touchplot_limits
+#plot_event_clusters_on_strip
+#extract_all_expressions
+#extract_all_volume
+#extract_all_pitchbends
+#extract_all_modulations
+#findLastNoteOn
+#copy_midi_segment
+#pitchRangeFor
+#pianorollFor
+#aftertouch
 
+
+
+set debug 0
+set midi(speed) 0.5
+set midi(.touchplot) ""
+
+
+proc process_event {eventName channel beat} {
+# A cluster of events is a set of events of the same
+# type 'eventName' occurring in a specific channel
+# which are all spaced less than 0.5 beats apart.
+#
+# eventTime is an array which contains the time of the
+# last eventName (pitchbend, volume, ...) encountered for
+# a specific MIDI channel. It is used to separate clusters
+# of eventName events and to record the start of this
+# cluster in the global array events.
+global eventTime
+global eventClusters
+global debug
+set dash -
+if {[info exist eventTime($eventName$dash$channel)]} {
+   set lastBeat $eventTime($eventName$dash$channel)
+   set interval [expr $beat - $lastBeat]
+   #puts "lastBeat = $lastBeat interval = $interval"
+   if {$interval > 0.5} {
+     if {$debug} {puts "cluster for $event-$channel at $beat"}
+     lappend eventClusters [list $eventName $channel $beat]
+     }
+   set eventTime($eventName$dash$channel) $beat
+   } else {
+     if {$debug} {puts "cluster for $event-$channel at $beat"}
+     lappend eventClusters [list $eventName $channel $beat]
+     set eventTime($eventName$dash$channel) $beat
+   }
+}
+
+
+proc load_mflines {} {
+# Reads a specific midi file, interprets all the messages
+# using midi2abc -mftext and returns all the messages
+# in the global array mflines.
+global mflines
+global midi
+set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -mftext"
+catch {eval $cmd} mftextresults
+set exec_out $mftextresults
+#puts "cmd = $cmd"
+#puts "exec_out = $exec_out"
+if {[string first "no such" $exec_out] >= 0} {puts "no such file $midi(path_midi2abc)"}
+set mftextresults [string map {\" {} \{ {} \} {}} $mftextresults]
+set midicommands [split $mftextresults \n]
+set mflines [lsort -command compare_onset $midicommands]
+}
+
+proc extract_all_event_clusters {} {
+global mflines
+global eventClusters
+global debug
+load_mflines
+set eventClusters {}
+set k 0
+foreach line $mflines {
+  set gotbeat [scan $line %7f%n beat length] 
+  if !$gotbeat continue
+  set lline [string range $line $length end]
+  set gotkeyword [scan $lline %s%n keyword length]
+  set lline [string range $lline $length end]
+  #puts "$keyword $length"
+  switch $keyword {
+        Note {set type note
+              scan $lline %d%n channel length
+              set  lline [string range $lline $length end]
+              scan $lline %s%n onOff length
+              set  lline [string range $lline $length end]
+              if {$debug} {puts "$beat\t$type $onOff $channel"}
+              }
+        Pressure {
+              set type touch
+              scan $lline %d%n channel length
+              set  lline [string range $lline $length end]
+              if {$debug} {puts "$beat\t$type $channel"}
+              }
+        Pitchbend {set type pitchbend
+              scan $lline %d%n channel length
+              set  lline [string range $lline $length end]
+              scan $lline %d%n bend length
+              if {$debug} {puts "$beat\t$type $channel $bend"}
+              process_event $type $channel $beat
+              }
+        Metatext {set type metatext
+              set rest $lline
+              if {$debug} {puts "$beat\t$type $rest"}
+              }
+        Meta {set type meta
+              set rest $lline 
+              if {$debug} {puts "$beat\t$type $rest"}
+              }
+        Program  {set type program}
+        Chanpres {set type touch}
+        CntlParm {set type cntl
+              scan $lline %d%n channel length
+              set  lline [string range $lline $length end]
+              scan $lline %s%n ctltype length
+              set  rest [string range $lline $length end]
+              switch $ctltype {
+                Expression {
+                            scan $rest " = %d" expValue
+                            process_event $ctltype $channel $beat
+                            }
+                ModulationWheel {
+                            scan $rest " = %d" modValue
+                            process_event $ctltype $channel $beat
+                            }
+                Volume     {
+                            scan $rest " = %d" volValue
+                            process_event $ctltype $channel $beat
+                           }
+                Effects    {
+                            scan $rest " = %d" effValue
+                            puts "effValue = $effValue"
+                            process_event $ctltype $channel $beat
+                           }
+                Chorus     {
+                            scan $rest " = %d" chorValue
+                            puts "chorValue = $chorValue"
+                            process_event $ctltype $channel $beat
+                           }
+                Sound      {
+                            scan $rest " = %d" soundValue
+                            puts "soundValue = $soundValue"
+                            process_event $ctltype $channel $beat
+                           }
+                HoldPedal  {
+                            scan $rest " = %d" pedalValue
+                            process_event $ctltype $channel $beat
+                           }
+                }
+              if {$debug} {puts "$beat\t$type $channel $ctltype$rest"}
+              }
+        default {set type other
+                 puts "$beat\t***$line"
+                }
+    }
+
+ incr k
+    }
+}
+
+proc countDistinctEventClusters {} {
+global eventClusters
+global chanlist
+global typelist
+global dEvents
+array unset dEvents
+set typelist {}
+set chanlist {}
+foreach e $eventClusters {
+  set chan [lindex $e 1]
+  set ctype [lindex $e 0]
+  set elem $ctype-$chan
+  if {[lsearch  $typelist $ctype] < 0} {lappend typelist $ctype} 
+  if {[lsearch  $chanlist $chan] < 0} {lappend chanlist $chan} 
+  if {[info exist dEvents($elem)]} {
+       incr dEvents($elem)
+       } else {
+       set dEvents($elem) 1
+       }
+  }
+#puts [array get dEvents]
+#puts $typelist
+set chanlist [lsort -integer $chanlist]
+#puts $chanlist
+}
+
+proc showListOfNumberOfClusters {} {
+global chanlist
+global typelist
+global dEvents
+foreach c $chanlist {
+  set line $c
+  foreach t $typelist {
+    set e $t-$c
+    if {[info exist dEvents($e)]} {
+      append line " $e = $dEvents($e)"
+      }
+    }
+  }
+}
+
+
+
+set hlp_effect "Effect\n
+Many midi files control the voicing of the notes using a sequence\
+of pitchbends or control messages. If they are present, you can see\
+these messages in the midi files using the view/mftext menu button.\
+These messages apply to only a specific channel.\n\n\
+There are many different control messages. They include ModulationWheel,\
+Volume, Expression, etc. This function shows the number of clusters\
+of these messages and how they distributed among the channels in\
+an array of buttons. A cluster of messages is a group of the same type\
+one half a beat apart.\n\n\
+Pressing one of these buttons containing many clusters, will cause\
+this application to pop up a new window showing the piano roll for\
+the specific channel and the messages. There is a separate help text\
+for this window.
+"
+
+
+proc showEffectWindow {} {
+global chanlist
+global typelist
+global dEvents
+global df
+if {[winfo exist .effect]} {destroy .effect}
+toplevel .effect
+frame .effect.h
+pack  .effect.h -anchor w
+label .effect.h.lab -text "There are no useful control messages in this file"
+button .effect.h.hlp -text help -font $df -command {show_message_page $hlp_effect word}
+pack .effect.h.lab .effect.h.hlp -anchor w -side left
+set ef .effect.f
+frame $ef
+pack $ef
+label $ef.0 -text channel -font $df -borderwidth 2 -relief ridge
+grid $ef.0 -row 0
+set k 1
+foreach t $typelist {
+   label $ef.$k -text $t -font $df -borderwidth 2 -relief ridge -padx 2
+   grid $ef.$k -row 0 -column $k
+   incr k
+   } 
+set j 1
+foreach c $chanlist {
+   label $ef.$k -text $c -font $df -borderwidth 2 -relief flat
+   grid $ef.$k -column 0 -row $j
+   incr k
+   incr j
+   }
+
+set n 0
+foreach e [array names dEvents] {
+  set ev [split $e -]
+  set t [lindex $ev 0]
+  set c [lindex $ev 1]
+  set colNum [lsearch $typelist $t]
+  incr colNum 
+  set rowNum [lsearch -exact $chanlist $c]
+  incr rowNum
+  set v $dEvents($e)
+  if {$t == "pitchbend"} {
+    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_pitchbends $c" -bd 3
+    } elseif {$t == "ModulationWheel"} {
+    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_modulations $c" -bd 3
+    } elseif {$t == "Expression"} {
+    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_expressions $c" -bd 3
+   } elseif  {$t == "Volume"} {
+    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_volume $c" -bd 3
+   } elseif  {$t == "HoldPedal"} {
+    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_pedals $c" -bd 3
+   }
+
+  grid $ef.i$n -column $colNum -row $rowNum
+  incr n
+  }
+#puts "n = $n"
+if {$n > 2} {.effect.h.lab configure -text ""}
+}
+
+
+
+proc minList {data} {
+#returns the minimum of the contents of the data list.
+set min 100000.0
+foreach item $data {
+  if {$item < $min} {set min $item}
+  }
+return $min
+}
+
+proc maxList {data} {
+#returns the maximum of the contents of the data list.
+set max -1000000.0
+foreach item $data {
+  if {$item > $max} {set max $item}
+  }
+return $max
+}
+
+proc createTouchPlot {plotcanvas WideWidth channel} {
+  global df
+  global midi
+  toplevel .touchplot
+  wm resizable .touchplot 0 0
+  positionWindow .touchplot
+  frame .touchplot.1
+  frame .touchplot.2
+  pack .touchplot.1 .touchplot.2
+  button .touchplot.1.b -text play -font $df -command "copy_midi_segment $channel"
+  label .touchplot.1.speedlabel -text speed -font $df
+  scale .touchplot.1.scale -length 100 -from 0.1 -to 1.0\
+-orient horizontal -resolution 0.02 -width 10 -variable midi(speed) -font $df
+  pack .touchplot.1.b .touchplot.1.speedlabel .touchplot.1.scale -side left
+  canvas $plotcanvas -width 400 -height 400 -xscrollcommand ".touchplot.scr set" -scrollregion "0 0 $WideWidth 400"
+  canvas .touchplot.2.scale -width 50 -height 400
+  pack .touchplot.2.scale $plotcanvas -side left
+  canvas .touchplot.strip -width 450 -height 15 -bg seashell3 
+  scrollbar .touchplot.scr -orient horiz -command {.touchplot.2.c xview }
+  pack .touchplot.strip
+  pack .touchplot.scr -fill x -expand 1
+}
+
+
+proc plotWideData {xData yData channel color name} {
+#plots xData values versus yData values
+  global midi
+  global df
+  global WideWidth
+  global touchPlotMaxx
+  set plotcanvas .touchplot.2.c
+  set hgraph ""
+  set miny [minList $yData]
+  set maxy [maxList $yData]
+  set minx 0.0
+  set maxx [expr 1 + floor([maxList $xData)]]
+  set touchPlotMaxx $maxx
+  set miny [expr $miny -10]
+  set maxy [expr $maxy +10]
+  set xstep 2.0
+  set WideWidth [expr 50 * $maxx]
+  set leftEdge 0
+  set rightEdge [expr $WideWidth -50]
+  foreach x $xData y $yData {
+      lappend hgraph $x $y
+      }
+  if {[winfo exists .touchplot] == 0} {
+        createTouchPlot $plotcanvas $WideWidth $channel
+        } else {
+        $plotcanvas delete all
+        $plotcanvas configure -scrollregion "0 0 $WideWidth 400"
+        .touchplot.1.b configure -command "copy_midi_segment $channel"
+        }
+   bind .touchplot.2.c <ButtonPress-1> {touchplot_Button1Press %x %y}
+   bind .touchplot.2.c <ButtonRelease-1> touchplot_Button1Release
+   bind .touchplot.2.c <Double-Button-1> touchplot_ClearMark
+   .touchplot.2.c create rect -1 -1 -1 -1 -tags mark -fill gray35 -stipple gray12
+   $plotcanvas create rectangle $leftEdge 350 $rightEdge 50 -outline black -width 2 -fill white
+   Graph::alter_transformation $leftEdge $rightEdge 350 50 $minx $maxx $miny $maxy
+   #Graph::draw_y_ticks $plotcanvas $miny $maxy 20.0 1 %3.0f 
+   Graph::draw_x_ticks $plotcanvas $minx $maxx $xstep 1 0 %3.1f
+
+   vertical_scale .touchplot.2.scale $miny $maxy 20.0
+   pianorollFor $channel
+
+   Graph::draw_points_from_list $plotcanvas $hgraph $color
+   plot_event_clusters_on_strip $name $channel $minx $maxx
+   }
+
+
+
+proc vertical_scale {c miny maxy step} {
+global df
+$c delete all
+set y_scale [expr 300.0 / ($maxy - $miny)]
+set y_shift [expr 350.0 + $miny*$y_scale]
+for {set y $miny} {$y < $maxy} {set y [expr $y + $step]} {
+  set iy [expr $y_shift - $y * $y_scale]
+  set str [format %4.0f $y]
+  $c create line 40 $iy 49 $iy
+  $c create text 20 $iy -text $str -font $df
+  }
+}
+
+proc touchplot_Button1Press {x y} {
+    set touchplotHeight 350
+    set xc [.touchplot.2.c canvasx $x]
+    .touchplot.2.c raise mark
+    .touchplot.2.c coords mark $xc 50 $xc $touchplotHeight
+    bind .touchplot.2.c <Motion> { touchplot_Button1Motion %x }
+}
+
+
+proc touchplot_Button1Motion {x} {
+    set touchplotHeight 350
+    set xc [.touchplot.2.c canvasx $x]
+    if {$xc < 0} { set xc 0 }
+    set co [.touchplot.2.c coords mark]
+    .touchplot.2.c coords mark [lindex $co 0] 50 $xc $touchplotHeight
+}
+
+proc touchplot_Button1Release {} {
+    bind .touchplot.2.c <Motion> {}
+    set co [.touchplot.2.c coords mark]
+   }
+
+proc touchplot_ClearMark {} {
+    .touchplot.2.c coords mark -1 -1 -1 -1
+}
+
+
+
+proc touchplot_limits {} {
+global WideWidth
+global touchPlotMaxx
+set co [.touchplot.2.c coords mark]
+#   is there a marked region of reasonable extent ?
+set extent [expr [lindex $co 2] - [lindex $co 0]]
+if {$extent > 10} {
+        set start [expr [lindex $co 0]/($WideWidth -50.0)]
+        set end   [expr [lindex $co 2]/($WideWidth -50.0)]
+        set fbeat  [expr $start * $touchPlotMaxx]
+        set tbeat  [expr $end   * $touchPlotMaxx]
+  } else {
+        set xv [.touchplot.2.c xview]
+        set fbeat [expr [lindex $xv 0]  * $touchPlotMaxx]
+        set tbeat [expr [lindex $xv 1]  * $touchPlotMaxx]
+        }
+puts "fbeat = $fbeat tbeat = $tbeat"
+return [list $fbeat $tbeat]
+}
+
+proc plot_event_clusters_on_strip {name channel minx maxx} {
+global eventClusters
+Graph::set_xmapping 0 400 $minx $maxx
+.touchplot.strip delete all
+#puts "name = $name"
+foreach event $eventClusters {
+   set n [lindex $event 0]
+   set c [lindex $event 1]
+   set x [lindex $event 2]
+   set ix [Graph::ixpos $x]
+   if {$n == $name && $c == $channel} {
+     .touchplot.strip create line $ix 0 $ix 15
+     }
+   }
+} 
+
+proc extract_all_expressions {channel} {
+# extracts and plots all pitchbend messages
+# between beats from and to.
+global mflines
+global xData yData
+load_mflines
+set xData {}
+set yData {}
+set lastbeat 0.0
+foreach line $mflines {
+    set gotdata [scan $line %6f%s%d%s%n beat key c s length] 
+    #puts "$line\ngotdata=$gotdata"
+    if {$gotdata != 5} continue
+    if {$c !=$channel} continue    
+    if {$s != "Expression"} continue
+    set lline [string range $line $length end]
+    scan $lline %s%d dummy value
+    lappend xData $beat   
+    lappend yData $value
+    set lastbeat $beat
+    }
+plotWideData $xData $yData $channel brown Expression
+}
+
+proc extract_all_volume {channel} {
+# extracts and plots all pitchbend messages
+# between beats from and to.
+global mflines
+global xData yData
+load_mflines
+set xData {}
+set yData {}
+set lastbeat 0.0
+foreach line $mflines {
+    set gotdata [scan $line %6f%s%d%s%n beat key c s length]
+    #puts "$line\ngotdata=$gotdata"
+    if {$gotdata != 5} continue
+    if {$c !=$channel} continue
+    if {$s != "Volume"} continue
+    set lline [string range $line $length end]
+    scan $lline %s%d dummy value
+    lappend xData $beat
+    lappend yData $value
+    set lastbeat $beat
+    }
+plotWideData $xData $yData $channel blue Volume
+}
+
+
+proc extract_all_pitchbends {channel} {
+# extracts and plots all pitchbend messages
+# between beats from and to.
+global mflines
+global xData yData
+load_mflines
+set k 0
+set xData {}
+set yData {}
+set lastbeat 0.0
+foreach line $mflines {
+    set gotdata [scan $line %6f%s%d%d%n beat key c bend length] 
+    #puts "$line\ngotdata=$gotdata"
+    if {$gotdata <3} continue
+    if {$c !=$channel} continue    
+    if {$key != "Pitchbend"} continue
+    set bend  [expr $bend - 8192]
+    set bend  [expr $bend/40.96]
+    #puts "key = $key c = $c bend = $bend"
+    #puts "value = $value"
+    lappend xData $beat   
+    lappend yData $bend
+    incr k
+    set lastbeat $beat
+    }
+plotWideData $xData $yData $channel brown pitchbend
+}
+
+
+
+proc extract_all_modulations {channel} {
+# extracts and plots all control modulation messages
+global mflines
+global xData yData
+load_mflines
+set k 0
+set xData {}
+set yData {}
+#puts "extract_modulation $channel $from"
+foreach line $mflines {
+    set gotdata [scan $line %6f%s%d%s%n beat key c s length] 
+    if {$gotdata != 5} continue
+    #puts "$line\ngotdata=$gotdata"
+    if {$c !=$channel} continue    
+    if {$s != "ModulationWheel"} continue
+    set lline [string range $line $length end]
+    scan $lline " = %d" value
+    #puts "value = $value"
+    lappend xData $beat   
+    lappend yData $value
+    incr k
+    }
+
+plotWideData $xData $yData $channel green ModulationWheel
+}
+
+
+proc findLastNoteOn {channel fbeat} {
+global mflines
+set k 0
+foreach line $mflines {
+    #puts $line
+    set gotdata [scan $line %6f%s%s%d beat key dummy c] 
+    if {$gotdata < 4} continue
+    if {$beat > $fbeat} break
+    if {$c != $channel} continue
+    if {$key == "Note"} {set notebeat $beat}
+    incr k
+    }
+#puts "notebeat = $notebeat"
+return $notebeat
+}
+
+proc copy_midi_segment {channel} {
+    global midi
+    global exec_out
+    set limits [touchplot_limits]
+    set fbeat [lindex $limits 0]
+    set tbeat [lindex $limits 1]
+    set cmd "exec [list $midi(path_midicopy)] -chns $channel "
+    #set fbeat [findLastNoteOn $channel $fbeat]
+    append cmd " -frombeat $fbeat -tobeat $tbeat"
+    append cmd " -speed $midi(speed) "
+    append cmd " [list $midi(midifilein)] tmp.mid"
+    catch {eval $cmd} midicopyresult
+    set exec_out "$cmd\n $midicopyresult\n"
+    set cmd "exec [list $midi(path_midiplay)] tmp.mid &"
+    puts $cmd
+    catch {eval $cmd} midiplayeresult
+    return $midicopyresult
+}
+
+proc pitchRangeFor {channel} {
+global mflines
+set low 128
+set high 0
+foreach line $mflines {
+    set gotdata [scan $line "%6f%s%s%d%d" beat key1 key2 c pitch] 
+    if {$gotdata < 5} continue
+    if {$c != $channel} continue
+    if {$key1 != "Note"} continue
+    #puts "$key1 $key2 $c $pitch"
+    if {$pitch > $high} {set high $pitch}
+    if {$pitch < $low} {set low $pitch}
+   }
+return "$low $high"
+}
+
+proc pianorollFor {channel} {
+global midi
+global pianoxscale
+global midilength
+global ppqn
+global WideWidth
+set plotcanvas .touchplot.2.c
+set pitchmax [lindex [pitchRangeFor $channel] 1]
+set pitchmax [expr $pitchmax +6]
+set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
+catch {eval $cmd} pianoresult
+set nrec [llength $pianoresult]
+set midilength [lindex $pianoresult [expr $nrec -1]]
+set pianoresult [split $pianoresult \n]
+set header [lindex $pianoresult 0]
+set ppqn [lindex  $header 3]
+#puts "midilength = $midilength"
+#puts "midilength/ppqn = [expr $midilength/double($ppqn)]"
+set pianoxscale [expr $midilength /double($WideWidth -100)]
+#puts "pianoscale = $pianoxscale"
+foreach line $pianoresult {
+  if {[llength $line ] != 6} continue
+  set begin [lindex $line 0]
+  if {[string is double $begin] != 1} continue
+  set end [lindex $line 1]
+  set c [lindex $line 3]
+  if {$c != $channel} continue
+  set pitch [lindex $line 4]
+  set ix1 [expr $begin/$pianoxscale]
+  set ix2 [expr $end/$pianoxscale]
+  set iy [expr 50  + ($pitchmax - $pitch)*5]
+  #puts "begin = $begin end = $end ix1 = $ix1 iy = $iy"
+  $plotcanvas create line $ix1 $iy $ix2 $iy -width 4 -fill grey
+  }
+}
+
+
+proc aftertouch {} {
+extract_all_event_clusters
+countDistinctEventClusters
+showListOfNumberOfClusters
+showEffectWindow
+}
 
 #trace add execution compute_pianoroll leave "cmdstr"
 
 restore_root_folder 
 
-#source aftertouch.tcl
