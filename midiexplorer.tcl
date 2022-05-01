@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.82 2022-04-28 20:20" 
+set midiexplorer_version "MidiExplorer version 2.85 2022-05-01 10:05" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -680,6 +680,7 @@ proc midiInit {} {
     set midi(.ribbon) ""
     set midi(.ptableau) ""
     set midi(.touchplot) ""
+    set midi(.effect) ""
 
     
     set midi(player1) ""
@@ -1046,7 +1047,7 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
             -command piano_roll_display
 	$ww add command -label drumroll -font $df -command {drumroll_window} -accelerator "ctrl-d"
 	$ww add command -label percView -font $df -command percMapInterface
-        $ww add command -label afterTouch -font $df -command aftertouch
+        $ww add command -label afterTouch -font $df -command aftertouch -accelerator "ctrl-a"
 	$ww add command -label "mftext by beats" -font $df -command {
              set midi(mftextunits) 2
              mftextwindow $midi(midifilein) 0}
@@ -1300,6 +1301,7 @@ bind . <Control-w> {playmidifile 0}
 bind . <Control-t> {detailed_tableau}
 bind . <Control-o> google_search
 bind . <Control-u> duckduckgo_search
+bind . <Control-a> aftertouch
 bind . <Alt-c> {catch console show}
 }
 
@@ -8714,6 +8716,9 @@ if {[winfo exists .channel9]} {
 if {[winfo exists .ptableau]} {
    detailed_tableau
    }
+if {[winfo exists .effect]} {
+   aftertouch
+   }
 }
 
 proc update_drumroll_pdfs {} {
@@ -11417,7 +11422,7 @@ proc getGeometryOfAllToplevels {} {
                ".dictview" ".notegram" ".barmap" ".playmanage" ".data_info"
                ".midiplayer" ".tmpfile" ".cfgmidi2abc" ".pgram" ".keystrip"
                ".keypitchclass" ".channel9" ".ribbon" ".ptableau"
-               ".touchplot"  }
+               ".touchplot" ".effect"  }
   foreach top $toplevellist {
     if {[winfo exist $top]} {
       set g [wm geometry $top]"
@@ -14082,13 +14087,16 @@ proc createTouchPlot {plotcanvas WideWidth channel} {
   wm resizable .touchplot 0 0
   positionWindow .touchplot
   frame .touchplot.1
+  frame .touchplot.1a
   frame .touchplot.2
-  pack .touchplot.1 .touchplot.2
+  pack .touchplot.1 .touchplot.1a .touchplot.2
   button .touchplot.1.b -text play -font $df -command "copy_midi_segment $channel"
   label .touchplot.1.speedlabel -text speed -font $df
   scale .touchplot.1.scale -length 100 -from 0.1 -to 1.0\
 -orient horizontal -resolution 0.02 -width 10 -variable midi(speed) -font $df
   pack .touchplot.1.b .touchplot.1.speedlabel .touchplot.1.scale -side left
+  label .touchplot.1a.lab -text "" -font $df
+  pack .touchplot.1a.lab
   canvas $plotcanvas -width 400 -height 400 -xscrollcommand ".touchplot.scr set" -scrollregion "0 0 $WideWidth 400"
   canvas .touchplot.2.scale -width 50 -height 400
   pack .touchplot.2.scale $plotcanvas -side left
@@ -14117,7 +14125,7 @@ proc plotWideData {xData yData channel color name} {
   set xstep 2.0
   set WideWidth [expr 50 * $maxx]
   set leftEdge 0
-  set rightEdge [expr $WideWidth -50]
+  set rightEdge $WideWidth
   foreach x $xData y $yData {
       lappend hgraph $x $y
       }
@@ -14132,13 +14140,15 @@ proc plotWideData {xData yData channel color name} {
    bind .touchplot.2.c <ButtonRelease-1> touchplot_Button1Release
    bind .touchplot.2.c <Double-Button-1> touchplot_ClearMark
    .touchplot.2.c create rect -1 -1 -1 -1 -tags mark -fill gray35 -stipple gray12
-   $plotcanvas create rectangle $leftEdge 350 $rightEdge 50 -outline black -width 2 -fill white
-   Graph::alter_transformation $leftEdge $rightEdge 350 50 $minx $maxx $miny $maxy
+   .touchplot.1a.lab  configure -text "$name for channel $channel" \
+   -font $df -justify left
+   $plotcanvas create rectangle $leftEdge 350 $rightEdge 20 -outline black -width 2 -fill white
+   Graph::alter_transformation $leftEdge $rightEdge 350 20 $minx $maxx $miny $maxy
    #Graph::draw_y_ticks $plotcanvas $miny $maxy 20.0 1 %3.0f 
    Graph::draw_x_ticks $plotcanvas $minx $maxx $xstep 1 0 %3.1f
 
    vertical_scale .touchplot.2.scale $miny $maxy 20.0
-   pianorollFor $channel
+   pianorollFor $channel $minx $maxx
 
    Graph::draw_points_from_list $plotcanvas $hgraph $color
    plot_event_clusters_on_strip $name $channel $minx $maxx
@@ -14150,7 +14160,7 @@ proc vertical_scale {c miny maxy step} {
 global df
 $c delete all
 set y_scale [expr 300.0 / ($maxy - $miny)]
-set y_shift [expr 350.0 + $miny*$y_scale]
+set y_shift [expr 320.0 + $miny*$y_scale]
 for {set y $miny} {$y < $maxy} {set y [expr $y + $step]} {
   set iy [expr $y_shift - $y * $y_scale]
   set str [format %4.0f $y]
@@ -14163,7 +14173,7 @@ proc touchplot_Button1Press {x y} {
     set touchplotHeight 350
     set xc [.touchplot.2.c canvasx $x]
     .touchplot.2.c raise mark
-    .touchplot.2.c coords mark $xc 50 $xc $touchplotHeight
+    .touchplot.2.c coords mark $xc 20 $xc $touchplotHeight
     bind .touchplot.2.c <Motion> { touchplot_Button1Motion %x }
 }
 
@@ -14173,7 +14183,7 @@ proc touchplot_Button1Motion {x} {
     set xc [.touchplot.2.c canvasx $x]
     if {$xc < 0} { set xc 0 }
     set co [.touchplot.2.c coords mark]
-    .touchplot.2.c coords mark [lindex $co 0] 50 $xc $touchplotHeight
+    .touchplot.2.c coords mark [lindex $co 0] 20 $xc $touchplotHeight
 }
 
 proc touchplot_Button1Release {} {
@@ -14209,14 +14219,14 @@ return [list $fbeat $tbeat]
 
 proc plot_event_clusters_on_strip {name channel minx maxx} {
 global eventClusters
-Graph::set_xmapping 0 400 $minx $maxx
+Graph::set_xmapping 0 400 0.0 $maxx
 .touchplot.strip delete all
 #puts "name = $name"
 foreach event $eventClusters {
    set n [lindex $event 0]
    set c [lindex $event 1]
    set x [lindex $event 2]
-   set ix [Graph::ixpos $x]
+   set ix [expr [Graph::ixpos $x] + 25]
    if {$n == $name && $c == $channel} {
      .touchplot.strip create line $ix 0 $ix 15
      }
@@ -14380,7 +14390,7 @@ foreach line $mflines {
 return "$low $high"
 }
 
-proc pianorollFor {channel} {
+proc pianorollFor {channel minx maxx} {
 global midi
 global pianoxscale
 global midilength
@@ -14396,20 +14406,17 @@ set midilength [lindex $pianoresult [expr $nrec -1]]
 set pianoresult [split $pianoresult \n]
 set header [lindex $pianoresult 0]
 set ppqn [lindex  $header 3]
-#puts "midilength = $midilength"
-#puts "midilength/ppqn = [expr $midilength/double($ppqn)]"
-set pianoxscale [expr $midilength /double($WideWidth -100)]
-#puts "pianoscale = $pianoxscale"
+Graph::set_xmapping 0 $WideWidth 0.0 $maxx
 foreach line $pianoresult {
   if {[llength $line ] != 6} continue
-  set begin [lindex $line 0]
+  set begin [expr [lindex $line 0] / double($ppqn)]
   if {[string is double $begin] != 1} continue
-  set end [lindex $line 1]
+  set end [expr [lindex $line 1] / double($ppqn)]
   set c [lindex $line 3]
   if {$c != $channel} continue
   set pitch [lindex $line 4]
-  set ix1 [expr $begin/$pianoxscale]
-  set ix2 [expr $end/$pianoxscale]
+  set ix1 [Graph::ixpos $begin]
+  set ix2 [Graph::ixpos $end]
   set iy [expr 50  + ($pitchmax - $pitch)*5]
   #puts "begin = $begin end = $end ix1 = $ix1 iy = $iy"
   $plotcanvas create line $ix1 $iy $ix2 $iy -width 4 -fill grey
@@ -14422,6 +14429,7 @@ extract_all_event_clusters
 countDistinctEventClusters
 showListOfNumberOfClusters
 showEffectWindow
+positionWindow .effect
 }
 
 #trace add execution compute_pianoroll leave "cmdstr"
