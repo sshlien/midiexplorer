@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.85 2022-05-01 10:05" 
+set midiexplorer_version "MidiExplorer version 2.90 2022-05-02 19:45" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -13869,10 +13869,11 @@ foreach line $mflines {
               if {$debug} {puts "$beat\t$type $onOff $channel"}
               }
         Pressure {
-              set type touch
+              set type pressure
               scan $lline %d%n channel length
               set  lline [string range $lline $length end]
               if {$debug} {puts "$beat\t$type $channel"}
+              process_event $type $channel $beat
               }
         Pitchbend {set type pitchbend
               scan $lline %d%n channel length
@@ -13890,7 +13891,6 @@ foreach line $mflines {
               if {$debug} {puts "$beat\t$type $rest"}
               }
         Program  {set type program}
-        Chanpres {set type touch}
         CntlParm {set type cntl
               scan $lline %d%n channel length
               set  lline [string range $lline $length end]
@@ -14051,6 +14051,8 @@ foreach e [array names dEvents] {
     button $ef.i$n -width 3 -text $v -font $df -command "extract_all_volume $c" -bd 3
    } elseif  {$t == "HoldPedal"} {
     button $ef.i$n -width 3 -text $v -font $df -command "extract_all_pedals $c" -bd 3
+   } elseif  {$t == "pressure"} {
+    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_pressures $c" -bd 3
    }
 
   grid $ef.i$n -column $colNum -row $rowNum
@@ -14147,20 +14149,76 @@ proc plotWideData {xData yData channel color name} {
    #Graph::draw_y_ticks $plotcanvas $miny $maxy 20.0 1 %3.0f 
    Graph::draw_x_ticks $plotcanvas $minx $maxx $xstep 1 0 %3.1f
 
-   vertical_scale .touchplot.2.scale $miny $maxy 20.0
+   vertical_scale .touchplot.2.scale $miny $maxy
    pianorollFor $channel $minx $maxx
 
    Graph::draw_points_from_list $plotcanvas $hgraph $color
    plot_event_clusters_on_strip $name $channel $minx $maxx
    }
 
+proc plotHoldPedal {xData yData channel color name} {
+#plots xData values versus yData values
+  global midi
+  global df
+  global WideWidth
+  global touchPlotMaxx
+  set plotcanvas .touchplot.2.c
+  set hgraph ""
+  set miny [minList $yData]
+  set maxy [maxList $yData]
+  set minx 0.0
+  set maxx [expr 1 + floor([maxList $xData)]]
+  set touchPlotMaxx $maxx
+  set xstep 2.0
+  set WideWidth [expr 50 * $maxx]
+  puts "WideWidth = $WideWidth"
+  set leftEdge 0
+  set rightEdge $WideWidth
+  if {[winfo exists .touchplot] == 0} {
+        createTouchPlot $plotcanvas $WideWidth $channel
+        } else {
+        $plotcanvas delete all
+        $plotcanvas configure -scrollregion "0 0 $WideWidth 380"
+        .touchplot.1.b configure -command "copy_midi_segment $channel"
+        }
+   bind .touchplot.2.c <ButtonPress-1> {touchplot_Button1Press %x %y}
+   bind .touchplot.2.c <ButtonRelease-1> touchplot_Button1Release
+   bind .touchplot.2.c <Double-Button-1> touchplot_ClearMark
+   .touchplot.2.c create rect -1 -1 -1 -1 -tags mark -fill gray35 -stipple gray12
+   .touchplot.1a.lab configure -text "$name for channel $channel"
+   $plotcanvas create rectangle $leftEdge 350 $rightEdge 20 -outline black -width 2 -fill white
+   Graph::alter_transformation $leftEdge $rightEdge 350 20 $minx $maxx $miny $maxy
+   #Graph::draw_y_ticks $plotcanvas $miny $maxy 20.0 1 %3.0f 
+   Graph::draw_x_ticks $plotcanvas $minx $maxx $xstep 1 0 %3.1f
+
+   vertical_scale .touchplot.2.scale $miny $maxy 
+   pianorollFor $channel $minx $maxx
+
+  foreach x $xData y $yData {
+      if {$y == 127} {set ix1 [Graph::ixpos $x]}
+      if {$y == 0  } {set ix2 [Graph::ixpos $x]
+                      if {[info exist ix1]} {
+                         $plotcanvas create rect $ix1 20 $ix2 350 -fill orange -stipple gray12}
+                     }
+      }
+
+   plot_event_clusters_on_strip $name $channel $minx $maxx
+   }
 
 
-proc vertical_scale {c miny maxy step} {
+
+
+proc vertical_scale {c miny maxy} {
 global df
 $c delete all
+if {[expr $maxy - $miny] > 140} {
+   set step 40
+   } else {
+   set step 20
+   }
 set y_scale [expr 300.0 / ($maxy - $miny)]
 set y_shift [expr 320.0 + $miny*$y_scale]
+set miny [expr round($miny/10)*10]
 for {set y $miny} {$y < $maxy} {set y [expr $y + $step]} {
   set iy [expr $y_shift - $y * $y_scale]
   set str [format %4.0f $y]
@@ -14338,6 +14396,60 @@ foreach line $mflines {
 plotWideData $xData $yData $channel green ModulationWheel
 }
 
+proc extract_all_pedals {channel} {
+# extracts and plots all control modulation messages
+global mflines
+global xData yData
+load_mflines
+set k 0 
+set xData {}
+set yData {}
+foreach line $mflines {
+    #puts $line
+    set gotdata [scan $line %6f%s%d%s%n beat key c s length]
+    if {$gotdata != 5} continue
+    #puts "$line\ngotdata=$gotdata"
+    if {$c !=$channel} continue
+    if {$s != "HoldPedal"} continue
+    set lline [string range $line $length end]
+    scan $lline " = %d" value
+    #puts "value = $value"
+    lappend xData $beat   
+    lappend yData $value
+    incr k
+    }
+#puts "Pedal xData = $xData"
+#puts "Pedal yData = $yData"
+#plotWideData $xData $yData $channel green ModulationWheel
+plotHoldPedal $xData $yData $channel green Pedal
+}
+
+proc extract_all_pressures {channel} {
+# extracts and plots all control modulation messages
+global mflines
+global xData yData
+load_mflines
+set k 0
+set xData {}
+set yData {}
+foreach line $mflines {
+    set gotdata [scan $line %6f%s%d%n beat key c length]
+    #puts "$line\ngotdata=$gotdata"
+    if {$gotdata != 4} continue
+    #puts "$line\ngotdata=$gotdata"
+    if {$c !=$channel} continue
+    #puts "key = $key"
+    if {$key != "Pressure"} continue
+    set lline [string range $line $length end]
+    set n [scan $lline "%s %d" dummy value]
+    incr k
+    lappend xData $beat
+    lappend yData $value
+    }
+plotWideData $xData $yData $channel purple pressures
+}
+
+ 
 
 proc findLastNoteOn {channel fbeat} {
 global mflines
