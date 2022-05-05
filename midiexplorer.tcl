@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.90 2022-05-02 19:45" 
+set midiexplorer_version "MidiExplorer version 2.96 2022-05-04 21:15" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -3901,8 +3901,8 @@ proc check_midi2abc_and_midicopy_versions {} {
     set result [getVersionNumber $midi(path_midicopy)]
     set err [scan $result "%f" ver]
     #puts $result
-    set msg "You need midicopy.exe version 1.34 or higher.\n"
-    if {$err == 0 || $ver < 1.34} { .info.txt insert insert $msg red
+    set msg "You need midicopy.exe version 1.38 or higher.\n"
+    if {$err == 0 || $ver < 1.38} { .info.txt insert insert $msg red
                     return $msg}
     return pass
 }
@@ -13734,7 +13734,7 @@ proc show_data_page {text wrapmode clean} {
 
 set abcmidilist {path_abc2midi 4.26\
             path_midi2abc 3.52\
-            path_midicopy 1.35\
+            path_midicopy 1.38\
             path_abcm2ps 8.14.6}
 
 
@@ -13775,27 +13775,22 @@ proc show_checkversion_summary {} {
 #process_event load_mflines extract_all_event_clusters
 #countDistinctEventClusters showListOfNumberOfClusters
 #showEffectWindow minList maxList createTouchPlot
-#plotWideData #vertical_scale
+#plotWideData vertical_scale
 #touchplot_Button1Press, touchplot_Button1Motion
-#touchplot_Button1Release
-#touchplot_ClearMark
-#touchplot_limits
-#plot_event_clusters_on_strip
-#extract_all_expressions
-#extract_all_volume
-#extract_all_pitchbends
-#extract_all_modulations
-#findLastNoteOn
-#copy_midi_segment
-#pitchRangeFor
-#pianorollFor
-#aftertouch
+#touchplot_Button1Release touchplot_ClearMark
+#touchplot_limits plot_event_clusters_on_strip
+#extract_all_expressions extract_all_volume
+#extract_all_pitchbends extract_all_modulations
+#findLastNoteOn copy_midi_segment
+#pitchRangeFor pianorollFor aftertouch
 
 
 
 set debug 0
 set midi(speed) 0.5
 set midi(.touchplot) ""
+set midi(tplotWidth) 600
+set midi(tres) 50
 
 
 proc process_event {eventName channel beat} {
@@ -14011,7 +14006,17 @@ frame .effect.h
 pack  .effect.h -anchor w
 label .effect.h.lab -text "There are no useful control messages in this file"
 button .effect.h.hlp -text help -font $df -command {show_message_page $hlp_effect word}
-pack .effect.h.lab .effect.h.hlp -anchor w -side left
+set res .effect.h.res.menu
+menubutton .effect.h.res -text "pixels/per beat" -font $df\
+   -menu .effect.h.res.menu
+menu  .effect.h.res.menu -tearoff 0
+$res add radiobutton -label 30 -font $df -variable midi(tres) -val 30
+$res add radiobutton -label 40 -font $df -variable midi(tres) -val 40
+$res add radiobutton -label 50 -font $df -variable midi(tres) -val 50
+$res add radiobutton -label 60 -font $df -variable midi(tres) -val 60
+$res add radiobutton -label 70 -font $df -variable midi(tres) -val 70
+
+pack .effect.h.lab .effect.h.hlp .effect.h.res -anchor w -side left
 set ef .effect.f
 frame $ef
 pack $ef
@@ -14042,17 +14047,17 @@ foreach e [array names dEvents] {
   incr rowNum
   set v $dEvents($e)
   if {$t == "pitchbend"} {
-    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_pitchbends $c" -bd 3
+    button $ef.i$n -width 4 -text $v -font $df -command "extract_all_pitchbends $c" -bd 3
     } elseif {$t == "ModulationWheel"} {
-    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_modulations $c" -bd 3
+    button $ef.i$n -width 4 -text $v -font $df -command "extract_all_modulations $c" -bd 3
     } elseif {$t == "Expression"} {
-    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_expressions $c" -bd 3
+    button $ef.i$n -width 4 -text $v -font $df -command "extract_all_expressions $c" -bd 3
    } elseif  {$t == "Volume"} {
-    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_volume $c" -bd 3
+    button $ef.i$n -width 4 -text $v -font $df -command "extract_all_volume $c" -bd 3
    } elseif  {$t == "HoldPedal"} {
-    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_pedals $c" -bd 3
+    button $ef.i$n -width 4 -text $v -font $df -command "extract_all_pedals $c" -bd 3
    } elseif  {$t == "pressure"} {
-    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_pressures $c" -bd 3
+    button $ef.i$n -width 4 -text $v -font $df -command "extract_all_pressures $c" -bd 3
    }
 
   grid $ef.i$n -column $colNum -row $rowNum
@@ -14092,18 +14097,19 @@ proc createTouchPlot {plotcanvas WideWidth channel} {
   frame .touchplot.1a
   frame .touchplot.2
   pack .touchplot.1 .touchplot.1a .touchplot.2
-  button .touchplot.1.b -text play -font $df -command "copy_midi_segment $channel"
+  button .touchplot.1.b -text play -font $df -command "copy_midi_segment $channel 0"
+  button .touchplot.1.bp -text "play plain" -font $df -command "copy_midi_segment $channel 1"
   label .touchplot.1.speedlabel -text speed -font $df
   scale .touchplot.1.scale -length 100 -from 0.1 -to 1.0\
 -orient horizontal -resolution 0.02 -width 10 -variable midi(speed) -font $df
-  pack .touchplot.1.b .touchplot.1.speedlabel .touchplot.1.scale -side left
+  pack .touchplot.1.b .touchplot.1.bp .touchplot.1.speedlabel .touchplot.1.scale -side left
   label .touchplot.1a.lab -text "" -font $df
   pack .touchplot.1a.lab
-  canvas $plotcanvas -width 400 -height 400 -xscrollcommand ".touchplot.scr set" -scrollregion "0 0 $WideWidth 400"
-  canvas .touchplot.2.scale -width 50 -height 400
+  canvas $plotcanvas -width $midi(tplotWidth) -height 330 -xscrollcommand ".touchplot.scr set" -scrollregion "0 0 $WideWidth 330"
+  canvas .touchplot.2.scale -width 50 -height 330 
   pack .touchplot.2.scale $plotcanvas -side left
-  canvas .touchplot.strip -width 450 -height 15 -bg seashell3 
-  scrollbar .touchplot.scr -orient horiz -command {.touchplot.2.c xview }
+  canvas .touchplot.strip -width [expr $midi(tplotWidth) + 50] -height 15 -bg seashell3 
+  scrollbar .touchplot.scr -orient horiz -width 20 -command {.touchplot.2.c xview }
   pack .touchplot.strip
   pack .touchplot.scr -fill x -expand 1
 }
@@ -14125,7 +14131,8 @@ proc plotWideData {xData yData channel color name} {
   set miny [expr $miny -10]
   set maxy [expr $maxy +10]
   set xstep 2.0
-  set WideWidth [expr 50 * $maxx]
+  set WideWidth [expr $midi(tres) * $maxx]
+  .effect.h.lab configure -text ""
   set leftEdge 0
   set rightEdge $WideWidth
   foreach x $xData y $yData {
@@ -14135,8 +14142,9 @@ proc plotWideData {xData yData channel color name} {
         createTouchPlot $plotcanvas $WideWidth $channel
         } else {
         $plotcanvas delete all
-        $plotcanvas configure -scrollregion "0 0 $WideWidth 400"
-        .touchplot.1.b configure -command "copy_midi_segment $channel"
+        $plotcanvas configure -scrollregion "0 0 $WideWidth 330"
+        .touchplot.1.b configure -command "copy_midi_segment $channel 0"
+        .touchplot.1.bp configure -command "copy_midi_segment $channel 1"
         }
    bind .touchplot.2.c <ButtonPress-1> {touchplot_Button1Press %x %y}
    bind .touchplot.2.c <ButtonRelease-1> touchplot_Button1Release
@@ -14144,10 +14152,10 @@ proc plotWideData {xData yData channel color name} {
    .touchplot.2.c create rect -1 -1 -1 -1 -tags mark -fill gray35 -stipple gray12
    .touchplot.1a.lab  configure -text "$name for channel $channel" \
    -font $df -justify left
-   $plotcanvas create rectangle $leftEdge 350 $rightEdge 20 -outline black -width 2 -fill white
-   Graph::alter_transformation $leftEdge $rightEdge 350 20 $minx $maxx $miny $maxy
-   #Graph::draw_y_ticks $plotcanvas $miny $maxy 20.0 1 %3.0f 
-   Graph::draw_x_ticks $plotcanvas $minx $maxx $xstep 1 0 %3.1f
+   $plotcanvas create rectangle $leftEdge 300 $rightEdge 20 -outline black -width 2 -fill white
+   Graph::alter_transformation $leftEdge $rightEdge 300 20 $minx $maxx $miny $maxy
+   #Graph::draw_x_ticks $plotcanvas $minx $maxx $xstep 1 0 %3.1f
+   Graph::draw_x_grid $plotcanvas $minx $maxx $xstep 1 0 %3.1f
 
    vertical_scale .touchplot.2.scale $miny $maxy
    pianorollFor $channel $minx $maxx
@@ -14166,11 +14174,16 @@ proc plotHoldPedal {xData yData channel color name} {
   set hgraph ""
   set miny [minList $yData]
   set maxy [maxList $yData]
+  .effect.h.lab configure -text ""
+  if {$miny == $maxy} {
+    .effect.h.lab configure -text "Can't display pedal data"
+    return
+    }
   set minx 0.0
   set maxx [expr 1 + floor([maxList $xData)]]
   set touchPlotMaxx $maxx
   set xstep 2.0
-  set WideWidth [expr 50 * $maxx]
+  set WideWidth [expr $midi(tres) * $maxx]
   puts "WideWidth = $WideWidth"
   set leftEdge 0
   set rightEdge $WideWidth
@@ -14178,18 +14191,19 @@ proc plotHoldPedal {xData yData channel color name} {
         createTouchPlot $plotcanvas $WideWidth $channel
         } else {
         $plotcanvas delete all
-        $plotcanvas configure -scrollregion "0 0 $WideWidth 380"
-        .touchplot.1.b configure -command "copy_midi_segment $channel"
+        $plotcanvas configure -scrollregion "0 0 $WideWidth 330"
+        .touchplot.1.b configure -command "copy_midi_segment $channel 0"
+        .touchplot.1.bp configure -command "copy_midi_segment $channel 1"
         }
    bind .touchplot.2.c <ButtonPress-1> {touchplot_Button1Press %x %y}
    bind .touchplot.2.c <ButtonRelease-1> touchplot_Button1Release
    bind .touchplot.2.c <Double-Button-1> touchplot_ClearMark
    .touchplot.2.c create rect -1 -1 -1 -1 -tags mark -fill gray35 -stipple gray12
    .touchplot.1a.lab configure -text "$name for channel $channel"
-   $plotcanvas create rectangle $leftEdge 350 $rightEdge 20 -outline black -width 2 -fill white
-   Graph::alter_transformation $leftEdge $rightEdge 350 20 $minx $maxx $miny $maxy
-   #Graph::draw_y_ticks $plotcanvas $miny $maxy 20.0 1 %3.0f 
-   Graph::draw_x_ticks $plotcanvas $minx $maxx $xstep 1 0 %3.1f
+   $plotcanvas create rectangle $leftEdge 300 $rightEdge 20 -outline black -width 2 -fill white
+   Graph::alter_transformation $leftEdge $rightEdge 300 20 $minx $maxx $miny $maxy
+   #Graph::draw_x_ticks $plotcanvas $minx $maxx $xstep 1 0 %3.1f
+   Graph::draw_x_grid $plotcanvas $minx $maxx $xstep 1 0 %3.1f
 
    vertical_scale .touchplot.2.scale $miny $maxy 
    pianorollFor $channel $minx $maxx
@@ -14216,8 +14230,8 @@ if {[expr $maxy - $miny] > 140} {
    } else {
    set step 20
    }
-set y_scale [expr 300.0 / ($maxy - $miny)]
-set y_shift [expr 320.0 + $miny*$y_scale]
+set y_scale [expr 250.0 / ($maxy - $miny)]
+set y_shift [expr 270.0 + $miny*$y_scale]
 set miny [expr round($miny/10)*10]
 for {set y $miny} {$y < $maxy} {set y [expr $y + $step]} {
   set iy [expr $y_shift - $y * $y_scale]
@@ -14228,7 +14242,7 @@ for {set y $miny} {$y < $maxy} {set y [expr $y + $step]} {
 }
 
 proc touchplot_Button1Press {x y} {
-    set touchplotHeight 350
+    set touchplotHeight 330
     set xc [.touchplot.2.c canvasx $x]
     .touchplot.2.c raise mark
     .touchplot.2.c coords mark $xc 20 $xc $touchplotHeight
@@ -14237,7 +14251,7 @@ proc touchplot_Button1Press {x y} {
 
 
 proc touchplot_Button1Motion {x} {
-    set touchplotHeight 350
+    set touchplotHeight 330
     set xc [.touchplot.2.c canvasx $x]
     if {$xc < 0} { set xc 0 }
     set co [.touchplot.2.c coords mark]
@@ -14277,14 +14291,15 @@ return [list $fbeat $tbeat]
 
 proc plot_event_clusters_on_strip {name channel minx maxx} {
 global eventClusters
-Graph::set_xmapping 0 400 0.0 $maxx
+global midi
+Graph::set_xmapping 0 $midi(tplotWidth) 0.0 $maxx
 .touchplot.strip delete all
 #puts "name = $name"
 foreach event $eventClusters {
    set n [lindex $event 0]
    set c [lindex $event 1]
    set x [lindex $event 2]
-   set ix [expr [Graph::ixpos $x] + 25]
+   set ix [expr [Graph::ixpos $x] + 23]
    if {$n == $name && $c == $channel} {
      .touchplot.strip create line $ix 0 $ix 15
      }
@@ -14446,7 +14461,7 @@ foreach line $mflines {
     lappend xData $beat
     lappend yData $value
     }
-plotWideData $xData $yData $channel purple pressures
+plotWideData $xData $yData $channel purple pressure
 }
 
  
@@ -14467,7 +14482,7 @@ foreach line $mflines {
 return $notebeat
 }
 
-proc copy_midi_segment {channel} {
+proc copy_midi_segment {channel plain} {
     global midi
     global exec_out
     set limits [touchplot_limits]
@@ -14477,6 +14492,9 @@ proc copy_midi_segment {channel} {
     #set fbeat [findLastNoteOn $channel $fbeat]
     append cmd " -frombeat $fbeat -tobeat $tbeat"
     append cmd " -speed $midi(speed) "
+    if {$plain} {
+      append cmd " -nobends -nopressure -nocntrl "
+      }
     append cmd " [list $midi(midifilein)] tmp.mid"
     catch {eval $cmd} midicopyresult
     set exec_out "$cmd\n $midicopyresult\n"
