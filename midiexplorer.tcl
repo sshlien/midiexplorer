@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 2.96 2022-05-04 21:15" 
+set midiexplorer_version "MidiExplorer version 3.02 2022-05-06 16:00" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -9303,6 +9303,18 @@ namespace eval Graph {
         }
    }
 
+   namespace export draw_curve_from_list
+   proc draw_curve_from_list {can datalist color} {
+        #can canvas
+        #datalist {x y x y x y ...}
+        set points {}
+        foreach {xdata ydata} $datalist {
+                lappend points [ixpos $xdata]
+                lappend points [iypos $ydata]
+                }
+        $can create line $points
+   }
+
 } ;# end of namespace declaration
 
 namespace import Graph::*
@@ -13995,37 +14007,64 @@ for this window.
 "
 
 
+set hlp_touchplot "After Touch Graph\n
+One of the after touch messages (pitchbend, pressure, control parameter,...)\
+is plotted as a function of time (beat number) for a particular channel.\
+The plot covers the entire duration of the midi file, but only a small\
+region is displayed. The bottom scroll button allows you to shift the\
+plot horizontally.\n\n\
+The strip above the scroll bar, shows the locations of the after touch\
+messages. Shifting the scroll button near the locations will expose the\
+the corresponding messages.\n\n\
+For reference, the notes are also plotted in piano roll form. Clicking\
+the play button will play the notes modified by these messages for the\
+exposed region. (You can also designate a selection of notes by\
+highlighting an area.). The 'play plain' will play the notes while ignoring\
+all of these messages.\n\n\
+Unlike the piano roll view, there is no zoom/unzoom function here.\
+The 'effect' window allows you to control the temporal resolution\
+of this plot by varying the number of pixels per beat in the top\
+menu. Small values spaces the beats closer together and exposes\
+a larger time area.
+"
+
+
 proc showEffectWindow {} {
 global chanlist
 global typelist
 global dEvents
 global df
-if {[winfo exist .effect]} {destroy .effect}
-toplevel .effect
-frame .effect.h
-pack  .effect.h -anchor w
-label .effect.h.lab -text "There are no useful control messages in this file"
-button .effect.h.hlp -text help -font $df -command {show_message_page $hlp_effect word}
-set res .effect.h.res.menu
-menubutton .effect.h.res -text "pixels/per beat" -font $df\
-   -menu .effect.h.res.menu
-menu  .effect.h.res.menu -tearoff 0
-$res add radiobutton -label 30 -font $df -variable midi(tres) -val 30
-$res add radiobutton -label 40 -font $df -variable midi(tres) -val 40
-$res add radiobutton -label 50 -font $df -variable midi(tres) -val 50
-$res add radiobutton -label 60 -font $df -variable midi(tres) -val 60
-$res add radiobutton -label 70 -font $df -variable midi(tres) -val 70
+if {![winfo exist .effect]} {
+   toplevel .effect
+   positionWindow .touchplot
+   frame .effect.h
+   pack  .effect.h -anchor w
+   label .effect.h.lab -text "There are no useful control messages in this file"
+   button .effect.h.hlp -text help -font $df -command {show_message_page $hlp_effect word}
+   set res .effect.h.res.menu
+   menubutton .effect.h.res -text "pixels/per beat" -font $df\
+      -menu .effect.h.res.menu
+   menu  .effect.h.res.menu -tearoff 0
+   $res add radiobutton -label 30 -font $df -variable midi(tres) -val 30
+   $res add radiobutton -label 40 -font $df -variable midi(tres) -val 40
+   $res add radiobutton -label 50 -font $df -variable midi(tres) -val 50
+   $res add radiobutton -label 60 -font $df -variable midi(tres) -val 60
+   $res add radiobutton -label 70 -font $df -variable midi(tres) -val 70
 
-pack .effect.h.lab .effect.h.hlp .effect.h.res -anchor w -side left
+   pack .effect.h.lab .effect.h.hlp .effect.h.res -anchor w -side left
+   }
 set ef .effect.f
+destroy $ef
 frame $ef
 pack $ef
 label $ef.0 -text channel -font $df -borderwidth 2 -relief ridge
 grid $ef.0 -row 0
 set k 1
 foreach t $typelist {
-   label $ef.$k -text $t -font $df -borderwidth 2 -relief ridge -padx 2
+   label $ef.$k -text $t -font $df -borderwidth 2 -relief ridge -padx 2\
+    -width 7 -anchor w
    grid $ef.$k -row 0 -column $k
+   tooltip::tooltip $ef.$k $t
    incr k
    } 
 set j 1
@@ -14090,19 +14129,21 @@ return $max
 proc createTouchPlot {plotcanvas WideWidth channel} {
   global df
   global midi
+  global hlp_touchplot
   toplevel .touchplot
   wm resizable .touchplot 0 0
   positionWindow .touchplot
   frame .touchplot.1
   frame .touchplot.1a
   frame .touchplot.2
-  pack .touchplot.1 .touchplot.1a .touchplot.2
+  pack .touchplot.1 .touchplot.1a .touchplot.2 -anchor w
   button .touchplot.1.b -text play -font $df -command "copy_midi_segment $channel 0"
   button .touchplot.1.bp -text "play plain" -font $df -command "copy_midi_segment $channel 1"
   label .touchplot.1.speedlabel -text speed -font $df
   scale .touchplot.1.scale -length 100 -from 0.1 -to 1.0\
 -orient horizontal -resolution 0.02 -width 10 -variable midi(speed) -font $df
-  pack .touchplot.1.b .touchplot.1.bp .touchplot.1.speedlabel .touchplot.1.scale -side left
+ button .touchplot.1.help -text help -font $df -command {show_message_page $hlp_touchplot word}
+  pack .touchplot.1.b .touchplot.1.bp .touchplot.1.speedlabel .touchplot.1.scale .touchplot.1.help  -side left
   label .touchplot.1a.lab -text "" -font $df
   pack .touchplot.1a.lab
   canvas $plotcanvas -width $midi(tplotWidth) -height 330 -xscrollcommand ".touchplot.scr set" -scrollregion "0 0 $WideWidth 330"
@@ -14161,8 +14202,30 @@ proc plotWideData {xData yData channel color name} {
    pianorollFor $channel $minx $maxx
 
    Graph::draw_points_from_list $plotcanvas $hgraph $color
+   join_points_with_curve $plotcanvas $hgraph
    plot_event_clusters_on_strip $name $channel $minx $maxx
    }
+
+proc join_points_with_curve {can datapoints} {
+set lastx 0
+set points {}
+foreach {x y} $datapoints {
+  if {[expr $x - $lastx] > 0.4} {
+      if {[llength $points] > 2} {
+         Graph::draw_curve_from_list $can $points black
+         }
+      set points {}
+    }
+  lappend points $x
+  lappend points $y
+  set lastx $x
+  }
+if {[llength $points] > 2} {
+      Graph::draw_curve_from_list $can $points black
+    }
+}
+
+
 
 proc plotHoldPedal {xData yData channel color name} {
 #plots xData values versus yData values
@@ -14498,10 +14561,13 @@ proc copy_midi_segment {channel plain} {
     append cmd " [list $midi(midifilein)] tmp.mid"
     catch {eval $cmd} midicopyresult
     set exec_out "$cmd\n $midicopyresult\n"
-    set cmd "exec [list $midi(path_midiplay)] tmp.mid &"
+
+    set cmd "exec [list $midi(path_midiplay)] $midi(midiplay_options) "
+    set cmd [concat $cmd [file join [pwd] tmp.mid]]
+    set cmd [concat $cmd &]
     puts $cmd
     catch {eval $cmd} midiplayeresult
-    return $midicopyresult
+    return $midiplayeresult
 }
 
 proc pitchRangeFor {channel} {
