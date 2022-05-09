@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.02 2022-05-06 16:00" 
+set midiexplorer_version "MidiExplorer version 3.07 2022-05-09 10:00" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -784,6 +784,10 @@ proc midiInit {} {
 
 # pitch class map
     set midi(dotsize) 1
+# afterTouch
+   set midi(speed) 0.5
+   set midi(tplotWidth) 600
+   set midi(tres) 50
 }
 
 # save all options, current abc file
@@ -1025,6 +1029,8 @@ $ww add command -label "check version numbers" -font $df\
                  -command show_checkversion_summary 
 $ww add command -label "mftext of output midi file" -font $df \
                  -command mftext_local_analysis
+$ww add command -label "save output midi file" -font $df \
+                 -command save_output_midi_file
 $ww add command -label "contents of midiexplorer_home" -command dirhome -font $df
 
 
@@ -3412,6 +3418,17 @@ proc save_tmpfile {} {
     file copy -force  X.tmp $midi(abc_save)
     puts "copied X.tmp to $midi(abc_save)"
 }
+
+proc save_output_midi_file {} {
+    global midi
+    set midiExt ".mid"
+    set midiExt {{{midi files} {*.mid}}}
+    set filedir [file dirname $midi(midi_save)]
+    set midi(abc_save) [tk_getSaveFile -initialdir $filedir -filetypes $midiExt]
+    file copy -force  $midi(outfilename) $midi(abc_save)
+    puts "done"
+}
+
 
 proc highlight_line {line1 line2 charpos} {
     .notice.t tag remove grey 0.0 end
@@ -8979,14 +8996,6 @@ set flatnotes5  {C G D A E B Gb Db Ab Eb Bb F}
 proc histogram_ps_output {canvaslink} {
 global df midi
 set types {{{postscript files} {*.ps}}}
-#set filedir [file dirname $midi(abc_open)]
-#set filename [tk_getSaveFile -initialdir $filedir \
-#            -filetypes $types]
-#if {[string length $filename] == 0} return
-#set extname [file extension $filename]
-#if {$extname != ".ps"} {set filename $filename.ps}
-#set pdf [list Helvetica 14]
-#set fontMap($df) $pdf
 $canvaslink postscript -file histogram.ps
 puts "histogram.ps created"
 }
@@ -13799,11 +13808,6 @@ proc show_checkversion_summary {} {
 
 
 set debug 0
-set midi(speed) 0.5
-set midi(.touchplot) ""
-set midi(tplotWidth) 600
-set midi(tres) 50
-
 
 proc process_event {eventName channel beat} {
 # A cluster of events is a set of events of the same
@@ -14020,7 +14024,8 @@ For reference, the notes are also plotted in piano roll form. Clicking\
 the play button will play the notes modified by these messages for the\
 exposed region. (You can also designate a selection of notes by\
 highlighting an area.). The 'play plain' will play the notes while ignoring\
-all of these messages.\n\n\
+all of these messages. The 'play all' will play all the channels for\
+the exposed (selected) region.\n\n\
 Unlike the piano roll view, there is no zoom/unzoom function here.\
 The 'effect' window allows you to control the temporal resolution\
 of this plot by varying the number of pixels per beat in the top\
@@ -14036,7 +14041,6 @@ global dEvents
 global df
 if {![winfo exist .effect]} {
    toplevel .effect
-   positionWindow .touchplot
    frame .effect.h
    pack  .effect.h -anchor w
    label .effect.h.lab -text "There are no useful control messages in this file"
@@ -14132,18 +14136,22 @@ proc createTouchPlot {plotcanvas WideWidth channel} {
   global hlp_touchplot
   toplevel .touchplot
   wm resizable .touchplot 0 0
-  positionWindow .touchplot
   frame .touchplot.1
   frame .touchplot.1a
   frame .touchplot.2
   pack .touchplot.1 .touchplot.1a .touchplot.2 -anchor w
   button .touchplot.1.b -text play -font $df -command "copy_midi_segment $channel 0"
   button .touchplot.1.bp -text "play plain" -font $df -command "copy_midi_segment $channel 1"
+  button .touchplot.1.ba -text "play all" -font $df -command "copy_midi_segment $channel 2"
+  tooltip::tooltip .touchplot.1.b "Play with all effects"
+  tooltip::tooltip .touchplot.1.bp "Play with no effects"
+  tooltip::tooltip .touchplot.1.ba "Play all channels with effects"
+
   label .touchplot.1.speedlabel -text speed -font $df
-  scale .touchplot.1.scale -length 100 -from 0.1 -to 1.0\
+  scale .touchplot.1.scale -length 100 -from 0.1 -to 2.0\
 -orient horizontal -resolution 0.02 -width 10 -variable midi(speed) -font $df
  button .touchplot.1.help -text help -font $df -command {show_message_page $hlp_touchplot word}
-  pack .touchplot.1.b .touchplot.1.bp .touchplot.1.speedlabel .touchplot.1.scale .touchplot.1.help  -side left
+  pack .touchplot.1.b .touchplot.1.bp .touchplot.1.ba .touchplot.1.speedlabel .touchplot.1.scale .touchplot.1.help  -side left
   label .touchplot.1a.lab -text "" -font $df
   pack .touchplot.1a.lab
   canvas $plotcanvas -width $midi(tplotWidth) -height 330 -xscrollcommand ".touchplot.scr set" -scrollregion "0 0 $WideWidth 330"
@@ -14181,6 +14189,7 @@ proc plotWideData {xData yData channel color name} {
       }
   if {[winfo exists .touchplot] == 0} {
         createTouchPlot $plotcanvas $WideWidth $channel
+        positionWindow .touchplot
         } else {
         $plotcanvas delete all
         $plotcanvas configure -scrollregion "0 0 $WideWidth 330"
@@ -14247,11 +14256,12 @@ proc plotHoldPedal {xData yData channel color name} {
   set touchPlotMaxx $maxx
   set xstep 2.0
   set WideWidth [expr $midi(tres) * $maxx]
-  puts "WideWidth = $WideWidth"
+ #puts "WideWidth = $WideWidth"
   set leftEdge 0
   set rightEdge $WideWidth
   if {[winfo exists .touchplot] == 0} {
         createTouchPlot $plotcanvas $WideWidth $channel
+        positionWindow .touchplot
         } else {
         $plotcanvas delete all
         $plotcanvas configure -scrollregion "0 0 $WideWidth 330"
@@ -14275,7 +14285,7 @@ proc plotHoldPedal {xData yData channel color name} {
       if {$y == 127} {set ix1 [Graph::ixpos $x]}
       if {$y == 0  } {set ix2 [Graph::ixpos $x]
                       if {[info exist ix1]} {
-                         $plotcanvas create rect $ix1 20 $ix2 350 -fill orange -stipple gray12}
+                         $plotcanvas create rect $ix1 20 $ix2 300 -fill orange -stipple gray12}
                      }
       }
 
@@ -14348,7 +14358,7 @@ if {$extent > 10} {
         set fbeat [expr [lindex $xv 0]  * $touchPlotMaxx]
         set tbeat [expr [lindex $xv 1]  * $touchPlotMaxx]
         }
-puts "fbeat = $fbeat tbeat = $tbeat"
+#puts "fbeat = $fbeat tbeat = $tbeat"
 return [list $fbeat $tbeat]
 }
 
@@ -14499,7 +14509,7 @@ foreach line $mflines {
 #puts "Pedal xData = $xData"
 #puts "Pedal yData = $yData"
 #plotWideData $xData $yData $channel green ModulationWheel
-plotHoldPedal $xData $yData $channel green Pedal
+plotHoldPedal $xData $yData $channel green HoldPedal
 }
 
 proc extract_all_pressures {channel} {
@@ -14545,17 +14555,21 @@ foreach line $mflines {
 return $notebeat
 }
 
-proc copy_midi_segment {channel plain} {
+proc copy_midi_segment {channel method} {
     global midi
     global exec_out
+    set midi(outfilename) tmp.mid
     set limits [touchplot_limits]
     set fbeat [lindex $limits 0]
     set tbeat [lindex $limits 1]
-    set cmd "exec [list $midi(path_midicopy)] -chns $channel "
+    if {$method != 2} {set cmd "exec [list $midi(path_midicopy)] -chns $channel "
+    } else {
+    set  cmd "exec [list $midi(path_midicopy)] "
+    }
     #set fbeat [findLastNoteOn $channel $fbeat]
     append cmd " -frombeat $fbeat -tobeat $tbeat"
     append cmd " -speed $midi(speed) "
-    if {$plain} {
+    if {$method == 1} {
       append cmd " -nobends -nopressure -nocntrl "
       }
     append cmd " [list $midi(midifilein)] tmp.mid"
@@ -14613,9 +14627,9 @@ foreach line $pianoresult {
   set pitch [lindex $line 4]
   set ix1 [Graph::ixpos $begin]
   set ix2 [Graph::ixpos $end]
-  set iy [expr 50  + ($pitchmax - $pitch)*5]
+  set iy [expr 20  + ($pitchmax - $pitch)*5]
   #puts "begin = $begin end = $end ix1 = $ix1 iy = $iy"
-  $plotcanvas create line $ix1 $iy $ix2 $iy -width 4 -fill grey
+  if {$iy < 300} {$plotcanvas create line $ix1 $iy $ix2 $iy -width 6 -fill grey}
   }
 }
 
