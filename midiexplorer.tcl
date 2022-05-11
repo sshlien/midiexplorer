@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.07 2022-05-09 10:00" 
+set midiexplorer_version "MidiExplorer version 3.09 2022-05-11 16:30" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -1749,6 +1749,7 @@ global nkeysig
 global timesig
 global ntimesig
 global df
+global lastbeat
 
 gatherMidiSummary
 midi_type0_table 
@@ -1758,16 +1759,18 @@ array unset programmod
 if {[info exist tempo]} {unset tempo}
 set addendum ""
 set i 1
-set miditxt(0) "$midi(midifilein) is a type 0 midi file containing only 1 track. A beat is divided into $ppqn pulses. "
+set miditxt(0) "$midi(midifilein)\n 1 track      $ppqn pulses/beat"
 
 #update_table_header
 
-if {![info exist tempo]} {set tempo 120
-   append miditxt(0) " No tempo was found, assumed to be $tempo beats/minute."
-   }
-if {$nkeysig > 0} {append miditxt(0) " The key signature was set to $keysig."}
+if {![info exist tempo]} {set tempo 120}
+append miditxt(0) "     tempo:$tempo beats/minute"
+append miditxt(0) "     $lastbeat beats in file\n"
+if {$nkeysig < 1} {set keysig C}
+append miditxt(0) "key signature:$keysig"
+if {$ntimesig < 1} {set timesig 4/4}
+append miditxt(0) "     time signature: $timesig\n"
 if {$nkeysig > 1} {append miditxt(0) " There are $nkeysig key signatures in the file."}
-if {$ntimesig > 0} {append miditxt(0) " The time signature was set to $timesig."}
 if {$ntimesig > 1} {append miditxt(0) " There are $ntimesig time signatures in the file."}
 
 
@@ -1827,29 +1830,23 @@ proc interpretMidiType1 {} {
   gatherMidiSummary 
   midiType1Table
 
-  set miditxt(0) "$midi(midifilein) contains $ntrks tracks. A\
- beat is divided into $ppqn pulses. "
+  set miditxt(0) "$midi(midifilein)
+ $ntrks tracks       $ppqn pulses/beat"
   set addendum ""
 
 #update_table_header
-if {$nkeysig > 0} {append miditxt(0) " The key signature was set to $keysig."}
-if {$nkeysig > 1} {append miditxt(0) " There are $nkeysig key signatures in the file."}
-if {$ntimesig > 0} {append miditxt(0) " The time signature was set to $timesig."}
+if {$nkeysig < 1} {set keysig C}
+if {![info exist tempo]} {set tempo 120}
+append miditxt(0) "         tempo:$tempo beats/minute"
+append miditxt(0) "      $lastbeat beats in file\n"
+append miditxt(0) "key signature: $keysig"
+if {$ntimesig > 0} {append miditxt(0) "     time signature: $timesig"}
 if {$ntimesig > 1} {append miditxt(0) " There are $ntimesig time signatures in the file."}
+if {$nkeysig > 1} {append miditxt(0) " There are $nkeysig key signatures in the file."}
 
- if {![info exist tempo]} {set tempo 120
-     append miditxt(0) " No tempo was found, assumed to be $tempo beats/minute."
-     }
  if {[string length $addendum] > 2} {append miditxt(0) $addendum}
  set txtbuf $miditxt(0)\n  
-# for {set i 1} {$i <= $ntrks} {incr i} {
-#   if {[info exist miditxt($i)]} {
-#     append txtbuf "\n" 
-#     append txtbuf $miditxt($i)
-#     append txtbuf "\n" 
-#   }
-# }
-  .info.txt delete 1.0 end
+ .info.txt delete 1.0 end
   if {[string length $midierror]>0} {
      .info.txt insert insert "$midierror\n" red -font $df
      }
@@ -14324,7 +14321,7 @@ proc touchplot_Button1Press {x y} {
 
 
 proc touchplot_Button1Motion {x} {
-    set touchplotHeight 330
+    set touchplotHeight 300
     set xc [.touchplot.2.c canvasx $x]
     if {$xc < 0} { set xc 0 }
     set co [.touchplot.2.c coords mark]
