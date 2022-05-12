@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.09 2022-05-11 16:30" 
+set midiexplorer_version "MidiExplorer version 3.10 2022-05-12 08:20" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -1765,13 +1765,13 @@ set miditxt(0) "$midi(midifilein)\n 1 track      $ppqn pulses/beat"
 
 if {![info exist tempo]} {set tempo 120}
 append miditxt(0) "     tempo:$tempo beats/minute"
-append miditxt(0) "     $lastbeat beats in file\n"
+append miditxt(0) "     $lastbeat beats in the file\n"
 if {$nkeysig < 1} {set keysig C}
 append miditxt(0) "key signature:$keysig"
 if {$ntimesig < 1} {set timesig 4/4}
 append miditxt(0) "     time signature: $timesig\n"
-if {$nkeysig > 1} {append miditxt(0) " There are $nkeysig key signatures in the file."}
-if {$ntimesig > 1} {append miditxt(0) " There are $ntimesig time signatures in the file."}
+if {$nkeysig > 1} {append miditxt(0) "\nThere are $nkeysig key signatures in the file."}
+if {$ntimesig > 1} {append miditxt(0) "\nThere are $ntimesig time signatures in the file."}
 
 
 set nchannels $i
@@ -1838,11 +1838,11 @@ proc interpretMidiType1 {} {
 if {$nkeysig < 1} {set keysig C}
 if {![info exist tempo]} {set tempo 120}
 append miditxt(0) "         tempo:$tempo beats/minute"
-append miditxt(0) "      $lastbeat beats in file\n"
+append miditxt(0) "      $lastbeat beats in the file\n"
 append miditxt(0) "key signature: $keysig"
 if {$ntimesig > 0} {append miditxt(0) "     time signature: $timesig"}
-if {$ntimesig > 1} {append miditxt(0) " There are $ntimesig time signatures in the file."}
-if {$nkeysig > 1} {append miditxt(0) " There are $nkeysig key signatures in the file."}
+if {$ntimesig > 1} {append miditxt(0) "\nThere are $ntimesig time signatures in the file."}
+if {$nkeysig > 1} {append miditxt(0) "\nThere are $nkeysig key signatures in the file."}
 
  if {[string length $addendum] > 2} {append miditxt(0) $addendum}
  set txtbuf $miditxt(0)\n  
