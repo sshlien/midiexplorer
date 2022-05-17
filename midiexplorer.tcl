@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.10 2022-05-12 08:20" 
+set midiexplorer_version "MidiExplorer version 3.15 2022-05-17 19:35" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -681,6 +681,7 @@ proc midiInit {} {
     set midi(.ptableau) ""
     set midi(.touchplot) ""
     set midi(.effect) ""
+    set midi(.csettings) ""
 
     
     set midi(player1) ""
@@ -1053,6 +1054,8 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
             -command piano_roll_display
 	$ww add command -label drumroll -font $df -command {drumroll_window} -accelerator "ctrl-d"
 	$ww add command -label percView -font $df -command percMapInterface
+        $ww add command -label "control settings" -font $df\
+          -command getAllControlSettings
         $ww add command -label afterTouch -font $df -command aftertouch -accelerator "ctrl-a"
 	$ww add command -label "mftext by beats" -font $df -command {
              set midi(mftextunits) 2
@@ -1069,9 +1072,10 @@ is useful for debugging this program
 when it is not running as expected."
 
 button $w.menuline.play -text play -command play_selected_lines -font $df -state disabled
-bind $w.menuline.play <3> {playmidifile 0}
+#bind $w.menuline.play <3> {playmidifile 0}
+bind $w.menuline.play <3> {play_and_exclude_selected_lines}
 
-tooltip::tooltip $w.menuline.play "Right click plays all tracks\nor channels left click plays\nonly selected tracks or channels."
+tooltip::tooltip $w.menuline.play "Right click plays all tracks or channels excluding\n the selected tracks or channels."
 
 set hlp_view "view menu items\n\n\
 google search: opens up an internet browser to the google search results\
@@ -3357,7 +3361,7 @@ proc show_console_page {text wrapmode} {
         positionWindow $p
         text $p.t -height 15 -width 50 -wrap $wrapmode -font $df -yscrollcommand {
             .notice.ysbar set}
-        scrollbar $p.ysbar -orient vertical -command {.notice.t yview}
+        scrollbar $p.ysbar -orient vertical -width 16 -command {.notice.t yview}
         pack $p.ysbar -side right -fill y -in $p
         pack $p.t -in $p -expand true -fill both
     }
@@ -6620,6 +6624,7 @@ global lasttrack
 global midispeed
 global fbeat
 global tbeat
+global exec_out
 set limits [getCanvasLimits $source]
 set fbeat [lindex $limits 0]
 set tbeat  [lindex $limits 1]
@@ -6696,7 +6701,8 @@ if {$midispeed != 1.00} {append option " -speed $midispeed"}
 # in case windows is still playing it.
 set cmd "file delete -force -- $midi(outfilename)"
 catch {eval $cmd} done
-set midi(outfilename) [tmpname]
+#set midi(outfilename) [tmpname]
+set midi(outfilename) tmp.mid
 # create temporary file
 if {[string length $option] > 0} {
   set cmd "exec [list $midi(path_midicopy)]  $option"
@@ -8732,6 +8738,9 @@ if {[winfo exists .ptableau]} {
    }
 if {[winfo exists .effect]} {
    aftertouch
+   }
+if {[winfo exists .csettings]} {
+   getAllControlSettings
    }
 }
 
@@ -11440,7 +11449,7 @@ proc getGeometryOfAllToplevels {} {
                ".dictview" ".notegram" ".barmap" ".playmanage" ".data_info"
                ".midiplayer" ".tmpfile" ".cfgmidi2abc" ".pgram" ".keystrip"
                ".keypitchclass" ".channel9" ".ribbon" ".ptableau"
-               ".touchplot" ".effect"  }
+               ".touchplot" ".effect" ".csettings" }
   foreach top $toplevellist {
     if {[winfo exist $top]} {
       set g [wm geometry $top]"
@@ -13801,6 +13810,7 @@ proc show_checkversion_summary {} {
 #extract_all_pitchbends extract_all_modulations
 #findLastNoteOn copy_midi_segment
 #pitchRangeFor pianorollFor aftertouch
+#getAllControlSettings displayControlSettings
 
 
 
@@ -14638,6 +14648,104 @@ showListOfNumberOfClusters
 showEffectWindow
 positionWindow .effect
 }
+
+
+
+proc getAllControlSettings {} {
+global mflines
+global controlSettings
+set notefound {0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0}
+set f "%7f CntlParm %d %s = %d" 
+set controlSettings {}
+load_mflines 
+foreach line $mflines {
+  set n [scan $line $f beat chan cntrltype value]
+  if {$n == 4 && [lindex $notefound $chan] == 0} {
+     set cntlsetting [list $cntrltype $chan $value]
+     lappend controlSettings $cntlsetting}
+  set n [scan $line "%7f Note on %d" beat chan]
+  if {$n == 2} {
+               set notefound [lreplace $notefound $chan $chan 1]
+               }
+  }
+displayControlSettings
+}
+
+set hlp_csettings "Initial Control Change Settings\n\n\
+These are the control settings that appear in the MIDI\
+file before the first note-on message. These settings\
+adjust how the notes are played. For example, the loudness\
+of the instrument is controlled by either or both the\
+volume and expression variables. Many of the other control\
+change parameters presented here are not applicable\
+without a specific MIDI synthesizer. They are displayed
+here because they are in the MIDI file. 
+"
+
+proc displayControlSettings {} {
+global controlSettings
+global df
+global hlp_csettings
+set controlNames {}
+set controlChannels {}
+foreach setting $controlSettings {
+    set name [lindex $setting 0]
+    set channel [lindex $setting 1]
+    if {[lsearch $controlNames $name] < 0} {
+      lappend controlNames $name}
+    if {[lsearch $controlChannels $channel] < 0} {
+      lappend controlChannels $channel
+      }
+    }
+set cset .csettings.f
+if {![winfo exist .csettings]} {
+  toplevel .csettings
+  positionWindow .csettings
+  frame .csettings.h
+  button .csettings.h.help -text help -font $df\
+    -command {show_message_page $hlp_csettings word}
+  pack .csettings.h.help -anchor w
+  pack .csettings.h -anchor w
+  } else {
+  destroy $cset
+  }
+
+frame $cset
+pack $cset
+
+label $cset.c -text Channel -font $df -anchor w
+set rowno 0
+grid $cset.c -row $rowno -sticky w
+set k 0
+set col 1
+foreach ch $controlChannels {
+  label $cset.$k -text $ch -font $df
+  grid $cset.$k -row $rowno -column $col
+  set chan2col($ch) $col
+  incr k
+  incr col
+  }
+set rowno 1
+foreach na $controlNames {
+  label $cset.$k -text $na -font $df -anchor w
+  set name2row($na) $rowno
+  grid $cset.$k -row $rowno -column 0 -sticky w
+  incr rowno
+  incr k
+  }
+
+foreach setting $controlSettings {
+    set name [lindex $setting 0]
+    set channel [lindex $setting 1]
+    set rownum $name2row($name)
+    set col $chan2col($channel)
+    set value [lindex $setting 2]
+    label $cset.$k -text $value -font $df
+    grid $cset.$k -row $rownum -column $col
+    incr k
+    }
+}
+
 
 #trace add execution compute_pianoroll leave "cmdstr"
 
