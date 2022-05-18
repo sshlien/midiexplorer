@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.15 2022-05-17 19:35" 
+set midiexplorer_version "MidiExplorer version 3.16 2022-05-18 10:25" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -14002,19 +14002,18 @@ foreach c $chanlist {
 
 
 set hlp_effect "Effect\n
-Many midi files control the voicing of the notes using a sequence\
-of pitchbends or control messages. If they are present, you can see\
-these messages in the midi files using the view/mftext menu button.\
-These messages apply to only a specific channel.\n\n\
+Many midi files modify the voicing of the notes using a sequence\
+of pitchbends or control messages.\
+These messages apply to only a specific channel.\
 There are many different control messages. They include ModulationWheel,\
-Volume, Expression, etc. This function shows the number of clusters\
-of these messages and how they distributed among the channels in\
-an array of buttons. A cluster of messages is a group of the same type\
-one half a beat apart.\n\n\
-Pressing one of these buttons containing many clusters, will cause\
-this application to pop up a new window showing the piano roll for\
-the specific channel and the messages. There is a separate help text\
-for this window.
+Volume, Expression, etc.\
+These messages can be seen using the view/mftext menu button.\n\n\
+These messages frequently appear in clusters where a cluster is\
+defined as a sequence of messages separated by less than half a beat.\
+The number of clusters for a particular message and channel are\
+indicated on the exposed buttons. If you click on one of those buttons\
+a new window (touchplot) will pop up showing the placement of these\
+messages in graphical format.  This is described in a separate help text.
 "
 
 
@@ -14068,20 +14067,20 @@ set ef .effect.f
 destroy $ef
 frame $ef
 pack $ef
-label $ef.0 -text channel -font $df -borderwidth 2 -relief ridge
-grid $ef.0 -row 0
+label $ef.0 -text channel -font $df -borderwidth 2 
+grid $ef.0 -row 0 -sticky w
 set k 1
 foreach t $typelist {
-   label $ef.$k -text $t -font $df -borderwidth 2 -relief ridge -padx 2\
-    -width 7 -anchor w
-   grid $ef.$k -row 0 -column $k
+   label $ef.$k -text $t -font $df -borderwidth 2 -padx 2\
+    -width 15 -anchor w
+   grid $ef.$k -row $k -column 0
    tooltip::tooltip $ef.$k $t
    incr k
    } 
 set j 1
 foreach c $chanlist {
    label $ef.$k -text $c -font $df -borderwidth 2 -relief flat
-   grid $ef.$k -column 0 -row $j
+   grid $ef.$k -column $j -row 0
    incr k
    incr j
    }
@@ -14091,23 +14090,23 @@ foreach e [array names dEvents] {
   set ev [split $e -]
   set t [lindex $ev 0]
   set c [lindex $ev 1]
-  set colNum [lsearch $typelist $t]
-  incr colNum 
-  set rowNum [lsearch -exact $chanlist $c]
-  incr rowNum
+  set rowNum [lsearch $typelist $t]
+  incr rowNum 
+  set colNum [lsearch -exact $chanlist $c]
+  incr colNum
   set v $dEvents($e)
   if {$t == "pitchbend"} {
-    button $ef.i$n -width 4 -text $v -font $df -command "extract_all_pitchbends $c" -bd 3
+    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_pitchbends $c" -bd 2
     } elseif {$t == "ModulationWheel"} {
-    button $ef.i$n -width 4 -text $v -font $df -command "extract_all_modulations $c" -bd 3
+    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_modulations $c" -bd 2
     } elseif {$t == "Expression"} {
-    button $ef.i$n -width 4 -text $v -font $df -command "extract_all_expressions $c" -bd 3
+    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_expressions $c" -bd 2
    } elseif  {$t == "Volume"} {
-    button $ef.i$n -width 4 -text $v -font $df -command "extract_all_volume $c" -bd 3
+    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_volume $c" -bd 2
    } elseif  {$t == "HoldPedal"} {
-    button $ef.i$n -width 4 -text $v -font $df -command "extract_all_pedals $c" -bd 3
+    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_pedals $c" -bd 2
    } elseif  {$t == "pressure"} {
-    button $ef.i$n -width 4 -text $v -font $df -command "extract_all_pressures $c" -bd 3
+    button $ef.i$n -width 3 -text $v -font $df -command "extract_all_pressures $c" -bd 2
    }
 
   grid $ef.i$n -column $colNum -row $rowNum
