@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.16 2022-05-18 10:25" 
+set midiexplorer_version "MidiExplorer version 3.17 2022-05-26 10:10" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -7481,6 +7481,7 @@ proc drumroll_zoom {} {
         set xv [lindex [.drumroll.can xview] 0]
         compute_drumroll
         drumroll_horizontal_scroll $xv
+        update_drumroll_pdfs
     }
 }
 
@@ -7497,6 +7498,7 @@ proc drumroll_unzoom {factor} {
     #set xv [expr $xv/$factor]
     compute_drumroll
     drumroll_horizontal_scroll $xvl
+    update_drumroll_pdfs
 }
 
 proc drumroll_total_unzoom {} {
@@ -7505,6 +7507,7 @@ proc drumroll_total_unzoom {} {
     #puts "displayregion $displayregion"
     set drumPixelsPerFile [expr $displayregion -20]
     compute_drumroll
+    update_drumroll_pdfs
     .drumroll.can configure -scrollregion [.drumroll.can bbox all]
 }
 
@@ -7512,6 +7515,7 @@ proc drumroll_zoom_to {beginbeat endbeat} {
     global lastbeat
     global drumPixelsPerFile
     global drumrollwidth
+    puts "drumroll_zoom_to $beginbeat"
     set fraction [expr ($endbeat - $beginbeat)/$lastbeat]
     if {$fraction < 0.05} {set fraction 0.05}
     set drumPixelsPerFile [expr $drumrollwidth/$fraction]
