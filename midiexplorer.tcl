@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.17 2022-05-26 10:10" 
+set midiexplorer_version "MidiExplorer version 3.19 2022-06-12 07:25 " 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -4680,7 +4680,6 @@ proc switch_note_status {midicmd} {
     if {[lindex $midicmd 2] == 1} {
       set beat_notestatus([lindex $midicmd 1]) 1
       } 
-    #puts "notestatus([lindex $midicmd 1]) = $notestatus([lindex $midicmd 1])"
 }
 
 
@@ -4899,8 +4898,8 @@ proc determineChordSequence {source} {
             reset_beat_notestatus
             set last_beat_number $beat_number
             set chordstring [label_notelist $onlist]
-            set chordstring [chordname $chordstring [root_of $chordstring]]
-            dict set list_of_chords $beat_number $chordstring
+            set chordname [chordname $chordstring [root_of $chordstring]]
+            dict set list_of_chords $beat_number $chordname
             set last_time $present_time
         }
         
@@ -5303,7 +5302,9 @@ proc notegram_plot {source} {
      radiobutton .notegram.head.1 -text sequential -variable midi(notegram) -value seq -font $df -command {compute_notegram none}
      radiobutton .notegram.head.2 -text "circle of fifths" -variable midi(notegram) -value fifths -font $df -command {compute_notegram none}
      button .notegram.head.play -text play -font $df -command {playExposed notegram}
-     pack  .notegram.head.1 .notegram.head.2 .notegram.head.play -side left -anchor w
+     button .notegram.head.zoom -text zoom -command zoom_notegram -font $df
+     button .notegram.head.unzoom -text unzoom -command unzoom_notegram -font $df
+     pack  .notegram.head.1 .notegram.head.2 .notegram.head.play .notegram.head.zoom .notegram.head.unzoom -side left -anchor w
      pack  .notegram.head -side top -anchor w 
      set c .notegram.can
      canvas $c -width $pianorollwidth -height 250 -border 3 -relief sunken
@@ -5343,6 +5344,17 @@ proc notegram_ClearMark {} {
     .notegram.can coords mark -1 -1 -1 -1
 }
 
+
+proc zoom_notegram {} {
+compute_notegram notegram
+}
+
+proc unzoom_notegram {} {
+global seqlength
+compute_notegram none
+}
+
+
 proc notegram_limits {co} {
 global midistructureheight
 global notegram_xfm
@@ -5364,6 +5376,7 @@ set beat1 [expr [lindex $beatlimits 0]*$pixels_per_beat]
 set beat2 [expr [lindex $beatlimits 1]*$pixels_per_beat]
 .midistructure.can coords mark $beat1 0 $beat2 $midistructureheight
 }
+
 
 proc compute_notegram {source} {
    global pianorollwidth
