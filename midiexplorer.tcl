@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.19 2022-06-12 07:25 " 
+set midiexplorer_version "MidiExplorer version 3.29 2022-07-07 05:35 " 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -567,7 +567,7 @@ if {[info exist env(MIDIEXPLORERPATH)]} {
      set msg "midiexplorer is creating the folder $midiexplorerpath\
      to store midiexplorer.ini and various temporary midi files."
      tk_messageBox -message $msg  -type ok
-     file mkdir $midiexplorerpat
+     file mkdir $midiexplorerpath
      set handle [open $midiexplorerpath/README.txt w]
      puts $handle "This folder is used by midiexplorer to store\n
             preferences and temporary data.\n\n\
@@ -650,6 +650,7 @@ proc midiInit {} {
     set midi(.drumroll) ""
     set midi(.drumanalysis) ""
     set midi(.drumrollconfig) ""
+    set midi(.drummap) ""
     set midi(.fontwindow) ""
     set midi(.indexwindow) ""
     set midi(.pitchpdf) ""
@@ -741,7 +742,7 @@ proc midiInit {} {
     set midi(attenuation) 70
     set midi(sortchordnames) key
     set midi(chordgram) fifths
-    set midi(notegram) fifths
+    set midi(notegram) 1
     set midi(tableau5) 0
     set midi(chordhist) graphics
     set midi(pitchclassfifths) 0
@@ -3261,8 +3262,8 @@ global midi
 global lastbeat
 global midichannels
 global exec_out
+set exec_out "playExposed\ncopyMidiToTmp $source\n"
 copyMidiToTmp $source
-set exec_out "playExposed\ncopyMidiToTmp tableau"
 if {![file exist $midi(path_midiplay)]} {
      set msg "You need to specify the path to a program which plays
 midi files. The box to the right can contain any runtime options."
@@ -3279,9 +3280,8 @@ file."
 append cmd " $midi(midiplay_options) tmp.mid &"
 catch {eval $cmd} midiplayerresult
 set midi(outfilename) tmp.mid
+append exec_out "\n$cmd\n$midiplayerresult"
 update_console_page
-#puts $cmd
-#puts $midiplayerresult
 }
 
 proc tableau_abc {} {
@@ -3489,12 +3489,14 @@ if {[winfo exist $w]} {
 
 toplevel $w
 positionWindow $w
+label $w.header -text executables -font $df
+grid $w.header -row 0 -column 1
 
 button $w.abcmidibut -text "abcmidi folder" -width 14 -command {locate_abcmidi_executables} -font $df
 entry $w.abcmidient -width 48 -relief sunken -textvariable midi(dir_abcmidi) -font $df
 grid $w.abcmidibut -row 1 -column 1
 grid $w.abcmidient -row 1 -column 2
-bind $w.abcmidient <Return> {focus .support
+bind $w.abcmidient <Return> {focus .support.header
                              set_abcmidi_executables 
 		            }
 
@@ -3502,20 +3504,14 @@ button $w.browserbut -text "internet browser" -width 14 -command {locate_browser
 entry $w.browserent -width 48 -relief sunken -textvariable midi(browser) -font $df
 grid $w.browserbut -row 10 -column 1
 grid $w.browserent -row 10 -column 2
-bind $w.browserent <Return> {focus .support}
+bind $w.browserent <Return> {focus .support.header}
 
-# ghostscript not needed by midiexplorer
-#button $w.gsbut -text "ghostscript" -width 14 -command {setpath path_gs} -font $df
-#entry $w.gsent -width 48 -relief sunken -textvariable midi(path_gs) -font $df
-#grid $w.gsbut -row 11 -column 1
-#grid $w.gsent -row 11 -column 2
-#bind $w.gsent <Return> {focus .support}
 
 button $w.psbut -text "Postscript viewer" -width 14 -command {setpath psview} -font $df
 entry $w.psent -width 48 -relief sunken -textvariable midi(path_gv) -font $df
 grid $w.psbut -row 12 -column 1
 grid $w.psent -row 12 -column 2
-bind $w.psent <Return> {focus .support}
+bind $w.psent <Return> {focus .support.header}
 }
 
 
@@ -3532,6 +3528,9 @@ if {[winfo exist $w]} {
 toplevel $w
 positionWindow $w
 
+label $w.header -text "midi player" -font $df
+grid $w.header -row 0 -column 1
+
 radiobutton $w.player1rad -command set_midiplayer -variable midi(player_sel) -value 1
 button $w.player1but -text "midiplayer 1" -width 14 -font $df\
    -command {setpath player1; .midiplayer.player1rad invoke} 
@@ -3539,13 +3538,15 @@ entry $w.player1ent -width 48 -relief sunken -textvariable midi(player1) -font $
 grid $w.player1rad -row 2 -column 0
 grid $w.player1but -row 2 -column 1
 grid $w.player1ent -row 2 -column 2
-bind $w.player1ent <Return> {focus .support}
+bind $w.player1ent <Return> {set_midiplayer
+                             focus .midiplayer.header}
 
 button $w.player1optbut -text "midiplayer options" -width 14 -command {}  -font $df
 entry $w.player1optent -width 48 -relief sunken -textvariable midi(player1opt) -font $df
 grid $w.player1optbut -row 3 -column 1
 grid $w.player1optent -row 3 -column 2
-bind $w.player1optent <Return> {focus .support}
+bind $w.player1optent <Return> {set_midiplayer
+                                focus .midiplayer.header}
 
 radiobutton $w.player2rad -command set_midiplayer -variable midi(player_sel) -value 2
 button $w.player2but -text "midiplayer 2" -width 14 -font $df\
@@ -3554,13 +3555,16 @@ entry $w.player2ent -width 48 -relief sunken -textvariable midi(player2) -font $
 grid $w.player2rad -row 4 -column 0
 grid $w.player2but -row 4 -column 1
 grid $w.player2ent -row 4 -column 2
-bind $w.player2ent <Return> {focus .support}
+bind $w.player2ent <Return> {set_midiplayer
+                             focus .midiplayer.header}
 
 button $w.player2optbut -text "midiplayer 2 options" -width 14 -command {}  -font $df
 entry $w.player2optent -width 48 -relief sunken -textvariable midi(player2opt) -font $df
 
 grid $w.player2optbut -row 5 -column 1
 grid $w.player2optent -row 5 -column 2
+bind $w.player2optent <Return> {set_midiplayer
+                                focus .midiplayer.header}
 
 radiobutton $w.player3rad -command set_midiplayer -variable midi(player_sel) -value 3
 button $w.player3but -text "midiplayer 3" -width 14 -font $df \
@@ -3569,12 +3573,15 @@ entry $w.player3ent -width 48 -relief sunken -textvariable midi(player3) -font $
 grid $w.player3rad -row 6 -column 0
 grid $w.player3but -row 6 -column 1
 grid $w.player3ent -row 6 -column 2
-bind $w.player3ent <Return> {focus .support}
+bind $w.player3ent <Return> {set_midiplayer
+                             focus .midiplayer.header}
 
 button $w.player3optbut -text "midiplayer 3 options" -width 14 -command {}  -font $df
 entry $w.player3optent -width 48 -relief sunken -textvariable midi(player3opt) -font $df
 grid $w.player3optbut -row 7 -column 1
 grid $w.player3optent -row 7 -column 2
+bind $w.player3optent <Return> {set_midiplayer
+                               focus .midiplayer.header}
 
 radiobutton $w.player4rad -command set_midiplayer -variable midi(player_sel) -value 4
 button $w.player4but -text "midiplayer 4" -width 14 -font $df \
@@ -3583,12 +3590,15 @@ entry $w.player4ent -width 48 -relief sunken -textvariable midi(player4) -font $
 grid $w.player4rad -row 8 -column 0
 grid $w.player4but -row 8 -column 1
 grid $w.player4ent -row 8 -column 2
-bind $w.player4ent <Return> {focus .support}
+bind $w.player4ent <Return> {set_midiplayer
+                             focus .midiplayer.header}
 
 button $w.player4optbut -text "midiplayer 4 options" -width 14 -command {}  -font $df
 entry $w.player4optent -width 48 -relief sunken -textvariable midi(player4opt) -font $df
 grid $w.player4optbut -row 9 -column 1
 grid $w.player4optent -row 9 -column 2
+bind $w.player4optent <Return> {set_midiplayer
+                               focus .midiplayer.header}
 }
 
 proc set_midiplayer {} {
@@ -5031,24 +5041,34 @@ proc chordgram_plot {source} {
 
 proc getCanvasLimits {source} {
 global lastbeat
+global fbeat
+global tbeat
 global ppqn
 set start -1
 set stop $lastbeat
 switch $source {
   chordgram {
     set co [.chordgram.can coords mark]
+    #puts "co = $co"
     set limits [chordgram_limits $co]
-       if {[lindex $limits 0] >= 0} {
+       if {[lindex $co 0] > 0} {
        set start [expr [lindex $limits 0]]
        set stop  [expr [lindex $limits 1]]
+       } else {
+       set start $fbeat
+       set stop $tbeat
+       #puts "fbeat = $fbeat tbeat = $tbeat"
        }
     }
   notegram {
     set co [.notegram.can coords mark]
-    set limits [notegram_limits $co]
-       if {[lindex $limits 0] >= 0} {
+    if {[lindex $co 0] > 0} {
+       set limits [notegram_limits $co]
        set start [expr [lindex $limits 0]]
        set stop  [expr [lindex $limits 1]]
+       } else {
+       set start $fbeat
+       set stop $tbeat
        }
     }
   pianoroll {
@@ -5080,9 +5100,11 @@ switch $source {
        }
     }
   default {
-    set start -1
-    set stop $lastbeat
-    }
+    if {[info exist fbeat]} {
+     set start $fbeat
+     set stop $tbeat
+     }
+   }
   }
 return [list $start $stop]
 }
@@ -5168,6 +5190,10 @@ proc compute_chordgram {start stop} {
    global chord_sequence
    global seqlength
    global chordgramLimits
+   global fbeat
+   global tbeat
+   set fbeat $start
+   set tbeat $stop
    set chordgramLimits [list $start $stop]
    # useflats is set by plot_pitch_class_histogram
    set xrbx [expr $pianorollwidth - 3]
@@ -5299,12 +5325,11 @@ proc notegram_plot {source} {
      toplevel .notegram
      positionWindow .notegram
      frame .notegram.head
-     radiobutton .notegram.head.1 -text sequential -variable midi(notegram) -value seq -font $df -command {compute_notegram none}
-     radiobutton .notegram.head.2 -text "circle of fifths" -variable midi(notegram) -value fifths -font $df -command {compute_notegram none}
+     checkbutton .notegram.head.2 -text "circle of fifths" -variable midi(notegram) -font $df -command {compute_notegram none}
      button .notegram.head.play -text play -font $df -command {playExposed notegram}
      button .notegram.head.zoom -text zoom -command zoom_notegram -font $df
      button .notegram.head.unzoom -text unzoom -command unzoom_notegram -font $df
-     pack  .notegram.head.1 .notegram.head.2 .notegram.head.play .notegram.head.zoom .notegram.head.unzoom -side left -anchor w
+     pack  .notegram.head.2 .notegram.head.play .notegram.head.zoom .notegram.head.unzoom -side left -anchor w
      pack  .notegram.head -side top -anchor w 
      set c .notegram.can
      canvas $c -width $pianorollwidth -height 250 -border 3 -relief sunken
@@ -5422,7 +5447,7 @@ proc compute_notegram {source} {
      if {$channel == 10} continue
      set note [lindex $line 4]
      set note [expr $note % 12]
-     if {$midi(notegram) == "fifths"} {
+     if {$midi(notegram) == 1} {
         set loc [lindex $permut5th $note]
      } else {set loc $note}
      set ix [Graph::ixpos [expr $fbeat + double($begin)/$ppqn]]
@@ -5435,7 +5460,7 @@ proc compute_notegram {source} {
      }
   set i 0
   set ix 15 
-  if {$midi(notegram) == "fifths"} {
+  if {$midi(notegram) == 1} {
     if {$useflats} {
       foreach name $flatnotes5 {
          set iy [Graph::iypos [expr double($i * 16)]] 
@@ -6674,12 +6699,13 @@ if {[string length $option] > 0} {
   set cmd "exec [list $midi(path_midicopy)]  $option"
   lappend cmd  $midi(midifilein) $midi(outfilename)
   catch {eval $cmd} miditime
-  set exec_out play_selected_lines:\n$cmd\n\n$miditime
+  append exec_out "play_selected_lines:\n$cmd\n\n$miditime"
   } else {
   set cmd "file copy $midi(midifilein) $midi(outfilename)"
   file copy $midi(midifilein) $midi(outfilename)
-  set exec_out copyMidiToTmp:\n$cmd\n
+  append exec_out "copyMidiToTmp:\n$cmd\n"
   }
+  update_console_page
 }
 
 
@@ -7002,6 +7028,7 @@ proc active_drums {} {
     global gram_ndrums
     global activedrum avgvel
    
+    array unset activedrum
     for {set i 35} {$i <82} {incr i} {
       set activedrum($i) 0
       set avgvel($i) 0
@@ -7701,6 +7728,23 @@ proc get_drum_patterns {simple} {
    return $drumpat
 }
 
+proc extract_drumpat_for {drum drumpat} {
+set power [expr $drum - 35]
+set mask [expr 1 << $power]
+set sdrumpat [dict creat]
+set drumpatSize [dict size $drumpat]
+for {set i 0} {$i < $drumpatSize} {incr i} {
+  set pat [dict get $drumpat $i]
+  if {[expr $pat & $mask] != 0} {
+      dict set sdrumpat $i 1
+     } else {
+      dict set sdrumpat $i 0
+     }
+  }
+return $sdrumpat
+}
+
+
 proc write_drumpat drumpat {
   puts "writing drumpat in dm.txt"
   set f [open dm.txt w]
@@ -7815,31 +7859,40 @@ in beat units of the percussion track. The\
 autocorrelation function provides a lot of\
 information and in particular the number of\
 beats in a measure or bar.\n\n\
-The drum pattern irregularity indicates how well\
+The drum irregularity indicates how well\
 one can predict the next bar from the\
 previous measure. Peaks in this graph represent\
 transition times where the drum pattern suddenly\
 changes.\n\n\
-The bottom bar sequence text window, shows the\
-index number representation for each bar where the\
-index number is indicated by a single character\
-either a digit or letter. There are up to 64\
-in each line.
+The map bottom produces a separate window showing\
+the distribution of the distinct bars for each\
+percussion instrument. The bars are labeled with\
+an alphanumeric character starting with the numeric\
+0 and identical bars have the same character. When\
+a different bar is encountered, it is represented\
+by a new character. Zero indicates the absence of\
+the drum in that bar.\n\n\
+The i/j/k numbers indicate the\
+number of distict tatums, beats, and bars that\
+were encountered for the specific percussion instrument.\
+For individual percussion instruments, i is always 1;\
+however when all percussion instruments are combined,\
+i can be as large as 2 to the exponent n where n is\
+the number of percussion instruments.
 "
+
 
 proc analyze_drum_patterns {simple} {
 global df
 global ppqn
 global midilength
 global mlength
-#for {set i 70} {$i < 100} {incr i} {
-#  puts "$i [dict get $drumpat $i]"
-#  }
+global fullbarseqstring
+global fullDrumStats
 set d .drumanalysis.blk.ctl
 set graph .drumanalysis.blk.c
 set t .drumanalysis.t
 set drumpat [get_drum_patterns $simple] 
-#write_drumpat $drumpat 
 
 if {[winfo exists $d] == 0} {
   setup_i2l
@@ -7850,34 +7903,29 @@ if {[winfo exists $d] == 0} {
   frame $d 
   canvas $graph -bd 2 -relief solid -background LavenderBlush1
   pack $d $graph -side left
-  frame $t 
-  text $t.txt -width 40 -height 10 -bd 3
-  label $t.lab -text "bar sequence"
-  pack $d $graph -side left
-  pack $t -side top
-  pack $t.lab $t.txt -side left
-  label $d.1 -text "number of beats" 
-  label $d.1a 
-  label $d.2 -text "number of tatums" 
-  label $d.2a 
-  label $d.3 -text "period"
-  label $d.3a
-  label $d.4 -text "distinct tatums"
-  label $d.4a 
-  label $d.5 -text "tatum entropy"
-  button $d.5a
-  label $d.6 -text "distinct beats"
-  label $d.6a
-  label $d.7 -text "beat entropy"
-  button $d.7a
-  label $d.8 -text "distinct bars"
-  label $d.8a
-  label $d.9 -text "bar entropy"
-  button $d.9a
-  button $d.10 -text "drum pattern irregularity"
-  button $d.11 -text "make postscript file" -command {make_postscript_file  .drumanalysis.c}
-  button $d.12 -text help -command {show_message_page $hlp_drumanalysis word}
-  label $d.10a
+
+  label $d.1 -text "number of beats" -font $df
+  label $d.1a  -font $df
+  label $d.2 -text "number of tatums" -font $df
+  label $d.2a  -font $df
+  label $d.3 -text "period" -font $df
+  label $d.3a -font $df
+  label $d.4 -text "distinct tatums" -font $df
+  label $d.4a  -font $df
+  label $d.5 -text "tatum entropy" -font $df
+  button $d.5a -font $df
+  label $d.6 -text "distinct beats" -font $df
+  label $d.6a -font $df
+  label $d.7 -text "beat entropy" -font $df
+  button $d.7a -font $df
+  label $d.8 -text "distinct bars" -font $df
+  label $d.8a -font $df
+  label $d.9 -text "bar entropy" -font $df
+  button $d.9a -font $df
+  button $d.10 -text "drum irregularity" -font $df
+  button $d.11 -text "postscript file" -command {make_postscript_file  .drumanalysis.c} -font $df
+  button $d.12 -text help -command {show_message_page $hlp_drumanalysis word} -font $df
+  button $d.10a -text "map" -font $df
   grid $d.1 $d.1a
   grid $d.2 $d.2a
   grid $d.3 $d.3a
@@ -7899,6 +7947,7 @@ $d.1a configure -text $nbeats
 $d.2a configure -text $ntatums
 $d.3a configure -text "$period beats"
 $d.10 configure -command "drum_irregularity [list $drumpat] [expr $period*4] $graph" 
+$d.10a configure -command "fullDrumMapAnalysis $period"
 
 set tatumhistogram [make_string_histogram $drumpat]
 set tentropy [string_entropy $tatumhistogram]
@@ -7909,7 +7958,9 @@ $d.5a configure -text $tentropy -command "plot_tatum_histogram $graph [list $tat
 
 
 set patindexdict [keys2index $tatumhistogram]
+#puts "drumpat:\n$drumpat"
 set beatseries [index_and_group $patindexdict $drumpat 4 "-"]
+#puts "beatseries for drumpat:\n$beatseries"
 set beathistogram [make_string_histogram $beatseries]
 set bentropy [string_entropy $beathistogram]
 set bsize [llength [dict keys $beathistogram]]
@@ -7922,19 +7973,92 @@ set barentropy [string_entropy $barhistogram]
 
 set patindex3dict [keys2index $barhistogram]
 set barseq [bar2index $patindex3dict $barseries]
-set barseqstring [barseq2string $patindex3dict $barseries]
-output_barseq $barseqstring
+set fullbarseqstring [barseq2string $patindex3dict $barseries]
+set fullDrumStats [format "%2d/%2d/%2d " $tsize $bsize $barsize]
+if {[winfo exist .drummap]} {fullDrumMapAnalysis $period}
 
 $d.6a configure -text "$bsize patterns"
 $d.8a configure -text "$barsize patterns"
 $d.7a configure -text $bentropy -command "plot_tatum_histogram $graph [list $beathistogram]"
 $d.9a configure -text $barentropy -command "plot_tatum_histogram $graph [list $barhistogram]"
+
 }
 
-proc output_barseq {barseqstring} {
-.drumanalysis.t.txt delete 1.0 end
-.drumanalysis.t.txt insert end $barseqstring
+
+proc analyzeDrumPatternsFor {drum period} {
+global drumpatches
+set b .drummap.txt
+ set drumname [lindex [lindex $drumpatches [expr $drum-35] 1]]
+set drumpat [get_drum_patterns 0] 
+#write_drumpat $drumpat 
+set sdrumpat [extract_drumpat_for $drum $drumpat]
+set tatumhistogram [make_string_histogram $sdrumpat]
+#set tentropy [string_entropy $tatumhistogram]
+set patindexdict [keys2index $tatumhistogram]
+set beatseries [index_and_group $patindexdict $sdrumpat 4 "-"]
+set tsize [llength [dict keys $tatumhistogram]]
+set beathistogram [make_string_histogram $beatseries]
+set bsize [llength [dict keys $beathistogram]]
+set patindex2dict [keys2index $beathistogram]
+set barseries [index_and_group $patindex2dict $beatseries $period "_"]
+set barhistogram [make_string_histogram $barseries]
+set barsize [llength [dict keys $barhistogram]]
+set patindex3dict [keys2index $barhistogram]
+set barseq [bar2index $patindex3dict $barseries]
+setup_i2l
+set barseqstring [barseq2string $patindex3dict $barseries]
+set drumStats [format "%2d/%2d/%2d " $tsize $bsize $barsize]
+$b insert insert $drumname\t\t\t headr
+$b insert end $drumStats\t headr
+$b insert end $barseqstring\n
 }
+
+
+proc fullDrumMapAnalysis {period} {
+global activedrum
+global drumpatches
+global fullbarseqstring
+global fullDrumStats
+active_drums
+set b .drummap.txt
+if {![winfo exist .drummap]} {
+   toplevel .drummap 
+   positionWindow .drummap
+   text $b -width 80 -xscrollcommand {.drummap.xsbar set} -wrap none
+   scrollbar .drummap.xsbar -orient horizontal -command {.drummap.txt xview}
+   pack $b .drummap.xsbar -side top -fill x
+   setup_i2l
+   }
+wm title .drummap "drummap"
+$b delete 1.0 end
+$b tag configure headr -background wheat3
+$b insert insert "drum\t\t\t  i/j/k\n" headr
+set nlines 0
+foreach drum [array names activedrum] {
+  if {$activedrum($drum) > 0} {
+    if {$drum > 81} break
+    #puts "activedrum($drum) == $activedrum($drum)"
+    set drumname [lindex [lindex $drumpatches [expr $drum-35] 1]]
+    analyzeDrumPatternsFor $drum $period
+    incr nlines
+    }
+  }
+.drummap.txt insert insert "All drums\t\t\t" headr
+.drummap.txt insert insert $fullDrumStats\t headr
+.drummap.txt insert end $fullbarseqstring
+incr nlines
+incr nlines
+# mark bar numbers on top line
+set nchar [string length $fullbarseqstring]
+for {set i 1} {$i <$nchar} {incr i 8} {
+    if {$i < 8} {set str [format %5d $i]
+        } else  {set str [format %9d $i]}
+    $b insert 1.end $str
+}
+
+$b configure -height $nlines
+}
+
 
 proc graph_drum_periodicity {drumpat graph} {
 set curve {}
@@ -7963,10 +8087,10 @@ proc make_string_histogram {series} {
 # which is returned in a histogram indexed by these
 # strings.
 set size [dict size $series]
+set keys [dict keys $series]
 set histogram [dict create]
-for {set i 0} {$i < $size} {incr i} {
-  if {![dict exists $series $i]} continue
-  set pat [dict get $series $i]
+foreach key $keys {
+  set pat [dict get $series $key]
   if {$pat == 0 } continue
   incr total
   if {[dict exist $histogram $pat]} {
@@ -8196,7 +8320,7 @@ for {set i 0} {$i < $size} {incr i} {
    if {[expr $i % 32] == 7} {append s "\t"}
    if {[expr $i % 32] == 15} {append s "\t"}
    if {[expr $i % 32] == 23} {append s "\t"}
-   if {[expr $i % 32] == 31} {append s "\n"}
+   if {[expr $i % 32] == 31} {append s "\t"}
    }
 return $s
 }
@@ -11115,9 +11239,9 @@ proc plotUnivariateDistribution {graph curve min_x max_x xspace xlabel} {
     set start $min_x
     set stop  $max_x
     set delta_tick 50
-    $graph create rectangle 50 20 350 200 -outline black\
+    $graph create rectangle 70 20 370 200 -outline black\
             -width 2 -fill white
-    Graph::alter_transformation 50 350 200 20 $start $stop 0.0 1.0
+    Graph::alter_transformation 70 370 200 20 $start $stop 0.0 1.0
     Graph::draw_x_grid $graph $start $stop $xspace 1  0 %4.1f
     Graph::draw_y_grid $graph 0.0 1.0 0.2 1 %3.2f
     set npoints [expr [llength $curve ] -1]
@@ -11147,10 +11271,10 @@ proc plot_line_graph {graph curve min_x max_x xspace xlabel min_y max_y title} {
     if {[winfo exists $graph] == 1} {$graph delete all}
     set start [expr double($min_x)]
     set stop  [expr double($max_x)]
-    $graph create rectangle 50 20 350 200 -outline black\
+    $graph create rectangle 70 20 370 200 -outline black\
             -width 2 -fill white
     set yspace [expr ($max_y - $min_y)/5.0]
-    Graph::alter_transformation 50 350 200 20 $start $stop $min_y $max_y
+    Graph::alter_transformation 70 370 200 20 $start $stop $min_y $max_y
     Graph::draw_x_grid $graph $start $stop $xspace 1  0 %4.1f
     Graph::draw_y_grid $graph $min_y $max_y $yspace 1 %3.2f
     set npoints [expr [llength $curve ] -1]
@@ -11170,7 +11294,7 @@ proc plot_line_graph {graph curve min_x max_x xspace xlabel min_y max_y title} {
         set iy2 [Graph::iypos $y2]
         $graph create line $ix1 $iy1 $ix2 $iy2 
         }
-    set iy1 [expr [Graph::iypos $min_y] + 30]
+    set iy1 [expr [Graph::iypos $min_y] + 40]
     set ix1 200
     $graph create text $ix1 $iy1 -text $xlabel -font $df
     set iy1 [expr [Graph::iypos $max_y] + 20]
@@ -11466,7 +11590,7 @@ proc getGeometryOfAllToplevels {} {
                ".dictview" ".notegram" ".barmap" ".playmanage" ".data_info"
                ".midiplayer" ".tmpfile" ".cfgmidi2abc" ".pgram" ".keystrip"
                ".keypitchclass" ".channel9" ".ribbon" ".ptableau"
-               ".touchplot" ".effect" ".csettings" }
+               ".touchplot" ".effect" ".csettings" ".drummap" }
   foreach top $toplevellist {
     if {[winfo exist $top]} {
       set g [wm geometry $top]"
@@ -11698,7 +11822,6 @@ global tatumhistogram
 global beathistogram
 global barhistogram
 global barseqstring
-#global rbarseqstring
 global rhythmhistogram
 global rpatindexdict
 global beatsperbar
@@ -11844,7 +11967,6 @@ set rhythmentropy [string_entropy $rhythmhistogram]
 set rhythmsize [llength [dict keys $rhythmhistogram]]
 set rpatindexdict [keys2index $rhythmhistogram]
 set rbarseries [bar2index $rpatindexdict $bar_rhythm]
-#set rbarseqstring [barseq2string $rpatindexdict $bar_rhythm]
 
 .entropy.tsize configure -text $tsize 
 .entropy.bsize configure -text $bsize
