@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.29 2022-07-07 05:35 " 
+set midiexplorer_version "MidiExplorer version 3.33 2022-07-12 13:20" 
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -637,6 +637,7 @@ proc midiInit {} {
     set midi(autoposition) 1
     set midi(.) ""
     set midi(.notice) ""
+    set midi(.console) ""
     set midi(.progsel) ""
     set midi(.piano) ""
     set midi(.beatgraph) ""
@@ -933,7 +934,7 @@ set ww $w.menuline.file.items
 menubutton $w.menuline.file -text file -menu $w.menuline.file.items -font $df
 menu $ww -tearoff 0
 $ww add command -label "root directory" -font $df -command {
-    set midi(rootfolder) [tk_chooseDirectory -title "Choose the directory containing the abc files"]
+    set midi(rootfolder) [tk_chooseDirectory -title "Choose the directory containing the midi files or folders"]
     if {[file exist $midi(rootfolder)]}  {populatedir .treebrowser.tree $midi(rootfolder)
     }
     if {[info exist desc]} {unset desc}
@@ -2660,7 +2661,6 @@ from the abcMIDI package, click settings and set the path to its location."
     append cmd " [list $midi(midifilein)] tmp.mid"
     catch {eval $cmd} midicopyresult
     set exec_out "$cmd\n $midicopyresult\n"
-    #puts $exec_out
     return $midicopyresult
 }
 
@@ -3342,16 +3342,16 @@ return [list $fbeat $tbeat]
 
 proc update_console_page {} {
     global exec_out
-    if {[winfo exist .notice]} {show_console_page $exec_out char}
+    if {[winfo exist .console]} {show_console_page $exec_out char}
 }
 
 proc show_console_page {text wrapmode} {
     global active_sheet df
     #remove_old_sheet
-    set p .notice
+    set p .console
     set pat1 {Error in line-char ([0-9]+)\-([0-9]+)}
     set pat2 {Warning in line-char ([0-9]+)\-([0-9]+)}
-    if [winfo exist .notice] {
+    if [winfo exist .console] {
         $p.t configure -state normal -font $df
         $p.t delete 1.0 end
         set taglist [$p.t tag names]
@@ -3360,8 +3360,8 @@ proc show_console_page {text wrapmode} {
         toplevel $p
         positionWindow $p
         text $p.t -height 15 -width 50 -wrap $wrapmode -font $df -yscrollcommand {
-            .notice.ysbar set}
-        scrollbar $p.ysbar -orient vertical -width 16 -command {.notice.t yview}
+            .console.ysbar set}
+        scrollbar $p.ysbar -orient vertical -width 16 -command {.console.t yview}
         pack $p.ysbar -side right -fill y -in $p
         pack $p.t -in $p -expand true -fill both
     }
@@ -3657,6 +3657,7 @@ proc locate_abcmidi_executables {} {
 proc set_abcmidi_executables {} {
 global midi
 global exec_out
+set exec_out ""
 set dirname $midi(dir_abcmidi)
 foreach exec {midi2abc midicopy} {
     if {[file exist $dirname/$exec.exe]} {
@@ -3844,7 +3845,6 @@ set midi(proglist) $p
 set trkchan 1
 # flag to to separate by track or channel
 
-set exec_out ""
 #run time messages
 set piano_yview_pos 0.35 ;# scroll position for piano roll display
 set pianoresult {} 
@@ -7117,28 +7117,26 @@ proc drumroll_window {} {
             -command {drumroll_unzoom 5.0}
     $p.unzoom.items add command -label "Total unzoom" -command drumroll_total_unzoom -font $df
 
-    menubutton $p.action -text actions -width 8 -menu $p.action.items -font $df
-    menu $p.action.items -tearoff 0
-    tooltip::tooltip $p.action "Various plots and analysis"
-    $p.action.items add command -label "onset distribution" -font $df \
+    button $p.analysis -text analysis -relief flat -font $df\
+            -command {analyze_drum_patterns 0}
+    tooltip::tooltip $p.analysis "Detailed analysis of drum patterns"
+
+    menubutton $p.plots -text plots -width 8 -menu $p.plots.items -font $df
+    menu $p.plots.items -tearoff 0
+    tooltip::tooltip $p.plots "Various plots"
+    $p.plots.items add command -label "onset distribution" -font $df \
             -command {drumroll_statistics onset
                       plotmidi_onset_pdf
                      }
-    $p.action.items add command -label "velocity distribution" -font $df \
+    $p.plots.items add command -label "velocity distribution" -font $df \
             -command {drumroll_statistics velocity
                       plotmidi_velocity_pdf
                      }
-
-    $p.action.items add command -label "pattern analysis" -font $df \
-            -command {analyze_drum_patterns 0}
-
-    $p.action.items add command -label "simple pattern analysis" -font $df \
-            -command {analyze_drum_patterns 1}
     
     button $p.help -text help -relief flat -font $df\
             -command {show_message_page $hlp_drumroll word}
     
-    grid  $p.invert $p.play $p.config $p.zoom $p.unzoom $p.action $p.help -sticky news
+    grid  $p.invert $p.play $p.config $p.zoom $p.unzoom $p.analysis $p.plots $p.help -sticky news
     grid $p -column 1
     
     set p .drumroll.file
@@ -7206,26 +7204,6 @@ proc drumroll_config {} {
 #    checkbutton $p.drumboost -text "set selected drum loudness"\
 # -variable midi(drumvelocity) -font $df
     pack $p.normal $p.nodrum $p.onlydrum -side top -anchor w
-#    pack $p.focussel $p.mute $p.drumboost -side top -anchor w
-
-#    frame $p.muteval
-#    label $p.muteval.lab -text "mute no drum level" -font $df
-#    entry $p.muteval.ent -width 3 -font $df -textvariable midi(mutelev)
-#    pack $p.muteval.ent $p.muteval.lab -side left 
-#    pack $p.muteval -anchor w
-#    frame $p.focus
-#    entry $p.focus.ent -width 3 -font $df -textvariable midi(mutefocus)
-#    label $p.focus.lab -text "mute focus level" -font $df
-#    pack $p.focus.ent $p.focus.lab -side left
-#    pack $p.focus -anchor w
-#    frame $p.boost
-#    entry $p.boost.ent -width 3 -font $df -textvariable midi(drumloudness)
-#    label $p.boost.lab -text "selected drum loudness" -font $df
-#    pack $p.boost.ent $p.boost.lab -side left
-#    pack $p.boost -anchor w
-#    button $p.help -text help -font $df\
-            -command {show_message_page $hlp_drumroll_config word}
-#    pack $p.help -anchor w
 }
 
 set hlp_drumroll_config "Drum Roll Configuration\n\n\
@@ -7278,7 +7256,7 @@ proc show_drum_events {} {
         return
     }
     compute_drumroll 
-    if {[winfo exist .drumanalysis]} {analyze_drum_patterns 1}
+    if {[winfo exist .drumanalysis]} {analyze_drum_patterns 0}
 }
 
 
@@ -7289,6 +7267,7 @@ proc drumroll_qnotelines {} {
     global piano_vert_lines
     global piano_qnote_offset
     global vspace
+    global df
     set p .drumroll
     $p.canx delete all
     set bounding_box [$p.can bbox all]
@@ -7312,7 +7291,7 @@ proc drumroll_qnotelines {} {
         for {set i $piano_qnote_offset} {$i < $midilength} {incr i $txspace} {
             set ix1 [expr $i/$drumxscale]
             if {$ix1 < 0} continue
-            $p.canx create text $ix1 5 -text [expr $piano_vert_lines*int($i/$vspace)]
+            $p.canx create text $ix1 11 -font $df -text [expr $piano_vert_lines*int($i/$vspace)]
         }
     }
 }
@@ -7883,6 +7862,7 @@ the number of percussion instruments.
 
 
 proc analyze_drum_patterns {simple} {
+# only simple = 0 is supported in the user interface
 global df
 global ppqn
 global midilength
@@ -7914,18 +7894,26 @@ if {[winfo exists $d] == 0} {
   label $d.4a  -font $df
   label $d.5 -text "tatum entropy" -font $df
   button $d.5a -font $df
+  tooltip::tooltip $d.5a "Show histogram of all distinct tatums"
   label $d.6 -text "distinct beats" -font $df
   label $d.6a -font $df
   label $d.7 -text "beat entropy" -font $df
   button $d.7a -font $df
+  tooltip::tooltip $d.7a "Show histogram of all distinct beats"
   label $d.8 -text "distinct bars" -font $df
   label $d.8a -font $df
   label $d.9 -text "bar entropy" -font $df
   button $d.9a -font $df
+  tooltip::tooltip $d.9a "Show histogram of all distinct bars"
   button $d.10 -text "drum irregularity" -font $df
+  tooltip::tooltip $d.10 "Plot the tatum irregularity"
   button $d.11 -text "postscript file" -command {make_postscript_file  .drumanalysis.c} -font $df
+  tooltip::tooltip $d.11 "Save the current plot
+in a PostScript file."
   button $d.12 -text help -command {show_message_page $hlp_drumanalysis word} -font $df
   button $d.10a -text "map" -font $df
+  tooltip::tooltip $d.10a "Maps all the distinct bars
+ for each percussion instrument"
   grid $d.1 $d.1a
   grid $d.2 $d.2a
   grid $d.3 $d.3a
@@ -8569,7 +8557,8 @@ proc midi_statistics {choice source} {
         set note [lindex $line 4]
         set vel [lindex $line 5]
         switch $choice {
-            pitch {set histogram($note) [expr $histogram($note)+1]}
+            pitch {if {$c == 10} continue
+                  set histogram($note) [expr $histogram($note)+1]}
             velocity {set histogram($vel) [expr $histogram($vel)+1]}
             duration {set index [expr int(($end - $begin)*32/$ppqn)]
                 if {$index > 127} {set index 127}
@@ -8955,6 +8944,7 @@ proc pdf_entropy {pdf} {
     set entropy 0.0
     set total 0.0
     foreach p $pdf {set total [expr $total + $p]}
+    if {$total == 0.0} {return -1}
     foreach p $pdf {
       set p [expr $p / $total]
       if {$p < 0.00001} continue
@@ -11580,7 +11570,7 @@ bind . <Alt-g> get_genre
 
 proc getGeometryOfAllToplevels {} {
   global midi
-  set toplevellist {"." ".notice" ".progsel" ".piano" ".chordstats"
+  set toplevellist {"." ".notice" ".console" ".progsel" ".piano" ".chordstats"
                ".colors" ".chordview" ".chordgram" ".midistructure" 
                ".drumsel" ".drumroll" ".drumanalysis" ".pitchpdf"
                ".velocitypdf" ".onsetpdf" ".offsetpdf"  ".durpdf" ".pitchclass"
@@ -11892,6 +11882,7 @@ global df
 global pianoresult
 global exec_out
 global midilength
+global cleanData
 # It is necessary to use global variables in order to pass these
 # variables to the procedures called by the button controls.
 global patindexdict
@@ -11907,6 +11898,7 @@ global bar_rhythm
 global beatsperbar
 global last_dictview
 
+set cleanData 0
 entropyInterface 
 
 # copyMidiToTmp deals with the selected tracks and time interval
@@ -12876,7 +12868,7 @@ pointer from left to right over the region of interest while holding\
 down the left mouse button. You can also specify the midi channels\
 of interest by checking the appropriate check buttons.\n\n\
 This representation is still somewhat experimental. The configuration menu,\
-allows you to change some the way it is displayed.
+allows you to change the way it is displayed.
 
 "
 
@@ -13995,8 +13987,6 @@ global midi
 set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -mftext"
 catch {eval $cmd} mftextresults
 set exec_out $mftextresults
-#puts "cmd = $cmd"
-#puts "exec_out = $exec_out"
 if {[string first "no such" $exec_out] >= 0} {puts "no such file $midi(path_midi2abc)"}
 set mftextresults [string map {\" {} \{ {} \} {}} $mftextresults]
 set midicommands [split $mftextresults \n]
@@ -14816,7 +14806,7 @@ adjust how the notes are played. For example, the loudness\
 of the instrument is controlled by either or both the\
 volume and expression variables. Many of the other control\
 change parameters presented here are not applicable\
-without a specific MIDI synthesizer. They are displayed
+without a specific MIDI synthesizer. They are displayed\
 here because they are in the MIDI file. 
 "
 
