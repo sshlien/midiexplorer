@@ -5,7 +5,8 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.33 2022-07-12 13:20" 
+set midiexplorer_version "MidiExplorer version 3.40 2022-07-17 09:05" 
+set briefconsole 1
 
 # Copyright (C) 2019-2021 Seymour Shlien
 #
@@ -620,7 +621,7 @@ proc midiInit {} {
 
         set midi(path_midiplay) "C:/Program Files/Windows Media Player/wmplayer.exe"
         set midi(midiplay_options) "/play /close"
-        set midi(browser) "C:/Program Files/internet explorer/iexplorer.exe"
+        set midi(browser) " C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
         } else {
         set midi(path_midi2abc) midi2abc
         set midi(path_midicopy) midicopy
@@ -908,6 +909,8 @@ proc positionWindow {window} {
 set font_family [font actual helvetica -family]
 set font [font create -family $font_family -size 11]
 
+global exec_out
+set exec_out "empty"
 
 package require Tk
 
@@ -1048,6 +1051,7 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
 	    -command duckduckgo_search
         $ww add command -label "pgram" -font $df -command pgram_window -accelerator "ctrl-p"
         $ww add command -label keymap -font $df -command {keymap none} -accelerator "ctrl-y"
+	$ww add command -label chordgram -font $df -command {chordgram_plot none} -accelerator "ctrl-h"
 	$ww add command -label "midi structure" -font $df -accelerator "ctrl-s"\
             -command {midi_structure_display}
         $ww add command  -label "tableau" -font $df \
@@ -1220,6 +1224,8 @@ entry .treebrowser.menuline2.name -width 16 -textvariable findname -font $df
 
 bind .treebrowser.menuline2.name <Return> {findChildInTree .treebrowser $findname}
 
+button .treebrowser.menuline2.random -text "random pick" -font $df -command {randomPick .treebrowser}
+
 tooltip::tooltip .treebrowser.menuline2.jump "If you know the name of a subfolder
 in this directory, it may be more practical
 to jump to this location rather than scrolling
@@ -1256,7 +1262,14 @@ down the control key on your keyboard. (You can also deselect\
 a track in the same manner.) Holding the shift key down will\
 permit you to select a contiguous group of tracks. Some of the\
 button functions like play, rhythm and pitch  analysis may only act on the\
-selected tracks.
+selected tracks. The selected channels/tracks is also linked\
+to the midistructure window (described elsewhere). When you\
+left click the play button, it will play the selected region and\
+channel/tracks in the midistructure window even though the\
+midistructure window is not exposed. If you right click the\
+play button, then the selection in the midistructure window will\
+be ignored.
+
 
 Other help instructions will appear when you click the help button,\
 or help menu item in other windows. More detailed user's guide\
@@ -1299,7 +1312,7 @@ is still exposed when you exit midiexplorer.
 # pack everything and set binding to quick keys
 set ww $w.menuline
 pack $ww.file  $ww.view $ww.play $ww.rhythm $ww.pitch  $ww.database $ww.abc $ww.settings $ww.internals $ww.help -anchor w -side left
-pack .treebrowser.menuline2.jump .treebrowser.menuline2.name -side left
+pack .treebrowser.menuline2.jump .treebrowser.menuline2.name .treebrowser.menuline2.random -side left
 pack .treebrowser.menuline -anchor w
 pack .treebrowser.menuline2 -anchor w
 
@@ -1314,6 +1327,7 @@ bind . <Control-t> {detailed_tableau}
 bind . <Control-o> google_search
 bind . <Control-u> duckduckgo_search
 bind . <Control-a> aftertouch
+bind . <Control-h> {chordgram_plot none}
 bind . <Alt-c> {catch console show}
 }
 
@@ -1632,6 +1646,17 @@ foreach node $nodes {
  }
 }
 
+proc randomPick {w} {
+# in case the root folder is not there
+restore_root_folder 
+set nodes [$w.tree children [$w.tree children {}]]
+set nnodes [llength $nodes]
+set pick [expr int(rand()*$nnodes)]
+set node [lindex $nodes $pick]
+$w.tree see $node
+}
+
+
 proc TreeBrowserSortBy {col direction} {
     set data {}
     foreach row [.treebrowser.tree children {}] {
@@ -1801,6 +1826,31 @@ for {set i 0} {$i < 17} {incr i} {
   set midichannels($i) 0
   }
 set midispeed 1.0
+}
+
+proc invertMidiTracksAndChannels {} {
+global midi
+global miditracks
+global midichannels
+set w .midistructure.leftbuttons
+if {$midi(midishow_sep) == "track"} {
+ for {set i 2} {$i <40} {incr i} {
+  set miditracks($i) [expr 1 - $miditracks($i)]
+  if {$miditracks($i) && [winfo exists $w.$i] } {
+      $w.$i select
+      } elseif {[winfo exists $w.$i] && $miditracks($i) == 0 } {
+      $w.$i deselect}
+  }
+ }
+if {$midi(midishow_sep) == "chan"} {
+ for {set i 1} {$i < 17} {incr i} {
+  set midichannels($i) [expr 1 - $midichannels($i)] 
+  if {$midichannels($i) && [winfo exists $w.$i] } {
+      $w.$i select
+      } elseif {[winfo exists $w.$i] && $midichannels($i) == 0} {
+      $w.$i deselect}
+  }
+ }
 }
 
 clearMidiTracksAndChannels
@@ -2460,7 +2510,7 @@ pack $w.blk
 label $w.header.filename -text "" -font $df -width 60
 pack  $w.header.filename -side left -anchor w
 button $w.blk.left.help -text help -font $df -width 9 -command {show_message_page $hlp_channel9 w}
-button $w.blk.left.play -text play -font $df -width 9 -command play_exposed
+button $w.blk.left.play -text play -font $df -width 9 -command perc_play_exposed
 spinbox $w.blk.left.speed -from 0.2 -to 1.2 -increment 0.1 -font $df -width 4 -textvariable midi(percspeed)
 frame $w.blk.left.mag
 label $w.blk.left.maglab -text scale -font $df
@@ -2650,6 +2700,7 @@ compute_drum_pattern
 
 proc copy_midi_to_tmp_for_drums {fbeat tbeat} {
     global midi
+    global exec_out
     if {![file exist $midi(path_midicopy)]} {
        set msg "cannot find $midi(path_midicopy). Install midicopy \
 from the abcMIDI package, click settings and set the path to its location."
@@ -2660,12 +2711,12 @@ from the abcMIDI package, click settings and set the path to its location."
     append cmd " -frombeat $fbeat -tobeat $tbeat -chns 10 -speed $midi(percspeed)"
     append cmd " [list $midi(midifilein)] tmp.mid"
     catch {eval $cmd} midicopyresult
-    set exec_out "$cmd\n $midicopyresult\n"
+    set exec_out "percMap - play_exposed\n\n$cmd\n $midicopyresult\n"
     return $midicopyresult
 }
 
 
-proc play_exposed {} {
+proc perc_play_exposed {} {
 global midi
 global lastBeat
 #set scrollregion [.channel9.blk.right.can cget -scrollregion]
@@ -2733,7 +2784,7 @@ set pianoresult [split $pianoresult \n]
 set ntrks [lindex [lindex $pianoresult 0] 2]
 if {$midi(midishow_sep) == "track"} {
    incr ntrks} else {
-   set ntrks 16
+   set ntrks 1
    }
 
 set ppqn [lindex [lindex $pianoresult 0] 3]
@@ -3195,7 +3246,7 @@ set lastTableau "pitch"
 
 
 set chanlist [list]
-for {set i 1} {$i <= $ntrks} {incr i} {
+for {set i 1} {$i <= 16} {incr i} {
   if {![info exist activechan($i)]} continue
   if {$activechan($i) > 0 && $i != 10} {lappend chanlist $i}
   }
@@ -3305,7 +3356,7 @@ if {[llength $limits] > 1} {
   set cmd "exec [list $midi(path_midicopy)]  $options"
   lappend cmd  $midi(midifilein) tmp.mid
   catch {eval $cmd} miditime
-  append exec_out "$cmd\n\$miditime"
+  append exec_out "tableau_abc\n\n$cmd\n\$miditime"
 
   set title [file root [file tail $midi(midifilein)]]
   set options ""
@@ -3635,7 +3686,7 @@ proc setpath {path_var} {
 proc locate_abcmidi_executables {} {
     global midi
     global exec_out
-    set exec_out ""
+    set exec_out "locate_abcmidi_executables\n\n"
     set dirname [tk_chooseDirectory]
     if {[string length $dirname] < 1} return
     set midi(dir_abcmidi) $dirname
@@ -3646,7 +3697,7 @@ proc locate_abcmidi_executables {} {
             set filename $exec
             set midi(path_$exec) $dirname/$exec
         } else {
-            append exec_out "cannot find $dirname/$exec or $dirname/$exec.exe\n"            puts $exec_out
+            append exec_out "cannot find $dirname/$exec or $dirname/$exec.exe\n"
         }
      
     }
@@ -4837,6 +4888,7 @@ proc determineChordSequence {source} {
     global midilength
     global exec_out
     global cleanData
+    global briefconsole
 
     set list_of_chords [dict create]
     #Force loadMidiFile in case notegram alters pianoresult
@@ -4866,7 +4918,11 @@ proc determineChordSequence {source} {
       set cleanData 0
       set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
       catch {eval $cmd} pianoresult
-      set exec_out [append exec_out "determineChordSeq:\n\n$cmd\n\n $pianoresult"]
+      if {$briefconsole} {
+         set exec_out "determineChordSeq:\n\n$cmd\n\n [string range $pianoresult 0 200]..."
+      } else {
+         set exec_out "determineChordSeq:\n\n$cmd\n\n $pianoresult"
+      }
       update_console_page
       set nrec [llength $pianoresult]
       set midilength [lindex $pianoresult [expr $nrec -1]]
@@ -5516,6 +5572,7 @@ below.
 Like the pianoroll, the midistructure allows you to select\
 tracks or channels using the checkbuttons. Specific actions\
 are applied to only the checked items unless none are checked.\
+The invert button reverses all the checked items.\
 You can also select a specific time interval by\
 by holding down the left mouse button and sweeping the cursor\
 over the desired interval.
@@ -5590,6 +5647,8 @@ proc midi_structure_window {} {
   tooltip::tooltip $wm.options "Controls the behaviour of the midistructure
 function"
 
+  button $wm.invert -text invert -font $df -command invertMidiTracksAndChannels
+
   button $wm.play -text play -font $df -command midistructure_play
   tooltip::tooltip $wm.play "play entire selection or selected\nchannels/tracks\
  according to options."
@@ -5631,7 +5690,7 @@ function"
   $w.fileinent xview moveto 1.0
   bind $w.fileinent <Return> {focus .midistructure.file}
   grid $w.fileinent -columnspan 2
-  pack $wm.options $wm.play $wm.speedlabel $wm.speed $wm.save $wm.plot $wm.abc $wm.help -side left
+  pack $wm.options $wm.invert $wm.play $wm.speedlabel $wm.speed $wm.save $wm.plot $wm.abc $wm.help -side left
   grid $wm -columnspan 2 -sticky nw
     
 
@@ -5639,7 +5698,7 @@ function"
   for {set i 2} {$i <40} {incr i} {
     checkbutton .midistructure.leftbuttons.$i -text "trk$i" -variable miditracks($i) -font $df -command {updateAllWindows midistructure}
     }
-  for {set i 0} {$i <17} {incr i} {
+  for {set i 1} {$i <17} {incr i} {
     checkbutton .midistructure.leftbuttons.c$i -text "chan$i" -variable midichannels($i) -font $df -command {updateAllWindows midistructure}
     }
   set yspacing [winfo reqheight .midistructure.leftbuttons.2]
@@ -5794,7 +5853,8 @@ proc show_prog_structure {} {
 
   if {$midi(midishow_sep) == "track" && $ntrks == 1} {
      .midistructure.txt configure -text "Type 0 midi file. Cannot separate by track" -foreground red
-     set midi(midishow_sep) "channel"
+     set midi(midishow_sep) "chan"
+     return
      }
 
 
@@ -6155,7 +6215,6 @@ proc compute_pianoroll {} {
           set chanprog([lindex $line 2]) [lindex $line 3]
         } elseif {[string match [lindex $line 0] "Header"]} {
           set midifiletype [lindex $line 1]
-          #set miditracks [lindex $line 2]
           .piano.txt configure -text [format "midi file type %d" $midifiletype] -foreground Black -font $df
         } 
         if {$midifiletype == 0} {set midi(midishow_sep) "chan"} 
@@ -12465,11 +12524,10 @@ set searchstring [string map {{ } + & +} $searchstring]
 #puts $searchstring
 set s "https://www.google.ca/search?q=$searchstring"
 #puts $s
-set cmd "exec [list $midi(browser)] $s &"
+set cmd "exec [list $midi(browser)] [list $s] &"
 catch {eval $cmd} result
-set exec_out $cmd
+set exec_out $cmd\n$result
 update_console_page
-#puts $result
 }
 
 proc duckduckgo_search {} {
@@ -13098,6 +13156,7 @@ global exec_out
 global sorted_pianoresult
 global beats_per_pixel
 global pxlbx pxrbx
+global briefconsole
 
 set pgraph .pgram.c
 $pgraph delete all
@@ -13123,7 +13182,11 @@ set sorted_pianoresult [lsort -command compare_onset $pianoresult]
 set nrec [llength $pianoresult]
 set midilength [lindex $pianoresult [expr $nrec -1]]
 set nbeats [expr $midilength/$ppqn]
-set exec_out compute_pgram:\n$cmd\n\n$pianoresult
+if {$briefconsole} {
+  set exec_out compute_pgram:\n$cmd\n\n[string range $pianoresult 0 200]...
+  } else {
+  set exec_out compute_pgram:\n$cmd\n\n$pianoresult
+  }
 
 Graph::alter_transformation $pxlbx $pxrbx $ybbx $ytbx 0.0 $nbeats 0.0 110.0 
 set beats_per_pixel [expr $nbeats/double($pxrbx - $pxlbx)]
@@ -13526,6 +13589,7 @@ proc keymap {source} {
     global sharpflatnotes
     global df
     global cleanData
+    global briefconsole
 
     #puts "keymap $midi(keySpacing)"
     set sharpflatnotes  {C C# D Eb E F F# G G# A Bb B}
@@ -13552,7 +13616,12 @@ set the path to a midi file."
    set cleanData 0
    set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
     catch {eval $cmd} pianoresult
-    set exec_out [append exec_out "keymap:\n\n$cmd\n\n $pianoresult"]
+    if {$briefconsole} {
+      set exec_out "keymap:\n\n$cmd\n\n [string range $pianoresult 0 200]..."
+      } else {
+      set exec_out "keymap:\n\n$cmd\n\n $pianoresult"
+      }
+
     set pianoresult [split $pianoresult \n]
     set ppqn [lindex [lindex $pianoresult 0] 3]
     if {$midi(debug)} {puts "ppqn = $ppqn"}
@@ -13584,6 +13653,7 @@ set the path to a midi file."
         .keystrip.c bind $keysig <Enter> "keyDescriptor $keysig %W %x %y"
         bind .keystrip.c  <1> "show_histogram %W %x %y"
          }
+  update_console_page
   }
 
 
