@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.40 2022-07-17 09:05" 
+set midiexplorer_version "MidiExplorer version 3.44 2022-07-22 06:10" 
 set briefconsole 1
 
 # Copyright (C) 2019-2021 Seymour Shlien
@@ -1077,7 +1077,7 @@ the selected midi file.  The console
 is useful for debugging this program
 when it is not running as expected."
 
-button $w.menuline.play -text play -command play_selected_lines -font $df -state disabled
+button $w.menuline.play -text play -command "play_selected_lines none" -font $df -state disabled
 #bind $w.menuline.play <3> {playmidifile 0}
 bind $w.menuline.play <3> {play_and_exclude_selected_lines}
 
@@ -2781,12 +2781,6 @@ set nrec [llength $pianoresult]
 set midilength [lindex $pianoresult [expr $nrec -1]]
 set pianoresult [split $pianoresult \n]
 
-set ntrks [lindex [lindex $pianoresult 0] 2]
-if {$midi(midishow_sep) == "track"} {
-   incr ntrks} else {
-   set ntrks 1
-   }
-
 set ppqn [lindex [lindex $pianoresult 0] 3]
 set lastbeat [expr $midilength/$ppqn]
 #puts "nrec = $nrec midilength = $midilength lastbeat = $lastbeat"
@@ -4366,14 +4360,19 @@ proc piano_zoom {} {
 
 proc piano_unzoom {factor} {
     global pianoPixelsPerFile
+    set displayregion [winfo width .piano.can]
+    set PixelsPerFile [expr $displayregion -8]
     set pianoPixelsPerFile [expr $pianoPixelsPerFile /$factor]
+    if {$pianoPixelsPerFile < $PixelsPerFile} {
+       set factor [expr $PixelsPerFile/$pianoPixelsPerFile]
+       set pianoPixelsPerFile $PixelsPerFile
+    }
     set xv [.piano.can xview]
     set xvl [lindex $xv 0]
     set xvr [lindex $xv 1]
     set growth [expr ($factor - 1.0)*($xvr - $xvl)]
     set xvl [expr $xvl - $growth/2.0]
     if {$xvl < 0.0} {set xv 0.0}
-    #set xv [expr $xv/$factor]
     compute_pianoroll
     piano_horizontal_scroll $xvl
     update_displayed_pdf_windows .piano.can
@@ -5078,6 +5077,7 @@ proc chordgram_plot {source} {
      button .chordgram.head.zoom -text zoom -command zoom_chordgram -font $df
      button .chordgram.head.unzoom -text unzoom -command unzoom_chordgram -font $df 
      button .chordgram.head.save -text "save data" -font $df -command saveChordgramData
+  tooltip::tooltip .chordgram.head.save  "Save chords list in\n midiexplorer_home/chordgram.txt"
      button .chordgram.head.help -text help -font $df -command {show_message_page $hlp_chordgram word}
      pack  .chordgram.head.2 .chordgram.head.play .chordgram.head.zoom .chordgram.head.unzoom .chordgram.head.save .chordgram.head.help -side left -anchor w
      pack  .chordgram.head -side top -anchor w 
@@ -5157,8 +5157,8 @@ switch $source {
     }
   default {
     if {[info exist fbeat]} {
-     set start $fbeat
-     set stop $tbeat
+     set start 0
+     set stop $lastbeat
      }
    }
   }
@@ -5370,6 +5370,7 @@ for {set j 0} {$j <$seqlength} {incr j} {
   puts $outhandle "$j\t$seconds\t$chord"
   }
 close $outhandle
+tk_messageBox -message "saved in midiexplorer_home/chordgram.txt"  -type ok
 }
 
 
@@ -6137,7 +6138,7 @@ proc compute_pianoroll {} {
     global midilength
     global pianoPixelsPerFile
     global pianoresult pianoxscale
-    global activechan
+    #global activechan
     global ppqn
     global piano_vert_lines
     global chanprog
@@ -6645,7 +6646,7 @@ proc midistructure_play {} {
 global midi
 switch $midi(playmethod) {
 	1 {focus_and_play}
-	2 {play_selected_lines}
+	2 {play_selected_lines midistructure}
 	3 {play_and_exclude_selected_lines}
         }
 }
@@ -6705,9 +6706,9 @@ update_console_page
 }
 
 
-proc play_selected_lines {} {
+proc play_selected_lines {source} {
 global midi
-copyMidiToTmp none
+copyMidiToTmp $source
 play_midi_file $midi(outfilename)
 update_console_page
 }
@@ -6758,7 +6759,7 @@ if {[string length $option] > 0} {
   set cmd "exec [list $midi(path_midicopy)]  $option"
   lappend cmd  $midi(midifilein) $midi(outfilename)
   catch {eval $cmd} miditime
-  append exec_out "play_selected_lines:\n$cmd\n\n$miditime"
+  set exec_out "play_selected_lines: from $source\n$cmd\n\n$miditime"
   } else {
   set cmd "file copy $midi(midifilein) $midi(outfilename)"
   file copy $midi(midifilein) $midi(outfilename)
@@ -7362,7 +7363,7 @@ proc compute_drumroll {} {
     global drumPixelsPerFile
     global pianoresult
     global drumxscale
-    global activechan
+    #global activechan
     global ppqn
     global piano_vert_lines
     global drumstrip rdrumstrip
@@ -7566,14 +7567,19 @@ proc drumroll_zoom {} {
 
 proc drumroll_unzoom {factor} {
     global drumPixelsPerFile
+    set displayregion [winfo width .drumroll.can]
+    set PixelsPerFile [expr $displayregion -8]
     set drumPixelsPerFile [expr $drumPixelsPerFile /$factor]
+    if {$drumPixelsPerFile < $PixelsPerFile} {
+       set factor [expr $PixelsPerFile/$drumPixelsPerFile]
+       set drumPixelsPerFile $PixelsPerFile
+    }
     set xv [.drumroll.can xview]
     set xvl [lindex $xv 0]
     set xvr [lindex $xv 1]
     set growth [expr ($factor - 1.0)*($xvr - $xvl)]
     set xvl [expr $xvl - $growth/2.0]
     if {$xvl < 0.0} {set xv 0.0}
-    #set xv [expr $xv/$factor]
     compute_drumroll
     drumroll_horizontal_scroll $xvl
     update_drumroll_pdfs
