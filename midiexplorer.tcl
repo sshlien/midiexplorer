@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.44 2022-07-22 06:10" 
+set midiexplorer_version "MidiExplorer version 3.49 2022-08-17 14:55" 
 set briefconsole 1
 
 # Copyright (C) 2019-2021 Seymour Shlien
@@ -2911,6 +2911,7 @@ if {![winfo exist $w]} {
   $w.header.dot.items add radiobutton -label 2 -font $df -command {dotmod 2}
   $w.header.dot.items add radiobutton -label 3 -font $df -command {dotmod 3}
   $w.header.dot.items add radiobutton -label 4 -font $df -command {dotmod 4}
+  $w.header.dot.items add radiobutton -label 5 -font $df -command {dotmod 5}
 
  menubutton $w.header.plot -text plot -menu $w.header.plot.items -font $df
   menu $w.header.plot.items -tearoff 0
@@ -2951,8 +2952,9 @@ if {![winfo exist $w]} {
 
   button $w.header.abc -text abc -font $df -command tableau_abc
  
-  button $w.header.help -text help -font $df -command {show_message_page $hlp_tableau word}
-  pack $w.header.play $w.header.dot $w.header.circle $w.header.plot $w.header.abc  $w.header.help -side left -anchor nw
+  button $w.header.help -text help -font $df -command {show_message_page $hlp_tableau word} -width 4
+  label $w.header.msg -text "" -font $df -relief flat
+  pack $w.header.play $w.header.dot $w.header.circle $w.header.plot $w.header.abc  $w.header.help $w.header.msg -side left -anchor nw
   pack .ptableau.status
   pack $w.header -side top -anchor nw
   pack .ptableau.scr -fill x -side bottom 
@@ -2964,6 +2966,7 @@ if {![winfo exist $w]} {
   bind .ptableau.frm.can <Double-Button-1> tableau_ClearMark
 
   }
+  .ptableau.status configure -text "$midi(midifilein)"
 }
 
 proc tableau_Button1Press {x y} {
@@ -3261,16 +3264,16 @@ for {set i 1} {$i<17} {incr i} {
 # outline channel bands
 set i 0
 foreach chan $chanlist {
-   set iy2 [expr $i*50]
+   set iy2 [expr ($i+1)*50]
    set iy1 [expr $iy2 - 50] 
 # distinguish the tracks by different shade of gray background
    if {[expr $i % 2] ==  1} {
-     .ptableau.frm.can create rectangle 0 $iy1 10000 $iy2 -fill #151505 -width 0
+     .ptableau.frm.can create rectangle 0 $iy1 10000 $iy2 -fill #151505 -width 0 -tag row$i
    } else {
-     .ptableau.frm.can create rectangle 0 $iy1 10000 $iy2 -fill #05050A -width 0
+     .ptableau.frm.can create rectangle 0 $iy1 10000 $iy2 -fill #05050A -width 0 -tag row$i
    }
-     .ptableau.frm.can bind r$i <Enter> "highlightTableauStrip $i"
-     .ptableau.frm.can bind r$i <Leave> "unhighlightTableauStrip $i"
+     .ptableau.frm.can bind row$i <Enter> "highlightTableauStrip $i"
+     .ptableau.frm.can bind row$i <Leave> "unhighlightTableauStrip $i"
    incr i
 }
 
@@ -3292,13 +3295,22 @@ displayBeatGrid $tableauHeight 16 4 1 .ptableau.frm.can
 
 proc highlightTableauStrip {i} {
 global tableauRowColor
+global chanlist
+global chn2prg
+global mlist
+global df
+set chan [lindex $chanlist $i]
+set p $chn2prg($chan)
+set p [lindex $mlist $p]
 set tableauRowColor [.ptableau.frm.can itemcget r$i -fill]
 .ptableau.frm.can itemconfigure r$i -fill white 
+.ptableau.frm.header.msg configure -text $p -relief flat
 }
 
 proc unhighlightTableauStrip {i} {
 global tableauRowColor
 .ptableau.frm.can itemconfigure r$i -fill $tableauRowColor 
+.ptableau.frm.header.msg configure -text ""
 }
 
 
@@ -3737,10 +3749,6 @@ if {[winfo exist $w]} {
   }
 toplevel $w
 positionWindow $w
-#label $w.lab4 -text "segment gap" -font $df
-#entry $w.segmentgap -width 2 -textvariable midi(segment_gap) -font $df
-#label $w.lab4a -text "beats" -font $df
-#grid $w.lab4 $w.segmentgap $w.lab4a -sticky nw
 radiobutton $w.track -text "separate by track" -font $df\
           -value track -variable midi(midishow_sep)\
           -command {zero_trksel
@@ -4147,7 +4155,7 @@ proc piano_window {} {
     scale $p.speed -length 100 -from 0.1 -to 3.0 -orient horizontal\
  -resolution 0.05 -width 10 -variable midispeed
     set midispeed 1.0
-    label $p.speedlabel -text speed -font $df
+    label $p.speedlabel -text speed -font $df -relief flat -pady 1
     button $p.help -text help -relief flat -font $df\
             -command {show_message_page $hlp_pianoroll word}
     
@@ -13966,7 +13974,7 @@ proc show_data_page {text wrapmode clean} {
 }
 
 
-set abcmidilist {path_abc2midi 4.26\
+set abcmidilist {path_abc2midi 4.74\
             path_midi2abc 3.52\
             path_midicopy 1.38\
             path_abcm2ps 8.14.6}
