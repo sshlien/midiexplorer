@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.49 2022-08-17 14:55" 
+set midiexplorer_version "MidiExplorer version 3.57 2022-09-16 19:05" 
 set briefconsole 1
 
 # Copyright (C) 2019-2021 Seymour Shlien
@@ -448,6 +448,7 @@ proc ::tooltip::enableCanvas {w args} {
 
 proc colorScheme {} {
 global midi
+global df
 set w .colors
 catch {destroy $w}
 toplevel $w
@@ -455,13 +456,13 @@ positionWindow $w
 wm title $w "Listbox Demonstration (colors)"
 wm iconname $w "Listbox"
 
-label $w.msg  -wraplength 4i -justify left -text "A listbox containing several color names is displayed\
+label $w.msg  -wraplength 4i -justify left -font $df -text "A listbox containing several color names is displayed\
 below, along with a scrollbar.  You can scan the list either using the scrollbar or by dragging in the \
 listbox window with button 2 pressed.  If you double-click button 1 on a color, then the application's \
 color palette will be set to match that color"
 pack $w.msg -side top
 frame $w.action
-button $w.action.default -text "restore defaults" -command {
+button $w.action.default -text "restore defaults" -font $df -command {
 	set midi(colorscheme) ""
         tk_setPalette grey90}
 pack $w.action
@@ -472,7 +473,7 @@ pack $w.frame -side top -expand yes -fill y
 
 scrollbar $w.frame.scroll -command "$w.frame.list yview"
 listbox $w.frame.list -yscroll "$w.frame.scroll set" \
-	-width 20 -height 16 -setgrid 1
+	-width 20 -height 16 -setgrid 1 -font $df
 pack $w.frame.list $w.frame.scroll -side left -fill y -expand 1
 
 bind $w.frame.list <Double-1> {
@@ -971,13 +972,11 @@ tooltip::tooltip $ww -index 1 "extract the information of the last
 midi file that you viewed."
 tooltip::tooltip $ww -index 2 "restores the last root folder in\nthe directory structure viewer"
 tooltip::tooltip $ww -index 3 "recent folders open"
-tooltip::tooltip $ww -index 4 "clear list of recent folders that
-were opened."
-tooltip::tooltip $ww -index 5 "specify the paths to the executables
-that this program requires"
-tooltip::tooltip $ww -index 6 "pick the font and font size you
-want to use for this program."
-tooltip::tooltip $ww -index 7 "activate or deactivate tooltips"
+tooltip::tooltip $ww -index 4 "opens a selector of midi files
+of specific genres."
+tooltip::tooltip $ww -index 5 "shut down this program remembering
+some of your choices."
+tooltip::tooltip $ww -index 6 "pop ups a window with brief instructions"
 
 tooltip::tooltip .treebrowser.menuline.file "This menu contains functions to
 set the midi directory, restore states,
@@ -1024,6 +1023,9 @@ $ww add checkbutton -label "remember locations of windows" -font $df\
 $ww add command -label "clear recents" -font $df -command deleteHistory
 
 $ww add command -label "help" -font $df -command {show_message_page $hlp_settings word}
+tooltip::tooltip .treebrowser.menuline.settings "This menu contains functions to
+configure the colours, fonts and other 
+characteristics of this program."
 
 
 set ww $w.menuline.internals.items
@@ -1038,6 +1040,8 @@ $ww add command -label "mftext of output midi file" -font $df \
 $ww add command -label "save output midi file" -font $df \
                  -command save_output_midi_file
 $ww add command -label "contents of midiexplorer_home" -command dirhome -font $df
+tooltip::tooltip .treebrowser.menuline.internals "This menu contains functions to
+expose how this program operates"
 
 
 #        view menubutton
@@ -1235,7 +1239,11 @@ entry box followed by a return."
 
 
 #        main help button
-button .treebrowser.menuline.help -text help -command {show_message_page $hlp_midiexplorer word} -font $df
+menubutton .treebrowser.menuline.help -text help  -font $df -borderwidth 3 -relief ridge -menu .treebrowser.menuline.help.actions
+menu .treebrowser.menuline.help.actions -tearoff 0
+.treebrowser.menuline.help.actions add command -label "Context Help" -command {show_message_page $hlp_midiexplorer word} -font $df
+.treebrowser.menuline.help.actions add command -label "Web Help" -command webhelp -font $df
+
 
 set hlp_midiexplorer "A long description of this program can be\
 found on https://midiexplorer.sourceforge.io/ .\n\n\
@@ -1251,9 +1259,9 @@ After selecting a midi directory and a midi file, a summary and\
 track by track (or channel by channel) description will appear\
 in the frames below and other buttons in the menubar will become\
 activated. The descriptors for the individual tracks\
-or channels list the number of notes, chords, average pitch, and\
-activity in this track or channel. You can sort the this data\
-by clicking on their respective headers.
+or channels list the number of notes, chords, the spread of the notes,\
+the average pitch, the  average note duration,  and other channels \
+commands . You can sort the this data by clicking on their respective headers.
 
 You can select particular channels or tracks\
 by clicking on them with your mouse pointer. Those tracks will\
@@ -1676,9 +1684,9 @@ proc TreeBrowserSortBy {col direction} {
 
 set w .tinfo
 frame $w 
-ttk::treeview $w.tree -columns {trk chn program notes activity pavg duration bends controls pressure } -show headings -height 14 -yscroll "$w.vsb set"
+ttk::treeview $w.tree -columns {trk chn program notes spread pavg duration bends controls pressure } -show headings -height 14 -yscroll "$w.vsb set"
 ttk::scrollbar $w.vsb -orient vertical -command ".tinfo.tree yview"
-foreach col {trk chn program notes activity pavg duration bends controls pressure} {
+foreach col {trk chn program notes spread pavg duration bends controls pressure} {
   $w.tree heading $col -text $col
   $w.tree heading $col -command [list TinfoSortBy $col 0]
   $w.tree column $col -width [expr [font measure $df $col] + 13]
@@ -2218,7 +2226,7 @@ proc list_keysigmod {} {
   }  
  
 
-proc get_trkinfo {channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount token} {
+proc get_trkinfo {channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount quietTime token} {
  global ppqn
  global pitchbendsplit
  upvar 1 $channel c
@@ -2229,9 +2237,11 @@ proc get_trkinfo {channel nnotes nharmony pmean duration pitchbendCount cntlpara
  upvar 1 $cntlparamCount cntlCount
  upvar 1 $pressureCount pressCount
  upvar 1 $pitchbendCount pbend
+ upvar 1 $quietTime qtime
  set c [lindex $token 1]
  set n [lindex $token 3]
  set h [lindex $token 4]
+ set qtime [lindex $token 9]
  set pavg [lindex $token 5]
  set pavg [expr $pavg/($n +$h)]
  set dur [lindex $token 6]
@@ -2337,6 +2347,7 @@ global channel2program
 global xchannel2program
 global channel_activity
 global activechan
+global lastpulse
 
 array unset activechan
 
@@ -2347,11 +2358,14 @@ set trknum 1
 set nlines 1
 foreach token $trkinfo(1) {
   if {[lindex $token 0] == "trkinfo"} {
-    get_trkinfo channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount $token
+    get_trkinfo channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount quietTime $token
     set activechan($channel) 1
     set totalnotes [expr $nnotes+$nharmony]
     set channel2program($channel) $xchannel2program($channel)
     set chan_action [lindex $channel_activity [expr $channel -1]]
+    set chan_spread [expr ($lastpulse - $quietTime)]
+    set chan_spread [expr $chan_spread/double($lastpulse)]
+    set chan_spread [format %5.3f $chan_spread]
     if {$channel == 10} {
       set prog [list drum channel]
     } else {
@@ -2359,7 +2373,7 @@ foreach token $trkinfo(1) {
       set prog [lindex $mlist $prog]
     }
     set outline "$trknum $channel [list $prog ]"
-    append outline " $nnotes/$totalnotes $chan_action $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
+    append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
     set id [$w.tree insert {} end -values $outline -tag fnt]
     incr nlines
     }
@@ -2377,6 +2391,7 @@ global channel_activity
 global ntrks
 global activechan
 global track2channel
+global lastpulse
 
 array unset activechan
 array unset track2channel
@@ -2388,11 +2403,14 @@ $w.tree delete [$w.tree children {}]
 for {set i 1} {$i <= $ntrks} {incr i} {
   foreach token $trkinfo($i) {
     if {[lindex $token 0] == "trkinfo"} {
-      get_trkinfo channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount $token
+      get_trkinfo channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount quietTime $token
       set activechan($channel) 1
       set track2channel($i) $channel
       set totalnotes [expr $nnotes+$nharmony]
       set chan_action [lindex $channel_activity [expr $channel -1]]
+      set chan_spread [expr ($lastpulse - $quietTime)]
+      set chan_spread [expr $chan_spread/double($lastpulse)]
+      set chan_spread [format %5.3f $chan_spread]
       set channel2program($channel) $xchannel2program($channel)
       if {$channel == 10} {
         set prog "drum channel"
@@ -2401,7 +2419,7 @@ for {set i 1} {$i <= $ntrks} {incr i} {
         set prog [lindex $mlist $prog]
       }
       set outline "$i $channel [list $prog ]"
-      append outline " $nnotes/$totalnotes $chan_action $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
+      append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
       set id [$w.tree insert {} end -values $outline -tag fnt]
       }
    }
@@ -3321,12 +3339,13 @@ global midichannels
 global exec_out
 set exec_out "playExposed\ncopyMidiToTmp $source\n"
 copyMidiToTmp $source
-if {![file exist $midi(path_midiplay)]} {
-     set msg "You need to specify the path to a program which plays
-midi files. The box to the right can contain any runtime options."
-     tk_messageBox -message $msg
-     return
-     }
+#if {![file exist midi(path_midiplay)]} {
+#     set msg "You need to specify the path to a program which plays
+#midi files. The box to the right can contain any runtime options."
+#     tk_messageBox -message $msg
+#     return
+#     }
+#     The executable may already be in the PATH environment.
 set cmd "exec [list $midi(path_midiplay)]"
 if {![file exist tmp.mid]} {
     set msg "Something is wrong. Midicopy should create a the tmp.mid
@@ -3535,6 +3554,14 @@ proc show_message_page {text wrapmode} {
     }
     raise $p .
 }
+
+proc webhelp {} {
+global midi
+set url "https://midiexplorer.sourceforge.io/"
+set cmd "exec [list $midi(browser)] $url &"
+eval $cmd
+}
+
 
 proc set_external_programs {} {
 global df
@@ -3924,12 +3951,17 @@ set hlp_pianoroll " The function will display the selected MIDI file in a piano\
         arrow, the associated channel or track checkbutton will appear\
         in red, and the parameters of this note\
         will appear in a short text line below the scroll bar of this display.\n\n\
-Hovering the mouse pointer over any of the channel/track checkbuttons will\
-highlight the notes of that track in red in the piano roll. (Note that those\
-notes may not be visible in the current view.) If you check one of those\
-buttons those notes will be highlighted in blue.\n\n\
-
-Note that if any of these functions\
+        It is best to zoom into a limited section of the midi file.\
+        The zoom and unzoom buttons will magnify or scale down the display.\
+        You can specify an area to zoom into by holding down the mouse left\
+        mouse button and sweeping an area. This area will be highlighted.\
+        (A double click will clear the highlighted area marker -- yellow stipple.)\
+        Clicking the zoom button will zoom into the highlighted area.\n\n\
+        Hovering the mouse pointer over any of the channel/track checkbuttons will\
+        highlight the notes of that track in red in the piano roll. (Note that those\
+        notes may not be visible in the current view.) If you check one of those\
+        buttons those notes will be highlighted in blue.\n\n\
+        Note that if any of these functions\
         do not seem to run correctly, you should click the console\
         button and view the messages.\n\n The program attempts to follow\
         the playing with a vertical red line based on the estimated duration\
@@ -3941,14 +3973,6 @@ Note that if any of these functions\
 	There is a speed control slider which allows you to adjust\
 	the tempo of the MIDI file. You must set it prior to playing\
 	the exposed music.\n\n\
-        It is best to zoom into a limited section of the midi file.\
-        The zoom and unzoom buttons will magnify or scale down the display.\
-        You can specify an area to zoom into by holding down the mouse left\
-        mouse button and sweeping an area. This area will be highlighted.\
-        (A double click will clear the highlighted area marker -- yellow stipple.)\
-        Clicking the zoom button will zoom into the highlighted area.\
-        Clicking the right mouse button while a zoom area is highlighted\
-        will send only the highlighted area to the MIDI player.\n\n\
         You may configure the program to either distinguish tracks\
         or channels. It is recommended that you separate the midi notes\
         by channel rather than by tracks. A sequence of checkbuttons\
@@ -3963,7 +3987,6 @@ Note that if any of these functions\
         notes may not be present in the particular scrolled region of\
         the display. In the case where the program assignment was\
         changed at a later time, only the last assignment is displayed.\n\n\
-
         It is possible to shift or change the spacing of the vertical quarter\
         note line indications by selecting the config/ppqn adjustment item.\
         This temporarily changes the ppqn value of the MIDI file which\
@@ -3976,8 +3999,8 @@ proc check_midi2abc_and_midicopy_versions {} {
     set result [getVersionNumber $midi(path_midi2abc)]
     #puts $result
     set err [scan $result "%f" ver]
-    set msg "You need midi2abc.exe version 3.52.\n"
-    if {$err == 0 || $ver < 3.54} { .info.txt insert insert $msg red
+    set msg "You need midi2abc.exe version 3.57.\n"
+    if {$err == 0 || $ver < 3.57} { .info.txt insert insert $msg red
                     return $msg}
     set result [getVersionNumber $midi(path_midicopy)]
     set err [scan $result "%f" ver]
@@ -5082,8 +5105,12 @@ proc chordgram_plot {source} {
      frame .chordgram.head
      checkbutton .chordgram.head.2 -text "circle of fifths" -variable midi(chordgram) -font $df -command "call_compute_chordgram $source"
      button .chordgram.head.play -text play -font $df -command {playExposed chordgram}
+  tooltip::tooltip .chordgram.head.play "play the highlighted area or
+ the exposed plot."
      button .chordgram.head.zoom -text zoom -command zoom_chordgram -font $df
+  tooltip::tooltip .chordgram.head.zoom  "zooms into the region that you highlighted."
      button .chordgram.head.unzoom -text unzoom -command unzoom_chordgram -font $df 
+  tooltip::tooltip .chordgram.head.unzoom  "zooms out to the full midi file."
      button .chordgram.head.save -text "save data" -font $df -command saveChordgramData
   tooltip::tooltip .chordgram.head.save  "Save chords list in\n midiexplorer_home/chordgram.txt"
      button .chordgram.head.help -text help -font $df -command {show_message_page $hlp_chordgram word}
@@ -9106,7 +9133,6 @@ proc plot_pitch_class_histogram {} {
             -width 2
     $pitchc create text 70 80 -text "entropy = $entropy"
     bind .pitchclass <Alt-p> {histogram_ps_output .pitchclass.c}
-    if {[winfo exist .notice]} {show_message_page $exec_out word}
 }
 
 proc annotate_group {g} {
@@ -9613,6 +9639,7 @@ proc mftextwindow {midifilein nofile} {
     global mfnotes mftouch mfcntl mfprog mfmeta
     set f .mftext
     if {[winfo exist $f]} {
+      $f.fillab configure -text  $midifilein  
       output_mftext [list $midifilein]
       raise $f .
       return
@@ -12445,16 +12472,17 @@ proc make_playlist_manager {} {
   global midi
   global playlistfiles
   global lastplayfile_item
+  global font df
 
   if {![winfo exist .playmanage]} {
     toplevel .playmanage
     positionWindow .playmanage
-    button .playmanage.help -text help -command {show_message_page $hlp_playlist word}
+    button .playmanage.help -font $df -text help -command {show_message_page $hlp_playlist word}
     pack .playmanage.help
     set f .playmanage.left
     frame $f
     pack $f -side left
-    listbox $f.list -yscrollcommand {.playmanage.left.ysbar set} -selectmode single 
+    listbox $f.list -yscrollcommand {.playmanage.left.ysbar set} -selectmode single -font $df
     scrollbar $f.ysbar -orient vertical -command {.playmanage.left.list yview}
     pack $f.ysbar -side right -fill y -in $f
     pack $f.list -fill both -expand y -in $f
@@ -12464,7 +12492,7 @@ proc make_playlist_manager {} {
     set f .playmanage.right
     frame $f
     pack $f -side left
-    listbox $f.list -yscrollcommand {.playmanage.right.ysbar set} -selectmode single
+    listbox $f.list -yscrollcommand {.playmanage.right.ysbar set} -selectmode single -font $df
     scrollbar $f.ysbar -orient vertical -command {.playmanage.right.list yview}
     pack $f.ysbar -side right -fill y -in $f
     pack $f.list -fill both -expand y -in $f
@@ -13974,8 +14002,8 @@ proc show_data_page {text wrapmode clean} {
 }
 
 
-set abcmidilist {path_abc2midi 4.74\
-            path_midi2abc 3.52\
+set abcmidilist {path_abc2midi 4.75\
+            path_midi2abc 3.56\
             path_midicopy 1.38\
             path_abcm2ps 8.14.6}
 
