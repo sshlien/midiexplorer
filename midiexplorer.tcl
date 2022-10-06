@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.57 2022-09-16 19:05" 
+set midiexplorer_version "MidiExplorer version 3.59 2022-09-18 17:00" 
 set briefconsole 1
 
 # Copyright (C) 2019-2021 Seymour Shlien
@@ -692,10 +692,12 @@ proc midiInit {} {
     set midi(player2) ""
     set midi(player3) ""
     set midi(player4) ""
+    set midi(player5) ""
     set midi(player1opt) ""
     set midi(player2opt) ""
     set midi(player3opt) ""
     set midi(player4opt) ""
+    set midi(player5opt) ""
     set midi(player_sel) 1
     set midi(playmethod) 1
     
@@ -809,6 +811,38 @@ proc WriteMidiExplorerIni {} {
     close $handle
 }
 
+proc set_midiplayer {} {
+global midi
+switch $midi(player_sel) {
+  1 {if {[string length $midi(player1)] > 1} {
+       set midi(path_midiplay) $midi(player1)
+       set midi(midiplay_options) $midi(player1opt)
+       }
+    }
+  2 {if {[string length $midi(player2)] > 1} {
+       set midi(path_midiplay) $midi(player2)
+       set midi(midiplay_options) $midi(player2opt)
+       }
+    }
+  3 {if {[string length $midi(player3)] > 1} {
+       set midi(path_midiplay) $midi(player3)
+       set midi(midiplay_options) $midi(player3opt)
+       }
+    }
+  4 {if {[string length $midi(player4)] > 1} {
+       set midi(path_midiplay) $midi(player4)
+       set midi(midiplay_options) $midi(player4opt)
+       }
+    }
+  5 {if {[string length $midi(player5)] > 1} {
+       set midi(path_midiplay) $midi(player5)
+       set midi(midiplay_options) $midi(player5opt)
+       }
+    }
+#puts "midiplay_options $midi(midiplay_options)"
+  }
+}
+
 # read all options
 proc readMidiexplorerIni {} {
     global midi df tocf
@@ -834,6 +868,7 @@ proc readMidiexplorerIni {} {
     font configure $tocf -family $midi(font_family_toc) -size $midi(font_size) \
             -weight $midi(font_weight)
 
+    set_midiplayer 
 }
 
 proc findLinuxExecutables {} {
@@ -3683,26 +3718,25 @@ grid $w.player4optbut -row 9 -column 1
 grid $w.player4optent -row 9 -column 2
 bind $w.player4optent <Return> {set_midiplayer
                                focus .midiplayer.header}
+
+radiobutton $w.player5rad -command set_midiplayer -variable midi(player_sel) -value 5
+button $w.player5but -text "midiplayer 5" -width 14 -font $df \
+   -command {setpath player5; .midiplayer.player5rad invoke} 
+entry $w.player5ent -width 48 -relief sunken -textvariable midi(player5) -font $df
+grid $w.player5rad -row 10 -column 0
+grid $w.player5but -row 10 -column 1
+grid $w.player5ent -row 10 -column 2
+bind $w.player5ent <Return> {set_midiplayer
+                             focus .midiplayer.header}
+
+button $w.player5optbut -text "midiplayer 5 options" -width 14 -command {}  -font $df
+entry $w.player5optent -width 48 -relief sunken -textvariable midi(player5opt) -font $df
+grid $w.player5optbut -row 11 -column 1
+grid $w.player5optent -row 11 -column 2
+bind $w.player5optent <Return> {set_midiplayer
+                               focus .midiplayer.header}
 }
 
-proc set_midiplayer {} {
-global midi
-switch $midi(player_sel) {
-  1 {set midi(path_midiplay) $midi(player1)
-     set midi(midiplay_options) $midi(player1opt)
-    }
-  2 {set midi(path_midiplay) $midi(player2)
-     set midi(midiplay_options) $midi(player2opt)
-    }
-  3 {set midi(path_midiplay) $midi(player3)
-     set midi(midiplay_options) $midi(player3opt)
-    }
-  4 {set midi(path_midiplay) $midi(player4)
-     set midi(midiplay_options) $midi(player4opt)
-    }
-  }
-#puts "midiplay_options $midi(midiplay_options)"
-}
 
 proc setpath {path_var} {
     global midi
