@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.59 2022-09-18 17:00" 
+set midiexplorer_version "MidiExplorer version 3.61 2022-10-12 16:40" 
 set briefconsole 1
 
 # Copyright (C) 2019-2021 Seymour Shlien
@@ -615,10 +615,7 @@ proc midiInit {} {
         set midi(path_midicopy) midicopy.exe
 	set midi(path_abc2midi) abc2midi.exe
 	set midi(path_abcm2ps)  abcm2ps.exe
-	    set midi(path_gv) "C:/Program Files/SumatraPDF/SumatraPDF.exe"
         set midi(path_gs) ""
-        if {[file exist "C:/Program Files (x86)/SumatraPDF/SumatraPDF.exe"]} {
-           set midi(path_gv) "C:/Program Files (x86)/SumatraPDF/SumatraPDF.exe"}
 
         set midi(path_midiplay) "C:/Program Files/Windows Media Player/wmplayer.exe"
         set midi(midiplay_options) "/play /close"
@@ -631,7 +628,6 @@ proc midiInit {} {
         set midi(path_midiplay) timidity
         set midi(midiplay_options) "-A 50 -ik"
         set midi(browser) firefox
-        set midi(path_gv) evince
         set midi(path_gs) gs
         }
 
@@ -3612,7 +3608,7 @@ label $w.header -text executables -font $df
 grid $w.header -row 0 -column 1
 
 button $w.abcmidibut -text "abcmidi folder" -width 14 -command {locate_abcmidi_executables} -font $df
-entry $w.abcmidient -width 48 -relief sunken -textvariable midi(dir_abcmidi) -font $df
+entry $w.abcmidient -width 64 -relief sunken -textvariable midi(dir_abcmidi) -font $df
 grid $w.abcmidibut -row 1 -column 1
 grid $w.abcmidient -row 1 -column 2
 bind $w.abcmidient <Return> {focus .support.header
@@ -3620,17 +3616,10 @@ bind $w.abcmidient <Return> {focus .support.header
 		            }
 
 button $w.browserbut -text "internet browser" -width 14 -command {locate_browser} -font $df
-entry $w.browserent -width 48 -relief sunken -textvariable midi(browser) -font $df
+entry $w.browserent -width 64 -relief sunken -textvariable midi(browser) -font $df
 grid $w.browserbut -row 10 -column 1
 grid $w.browserent -row 10 -column 2
 bind $w.browserent <Return> {focus .support.header}
-
-
-button $w.psbut -text "Postscript viewer" -width 14 -command {setpath psview} -font $df
-entry $w.psent -width 48 -relief sunken -textvariable midi(path_gv) -font $df
-grid $w.psbut -row 12 -column 1
-grid $w.psent -row 12 -column 2
-bind $w.psent <Return> {focus .support.header}
 }
 
 
@@ -12938,10 +12927,13 @@ set abcdata [.abcoutput.2.txt get 1.0 end]
 set outhandle [open X.tmp w]
 puts $outhandle $abcdata
 close $outhandle
-set cmd "exec $midi(path_abcm2ps) -j 1 X.tmp"
+set cmd "exec [list $midi(path_abcm2ps)] -j 1 X.tmp"
 catch {eval $cmd} exec_out
 set exec_out $cmd\n\n$exec_out
-set cmd "exec [list $midi(path_gv)] Out.ps &"
+set cmd "exec [list $midi(path_gs)] -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -q -sOutputFile=Out.pdf Out.ps"
+catch {eval $cmd} result
+append exec_out "\n$cmd\n$result"
+set cmd "exec [list $midi(browser)] file:[file join [pwd] Out.pdf] &"
 append exec_out \n$cmd
 catch {eval $cmd} result
 append exec_out \n$result
