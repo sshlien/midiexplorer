@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.61 2022-10-12 16:40" 
+set midiexplorer_version "MidiExplorer version 3.63 2022-10-24 20:20" 
 set briefconsole 1
 
 # Copyright (C) 2019-2021 Seymour Shlien
@@ -1396,21 +1396,26 @@ positionWindow .fontwindow
 set fontfamily [lsort [font families]]
 ttk::combobox $w.fontbox -width 24  -textvariable midi(font_family)\
          -values $fontfamily
+bind .fontwindow.fontbox <<ComboboxSelected>> {changeFont}
 entry $w.fontsel -textvariable midi(font_family) -width 26
 label $w.fontsellab -text "font family"
 grid $w.fontsellab $w.fontsel
 label $w.fontboxlab -text "font selector"
 grid  $w.fontboxlab $w.fontbox
-radiobutton $w.fontnormal -text normal -variable midi(font_weight) -value normal
-radiobutton $w.fontbold -text bold     -variable midi(font_weight) -value bold
+radiobutton $w.fontnormal -text normal -variable midi(font_weight) \
+       	-value normal -command changeFont
+radiobutton $w.fontbold -text bold     -variable midi(font_weight) \
+       	-value bold -command changeFont
 grid $w.fontnormal $w.fontbold
 label $w.fontsizelab -text "font size"
 ttk::combobox $w.fontsize -width 8  -textvariable midi(font_size)\
          -values $sizelist
+bind .fontwindow.fontsize <<ComboboxSelected>> {changeFont}
 grid $w.fontsizelab $w.fontsize
-button $w.fontset -text "font set" -command changeFont
+#button $w.fontset -text "font set" -command changeFont
 button $w.fontreset -text "font reset" -command reset_font
-grid $w.fontset $w.fontreset
+#grid $w.fontset $w.fontreset
+grid $w.fontreset
 }
 
 proc reset_font {} {
@@ -1715,15 +1720,16 @@ proc TreeBrowserSortBy {col direction} {
 
 set w .tinfo
 frame $w 
-ttk::treeview $w.tree -columns {trk chn program notes spread pavg duration bends controls pressure } -show headings -height 14 -yscroll "$w.vsb set"
+set fontheight [font metrics $df -linespace]
+ttk::treeview $w.tree -columns {trk chn program notes spread pavg duration bends controls pressure } -show headings -height $fontheight -yscroll "$w.vsb set"
 ttk::scrollbar $w.vsb -orient vertical -command ".tinfo.tree yview"
 foreach col {trk chn program notes spread pavg duration bends controls pressure} {
   $w.tree heading $col -text $col
   $w.tree heading $col -command [list TinfoSortBy $col 0]
-  $w.tree column $col -width [expr [font measure $df $col] + 13]
+  $w.tree column $col -width [expr [font measure $df $col] + 10]
   }
-$w.tree column program -width [font measure $df "WWWWWWWWWWWWWWWWWW"]
-$w.tree column notes -width [font measure $df "WWWWWW"]
+$w.tree column program -width [font measure $df "WWWWWWWWWWWWWW"]
+$w.tree column notes -width [font measure $df "WWWWWWWW"]
 $w.tree tag configure fnt -font $df
 pack $w.tree $w.vsb -side left -expand 1 -fill both 
 bind $w.tree <<TreeviewSelect>> {tinfoSelect}
@@ -3639,7 +3645,7 @@ positionWindow $w
 label $w.header -text "midi player" -font $df
 grid $w.header -row 0 -column 1
 
-radiobutton $w.player1rad -command set_midiplayer -variable midi(player_sel) -value 1
+radiobutton $w.player1rad -command set_midiplayer -variable midi(player_sel) -value 1 
 button $w.player1but -text "midiplayer 1" -width 14 -font $df\
    -command {setpath player1; .midiplayer.player1rad invoke} 
 entry $w.player1ent -width 48 -relief sunken -textvariable midi(player1) -font $df
