@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.63 2022-10-24 20:20" 
+set midiexplorer_version "MidiExplorer version 3.65 2022-10-31 10:40" 
 set briefconsole 1
 
 # Copyright (C) 2019-2021 Seymour Shlien
@@ -1390,7 +1390,7 @@ proc messagetxt {txt} {
 proc fontSelector {} {
 global midi
 set w .fontwindow
-set sizelist {6 7 8 9 10 11 12 13 14}
+set sizelist {6 7 8 9 10 11 12 13 14 15}
 toplevel $w
 positionWindow .fontwindow
 set fontfamily [lsort [font families]]
@@ -3626,6 +3626,12 @@ entry $w.browserent -width 64 -relief sunken -textvariable midi(browser) -font $
 grid $w.browserbut -row 10 -column 1
 grid $w.browserent -row 10 -column 2
 bind $w.browserent <Return> {focus .support.header}
+
+button $w.gsbut -text "ghostscript" -width 14 -command {locate_ghostscript} -font $df
+entry $w.gsent -width 64 -relief sunken -textvariable midi(path_gs) -font $df
+grid $w.gsbut -row 11 -column 1
+grid $w.gsent -row 11 -column 2
+bind $w.gsent <Return> {focus .support.header}
 }
 
 
@@ -3792,6 +3798,12 @@ foreach exec {midi2abc midicopy} {
 proc locate_browser {} {
     global midi
     set midi(browser) [tk_getOpenFile]
+    }
+
+
+proc locate_ghostscript {} {
+    global midi
+    set midi(path_gs) [tk_getOpenFile]
     }
 
 
@@ -9677,7 +9689,7 @@ proc mftextwindow {midifilein nofile} {
     toplevel $f
     positionWindow $f
     frame $f.1
-    label $f.fillab -text $midifilein  -font $df -width 60
+    label $f.fillab -text $midifilein  -font $df 
     button $f.1.browse -text browse -font $df -command {
              set midifilein [midi_file_browser]
              output_mftext [list $midifilein]
@@ -9689,7 +9701,7 @@ proc mftextwindow {midifilein nofile} {
     pack $f.1.browse $f.1.help -side left
     pack $f.1
     frame $f.2
-    pack $f.1 $f.2 -side top
+    pack $f.1 $f.2 -side top -fill y -expand yes
     set f .mftext.4
     frame $f
     label $f.lab -text hide -font $df
