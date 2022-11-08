@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.65 2022-10-31 10:40" 
+set midiexplorer_version "MidiExplorer version 3.67 2022-11-08 13:05" 
 set briefconsole 1
 
 # Copyright (C) 2019-2021 Seymour Shlien
@@ -10864,8 +10864,12 @@ if {$descsize < 2} {.info.txt insert insert "midi descriptors are empty\n\n" red
 
 set threshold [expr 50.0 /$nfiles]
 if {$threshold > 1.0} {set threshold 1.0}
-set size [file size $midi(midifilein)]
-set size [formatSize $size] 
+if {[file exist $midi(midifilein)]} {
+  set size [file size $midi(midifilein)]
+  set size [formatSize $size] 
+  } else {
+   set size 20
+  }
 set id [.treebrowser.tree insert {} end -text $midi(midifilein) -values [list $midi(midifilein) file $size 0.0 "" $position] -tag purple]
 for {set i 1} {$i < $descsize} {incr i} {
   #puts $i
@@ -13571,7 +13575,7 @@ array set majorColors {
 }
 
 
-proc keystrip_window {} {
+proc keystrip_window {source} {
 global midi
 global df
 set spacelist {3 4 6 8 12 16 18 24 32 36 48 64}
@@ -13605,9 +13609,9 @@ set spacelist {3 4 6 8 12 16 18 24 32 36 48 64}
     pack  $w.cfg.spc -side top -anchor w
     pack $w.cfg.spc.spclab -side left -anchor w
     pack $w.cfg.spc.spcbox -side left -anchor w
-    radiobutton $w.cfg.spc.kk -text kk -value kk -variable midi(pitchcoef) -command {keymap tableau} -font $df
-    radiobutton $w.cfg.spc.ss -text ss -value ss -variable midi(pitchcoef) -command {keymap tableau} -font $df
-    checkbutton $w.cfg.spc.w -text pitchWeighting -variable midi(pitchWeighting) -command {keymap tableau} -font $df
+    radiobutton $w.cfg.spc.kk -text kk -value kk -variable midi(pitchcoef) -command "keymap $source" -font $df
+    radiobutton $w.cfg.spc.ss -text ss -value ss -variable midi(pitchcoef) -command "keymap $source" -font $df
+    checkbutton $w.cfg.spc.w -text pitchWeighting -variable midi(pitchWeighting) -command "keymap $source" -font $df
     button $w.cfg.spc.h -text help -command keymap_help -font $df
     button $w.cfg.spc.c -text colors -command keyscape_keyboard -font $df
     pack $w.cfg.spc.kk $w.cfg.spc.ss $w.cfg.spc.w $w.cfg.spc.c $w.cfg.spc.h -side left -anchor w
@@ -13682,7 +13686,7 @@ proc keymap {source} {
 
     set keySpacing $midi(keySpacing)
 
-    keystrip_window
+    keystrip_window $source
     .keystrip.c delete all
 
     if {![file exist $midi(path_midi2abc)]} {
