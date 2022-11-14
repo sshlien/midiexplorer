@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.67 2022-11-08 13:05" 
+set midiexplorer_version "MidiExplorer version 3.69 2022-11-13 16:10" 
 set briefconsole 1
 
 # Copyright (C) 2019-2021 Seymour Shlien
@@ -689,11 +689,13 @@ proc midiInit {} {
     set midi(player3) ""
     set midi(player4) ""
     set midi(player5) ""
+    set midi(player6) ""
     set midi(player1opt) ""
     set midi(player2opt) ""
     set midi(player3opt) ""
     set midi(player4opt) ""
     set midi(player5opt) ""
+    set midi(player6opt) ""
     set midi(player_sel) 1
     set midi(playmethod) 1
     
@@ -833,6 +835,11 @@ switch $midi(player_sel) {
   5 {if {[string length $midi(player5)] > 1} {
        set midi(path_midiplay) $midi(player5)
        set midi(midiplay_options) $midi(player5opt)
+       }
+    }
+  6 {if {[string length $midi(player6)] > 1} {
+       set midi(path_midiplay) $midi(player6)
+       set midi(midiplay_options) $midi(player6opt)
        }
     }
 #puts "midiplay_options $midi(midiplay_options)"
@@ -1436,6 +1443,12 @@ if {[winfo exist .midistructure]} {
   }
 }
 
+proc doresize { win } {
+   if { $win eq "." } {
+      puts "Win $win now has width: [winfo width $win]"
+   }
+}
+
 proc changeFont {} {
 global midi
 global df
@@ -1449,6 +1462,17 @@ if {[winfo exist .midistructure]} {
   destroy .midistructure
   midi_structure_window 
   }
+set w .tinfo
+foreach col {trk chn program notes spread pavg duration bends controls pressure} {
+  $w.tree column $col -width [expr [font measure $df $col] + 10]
+ }
+$w.tree column program -width [font measure $df "WWWWWWWWWWWWWW"]
+$w.tree column notes -width [font measure $df "WWWWWWWW"]
+pack forget .tinfo.tree .tinfo.vsb
+pack forget .tinfo
+pack .tinfo.tree .tinfo.vsb -side left -expand 1 -fill both 
+pack .tinfo
+tk_messageBox -message "Restart midiexplorer to fix font problems or resize mainwindow."
 }
 
 #        tooltips switch
@@ -1721,7 +1745,7 @@ proc TreeBrowserSortBy {col direction} {
 set w .tinfo
 frame $w 
 set fontheight [font metrics $df -linespace]
-ttk::treeview $w.tree -columns {trk chn program notes spread pavg duration bends controls pressure } -show headings -height $fontheight -yscroll "$w.vsb set"
+ttk::treeview $w.tree -columns {trk chn program notes spread pavg duration bends controls pressure } -show headings -yscroll "$w.vsb set" -height $fontheight
 ttk::scrollbar $w.vsb -orient vertical -command ".tinfo.tree yview"
 foreach col {trk chn program notes spread pavg duration bends controls pressure} {
   $w.tree heading $col -text $col
@@ -1733,6 +1757,7 @@ $w.tree column notes -width [font measure $df "WWWWWWWW"]
 $w.tree tag configure fnt -font $df
 pack $w.tree $w.vsb -side left -expand 1 -fill both 
 bind $w.tree <<TreeviewSelect>> {tinfoSelect}
+$w.tree configure -height 10
 
 proc TinfoSortBy {col direction} {
     set data {}
@@ -3735,6 +3760,23 @@ entry $w.player5optent -width 48 -relief sunken -textvariable midi(player5opt) -
 grid $w.player5optbut -row 11 -column 1
 grid $w.player5optent -row 11 -column 2
 bind $w.player5optent <Return> {set_midiplayer
+                               focus .midiplayer.header}
+
+radiobutton $w.player6rad -command set_midiplayer -variable midi(player_sel) -value 6
+button $w.player6but -text "midiplayer 6" -width 14 -font $df \
+   -command {setpath player6; .midiplayer.player6rad invoke} 
+entry $w.player6ent -width 48 -relief sunken -textvariable midi(player6) -font $df
+grid $w.player6rad -row 12 -column 0
+grid $w.player6but -row 12 -column 1
+grid $w.player6ent -row 12 -column 2
+bind $w.player6ent <Return> {set_midiplayer
+                             focus .midiplayer.header}
+
+button $w.player6optbut -text "midiplayer 6 options" -width 14 -command {}  -font $df
+entry $w.player6optent -width 48 -relief sunken -textvariable midi(player6opt) -font $df
+grid $w.player6optbut -row 13 -column 1
+grid $w.player6optent -row 13 -column 2
+bind $w.player6optent <Return> {set_midiplayer
                                focus .midiplayer.header}
 }
 
