@@ -5,10 +5,10 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.69 2022-11-13 16:10" 
+set midiexplorer_version "MidiExplorer version 3.71 2022-11-16 10:20" 
 set briefconsole 1
 
-# Copyright (C) 2019-2021 Seymour Shlien
+# Copyright (C) 2019-2022 Seymour Shlien
 #
 #
 # This program is free software; you can redistribute it and/or modify
@@ -2836,6 +2836,9 @@ global midicommands
 global ppqn
 global chanprog
 global cleanData
+global exec_out
+
+append exec_out "\nloadMidiFile : extracting info from $midi(midifilein)"
 
 if {$cleanData} return
 if {![file exist $midi(midifilein)]} {
@@ -2852,6 +2855,7 @@ if {![file exist $midi(path_midi2abc)]} {
       tk_messageBox -message $msg
       return -1
       }
+
 
 readMidiFileHeader $midi(midifilein); # read midi header
 set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
@@ -3317,9 +3321,13 @@ global chanlist
 global beatsperbar
 global lastTableau
 global tableauHeight40
+global exec_out
+
+set exec_out "detailed_tableau"
 
 loadMidiFile
 set lastTableau "pitch"
+update_console_page
 
 
 set chanlist [list]
@@ -4175,6 +4183,8 @@ proc piano_roll_display {} {
 
 proc piano_window {} {
     global pianorollwidth
+    global exec_out
+    set exec_out "piano_roll"
     global df
     global midispeed
     if {[winfo exist .piano]} {destroy .piano}
@@ -4439,6 +4449,7 @@ proc show_events {} {
         return
     }
     set pianoPixelsPerFile $pianorollwidth
+    append exec_out "\ncompute_pianoroll\n"
     compute_pianoroll
     .piano.can yview moveto $piano_yview_pos
     .piano.cany yview moveto $piano_yview_pos
@@ -4777,13 +4788,14 @@ proc print_chordcount {w} {
 }
 
 
-proc reorganize_pianoresult {} {
+proc reorganize_pianoresult {source} {
     global pianoresult
     global sorted_midiactions
     global midi
     global trksel
     set midiactions {}
     set tsel [count_selected_midi_tracks]
+    if {$source == "none"} {set tsel 0}
     #puts "reorganize_pianoresult for [llength $pianoresult] records"
     foreach cmd $pianoresult {
         if {[llength $cmd] < 5} continue
@@ -4875,7 +4887,7 @@ proc make_and_display_chords {source} {
     set v .chordview.2.txt
     $v delete 0.0 end
     
-    reorganize_pianoresult
+    reorganize_pianoresult $source
     turn_off_all_notes
     reset_beat_notestatus
     
@@ -5003,6 +5015,7 @@ proc determineChordSequence {source} {
     global cleanData
     global briefconsole
 
+    set exec_out "determineChordSequence $source\n"
     set list_of_chords [dict create]
     #Force loadMidiFile in case notegram alters pianoresult
     set midilength 0
@@ -5032,9 +5045,9 @@ proc determineChordSequence {source} {
       set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
       catch {eval $cmd} pianoresult
       if {$briefconsole} {
-         set exec_out "determineChordSeq:\n\n$cmd\n\n [string range $pianoresult 0 200]..."
+         append exec_out "\n\n$cmd\n\n [string range $pianoresult 0 200]..."
       } else {
-         set exec_out "determineChordSeq:\n\n$cmd\n\n $pianoresult"
+         set exec_out "\n\n$cmd\n\n $pianoresult"
       }
       update_console_page
       set nrec [llength $pianoresult]
@@ -5045,7 +5058,7 @@ proc determineChordSequence {source} {
       }
 
 
-    reorganize_pianoresult
+    reorganize_pianoresult $source
     
     set tsel [count_selected_midi_tracks]
     
@@ -5593,6 +5606,8 @@ proc compute_notegram {source} {
    global tbeat
    global notegram_xfm
    global cleanData
+   global exec_out
+   set exec_out "compute_notegram:\n"
    set permut5th {0 7 2 9 4 11 6 1 8 3 10 5}
    # white or black characters
    set colfg [lindex [.info.txt config -fg] 4]
@@ -5964,9 +5979,10 @@ proc show_prog_structure {} {
   global cprogcolor
   global cprogsact
   global cprogs
+  global exec_out
   #global seglink
 
-
+  set exec_out "show_prog_structure"
   #puts "show_midi_structure channel2program [array get channel2program]"
   if {![winfo exist .midistructure]} return
 
@@ -6119,7 +6135,10 @@ proc show_prog_structure {} {
 
       
     plot_programcolor
+    append exec_out "\nplot_programcolor"
     plot_program_activity
+    append exec_out "\nplot_program_activity"
+    update_console_page
 
     #puts $taglist
     lappend taglist drum
@@ -6263,15 +6282,18 @@ proc compute_pianoroll {} {
     global track2channel
     global df
     global piano_qnote_offset
+    global exec_out
     
     #set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
     set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
+    append exec_out $cmd
     catch {eval $cmd} pianoresult
     set nrec [llength $pianoresult]
     set midilength [lindex $pianoresult [expr $nrec -1]]
     set pianoresult [split $pianoresult \n]
     
     #puts "compute_pianoroll [llength $pianoresult]"
+    update_console_page 
     if {[llength $pianoresult] < 1} {
         return
     }
@@ -6877,7 +6899,7 @@ if {[string length $option] > 0} {
   set cmd "exec [list $midi(path_midicopy)]  $option"
   lappend cmd  $midi(midifilein) $midi(outfilename)
   catch {eval $cmd} miditime
-  set exec_out "play_selected_lines: from $source\n$cmd\n\n$miditime"
+  append exec_out "copyMidiToTmp from $source\n$cmd\n\n$miditime"
   } else {
   set cmd "file copy $midi(midifilein) $midi(outfilename)"
   file copy $midi(midifilein) $midi(outfilename)
@@ -9055,6 +9077,9 @@ if {[winfo exists .effect]} {
 if {[winfo exists .csettings]} {
    getAllControlSettings
    }
+if {[winfo exists .data_info]} {
+   dirhome 
+   }
 }
 
 proc update_drumroll_pdfs {} {
@@ -9938,6 +9963,9 @@ set nfiles [llength $filelist]
 set sizelimit [expr min($sizelimit,$nfiles)]
 .info.txt insert insert "$nfiles midi files were found\n"
 .info.txt insert insert "sorting the midi files...\n"
+if {[winfo exists .csettings]} {
+   getAllControlSettings
+   }
 set filelist [lsort $filelist]
 .info.txt insert insert "extracting midi features..."
 set outhandle [open $outfile w]
@@ -13743,15 +13771,16 @@ set the path to a midi file."
        tk_messageBox -message $msg
        return
        }
+   set exec_out "keymap\n"
    # copy selected tracks/channels
    copyMidiToTmp $source
    set cleanData 0
    set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
     catch {eval $cmd} pianoresult
     if {$briefconsole} {
-      set exec_out "keymap:\n\n$cmd\n\n [string range $pianoresult 0 200]..."
+      append exec_out "\n\n$cmd\n\n [string range $pianoresult 0 200]..."
       } else {
-      set exec_out "keymap:\n\n$cmd\n\n $pianoresult"
+      append exec_out "\n\n$cmd\n\n $pianoresult"
       }
 
     set pianoresult [split $pianoresult \n]
