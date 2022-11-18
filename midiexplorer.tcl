@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.71 2022-11-16 10:20" 
+set midiexplorer_version "MidiExplorer version 3.72 2022-11-17 10:10" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -2574,6 +2574,9 @@ using the checkbox 'ignore hi-hat'.\n\n\
 proc percMapInterface {} {
 global df
 global midi
+global exec_out
+
+set exec_out "percMapInterface\n"
 
 set w .channel9
 if {[winfo exist $w]} return
@@ -2618,6 +2621,7 @@ pack   $w.prf.ignlab $w.prf.ignchk $w.prf.seplab $w.prf.sepchk -side left
 
 bind_all_percussion_tags
 compute_drum_pattern 
+update_console_page
 }
 
 proc compareOnset {a b} {
@@ -2688,6 +2692,7 @@ proc compute_drum_pattern {} {
     global sorted_events
     global drumstrip rdrumstrip
     global gram_ndrums
+    global exec_out
 
     extractAndSortPercussionEvents 
 
@@ -2741,6 +2746,7 @@ proc compute_drum_pattern {} {
     }
     displayBeatGrid_for_perc $mag
     .channel9.blk.right.can configure -scrollregion [.channel9.blk.right.can bbox all]
+    append exec_out "compute_drum_pattern\n"
 }
 
 proc displayBeatGrid_for_perc {mag} {
@@ -2767,9 +2773,11 @@ proc displayBeatGrid_for_perc {mag} {
 }
 
 proc bind_all_percussion_tags {} {
+global exec_out
 for {set i 35} {$i < 81} {incr i} {
      .channel9.blk.right.can bind n$i <Enter> "show_percussion_info $i"
     }
+append exec_out "bind_all_percussion_tags\n"
 }
 
 proc change_horizontal_resolution {} {
@@ -4263,7 +4271,7 @@ proc piano_window {} {
             -command {chordtext_window pianoroll}
     $p.action.items add command  -label "chord histogram" -font $df \
             -command {chord_histogram none}
-    $p.action.items add command  -label "chordgram plot " -font $df \
+    $p.action.items add command  -label "chordgram" -font $df \
             -command {chordgram_plot pianoroll}
     $p.action.items add command -label "help" -font $df\
             -command {show_message_page $hlp_pianoroll_actions word}
@@ -5015,7 +5023,7 @@ proc determineChordSequence {source} {
     global cleanData
     global briefconsole
 
-    set exec_out "determineChordSequence $source\n"
+    append exec_out "determineChordSequence $source\n"
     set list_of_chords [dict create]
     #Force loadMidiFile in case notegram alters pianoresult
     set midilength 0
@@ -5047,9 +5055,8 @@ proc determineChordSequence {source} {
       if {$briefconsole} {
          append exec_out "\n\n$cmd\n\n [string range $pianoresult 0 200]..."
       } else {
-         set exec_out "\n\n$cmd\n\n $pianoresult"
+         append exec_out "\n\n$cmd\n\n $pianoresult"
       }
-      update_console_page
       set nrec [llength $pianoresult]
       set midilength [lindex $pianoresult [expr $nrec -1]]
       set pianoresult [split $pianoresult \n]
@@ -5195,6 +5202,8 @@ proc chordgram_plot {source} {
    global df
    global chord_sequence
    global seqlength
+   global exec_out
+   set exec_out "chordgram_plot\n"
    if {![winfo exist .chordgram]} {
      toplevel .chordgram
      positionWindow .chordgram
@@ -5224,6 +5233,7 @@ proc chordgram_plot {source} {
    set last_beat [dict size $chord_sequence]
    set seqlength $last_beat
    call_compute_chordgram $source
+   update_console_page
 }
 
 proc getCanvasLimits {source} {
@@ -5297,6 +5307,8 @@ return [list $start $stop]
 }
 
 proc call_compute_chordgram {source} {
+global exec_out
+append exec_out "\ncall_compute_chordgram\n"
 set limits [getCanvasLimits $source]
 set start [lindex $limits 0]
 set stop  [lindex $limits 1]
@@ -5379,6 +5391,8 @@ proc compute_chordgram {start stop} {
    global chordgramLimits
    global fbeat
    global tbeat
+   global exec_out
+   append exec_out "compute_chordgram $start $stop\n"
    set fbeat $start
    set tbeat $stop
    set chordgramLimits [list $start $stop]
@@ -5607,6 +5621,7 @@ proc compute_notegram {source} {
    global notegram_xfm
    global cleanData
    global exec_out
+   global briefconsole
    set exec_out "compute_notegram:\n"
    set permut5th {0 7 2 9 4 11 6 1 8 3 10 5}
    # white or black characters
@@ -5615,7 +5630,11 @@ proc compute_notegram {source} {
    set cleanData 0
    set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
    catch {eval $cmd} pianoresult
-   set exec_out [append exec_out "notegram:\n\n$cmd\n\n $pianoresult"]
+   if {$briefconsole} {
+      set exec_out [append exec_out "\nnotegram:\n\n$cmd\n\n [string range $pianoresult 0 200]"]
+      } else {
+      set exec_out [append exec_out "\nnotegram:\n\n$cmd\n\n $pianoresult]
+      } 
    # useflats is set by plot_pitch_class_histogram
    set xrbx [expr $pianorollwidth - 3]
    set xlbx  40
@@ -6799,6 +6818,7 @@ global midichannels
 global lasttrack
 global midispeed
 global exec_out
+set exec_out "focus_and_play:\n"
 set trkchn ""
 set option ""
 if {$midi(midishow_sep) == "track"} {
@@ -6829,6 +6849,7 @@ if {$midispeed != 1.00} {append option " -speed $midispeed"}
 # in case windows is still playing it.
 set cmd "file delete -force -- $midi(outfilename)"
 catch {eval $cmd} done
+append exec_out "$cmd\n $done\n"
 set midi(outfilename) [tmpname]
 # create temporary file
 if {[string length $option] > 0} {
@@ -6839,16 +6860,20 @@ if {[string length $option] > 0} {
   } else {
   set cmd "file copy $midi(midifilein) $midi(outfilename)"
   file copy $midi(midifilein) $midi(outfilename)
-  set exec_out focus_and_play:\n$cmd\n
+  append exec_out "\n$cmd\n"
   }
 play_midi_file $midi(outfilename)
+append exec_out "play_midi_file $midi(outfilename)"
 update_console_page
 }
 
 
 proc play_selected_lines {source} {
 global midi
+global exec_out
+set exec_out "play_selected_lines $source\n"
 copyMidiToTmp $source
+append exec_out "\nplay_midi_file $midi(outfilename)"
 play_midi_file $midi(outfilename)
 update_console_page
 }
@@ -6919,6 +6944,7 @@ global midispeed
 global exec_out
 set trkchn ""
 set option ""
+set exec_out "play_and_exclude_selected_lines\n"
 if {$midi(midishow_sep) == "track"} {
   for {set i 0} {$i <= $lasttrack} {incr i} {
      if {$miditracks($i)} {append trkchn "$i,"}
@@ -6947,12 +6973,13 @@ if {[string length $option] > 0} {
   set cmd "exec [list $midi(path_midicopy)]  $option"
   lappend cmd  $midi(midifilein) $midi(outfilename)
   catch {eval $cmd} miditime
-  set exec_out play_selected_lines:\n$cmd\n\n$miditime
+  append exec_out "\n$cmd\n\n$miditime"
   } else {
   set cmd "file copy $midi(midifilein) $midi(outfilename)"
   file copy $midi(midifilein) $midi(outfilename)
-  set exec_out play_selected_lines:\n$cmd\n
+  append exec_out "\n$cmd\n"
   }
+append exec_out "\nplay_midi_file $midi(outfilename)"
 play_midi_file $midi(outfilename)
 update_console_page
 }
@@ -8742,12 +8769,19 @@ proc midi_statistics {choice source} {
     global exec_out
     global midi
     global cleanData
+    global briefconsole
 
     set cleanData 0
+    set exec_out "midi_statistics $choice $source\n\n"
     copyMidiToTmp $source
     set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
     catch {eval $cmd} pianoresult
-    set exec_out [append exec_out "midi_statistics:\n\n$cmd\n\n $pianoresult"]
+    if {$briefconsole} {
+       set exec_out [append exec_out "midi_statistics:\n\n$cmd\n\n [string range $pianoresult 0 200]..."]
+       } else {
+       set exec_out [append exec_out "midi_statistics:\n\n$cmd\n\n $pianoresult"]
+       }
+
     update_console_page
 
     for {set i 0} {$i < 128} {incr i} {set histogram($i) 0}
@@ -13120,6 +13154,8 @@ global df
 global hlp_pgram
 global midi
 global midichannels
+global exec_out
+set exec_out "pgram_window\n"
 if {![winfo exist .pgram]} {
   toplevel .pgram
   positionWindow .pgram
@@ -13151,7 +13187,7 @@ compute_pgram
 bind $pgraph <ButtonPress-1> {pgram_Button1Press %x %y}
 bind $pgraph <ButtonRelease-1> {pgram_Button1Release}
 bind $pgraph <Double-Button-1> pgram_ClearMark
-
+update_console_page
 }
 
 proc pgram_cfg {} {
@@ -13343,9 +13379,9 @@ set nrec [llength $pianoresult]
 set midilength [lindex $pianoresult [expr $nrec -1]]
 set nbeats [expr $midilength/$ppqn]
 if {$briefconsole} {
-  set exec_out compute_pgram:\n$cmd\n\n[string range $pianoresult 0 200]...
+  append exec_out compute_pgram:\n$cmd\n\n[string range $pianoresult 0 200]...
   } else {
-  set exec_out compute_pgram:\n$cmd\n\n$pianoresult
+  append exec_out compute_pgram:\n$cmd\n\n$pianoresult
   }
 
 Graph::alter_transformation $pxlbx $pxrbx $ybbx $ytbx 0.0 $nbeats 0.0 110.0 
@@ -13359,7 +13395,7 @@ if {$midi(pgrammode) == "chord"} {
   }
 
 p_reveal_buttons 
-update_console_page
+#update_console_page
 }
 
 proc pgram_vscale {} {

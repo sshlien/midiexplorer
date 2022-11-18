@@ -1,29 +1,28 @@
-Guess Who
+AC DC
+Aerosmith
 Bachman-Turner Overdrive
-Santana
-ZZ Top
-Led Zeppelin
-The Allman Brothers Band
-The Rolling Stones
-The Yardbirds
+Bad Company
+Black Sabbath
 Canned Heat
-Ten Years After
+Cream
+Deep Purple
+Derek and the Dominos
+Eric Clapton
 Fleetwood Mac
+Grand Funk Railroad
+Guess Who
 Jeff Beck
+Led Zeppelin
+Lynyrd Skynyrd
+Pink Floyd
+Santana
+Status Quo
+The Allman Brothers Band
 The Animals
 The Doors
-AC DC
-Lynyrd Skynyrd
-Aerosmith
-Derek and the Dominos
-Bad Company
-Status Quo
-Pink Floyd
-Cream
-Eric Clapton
-Jeff Beck
-Deep Purple
-Black Sabbath
+The Rolling Stones
+The Yardbirds
+Ten Years After
 Three Dog Night
-Grand Funk Railroad
+ZZ Top
 

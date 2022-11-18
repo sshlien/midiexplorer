@@ -1,202 +1,199 @@
-The Beatles
-Garth Brooks
-Brooks Garth
-Elvis Presley
-Eagles
-Led Zeppelin
-Billy Joel
-Michael Jackson
-Jackson Michael
-Elton John
-John Elton
-Pink Floyd
+ABBA
 AC DC
-Barbra Streisand
-The Rolling Stones
 Aerosmith
-Bruce Springsteen
-Madonna
-Mariah Carey
-Metallica
-Whitney Houston
-Van Halen
-Fleetwood Mac
-U2
-Celine Dion
-Neil Diamond
-Journey
-Shania Twain
-Kenny G
-Rogers Kenny
 Alabama
-Eminem
-Bob Seger
-Guns N' Roses
-Santana
 Alan Jackson
-Eric Clapton
-Simon & Garfunkel
-Chicago
-Foreigner
-Rod Stewart
+Alanis Morissette
+Alice in Chains
+Amy Grant
+Andrea Bocelli
+Andrew Lloyd Webber
+Andy Williams
+Anita Baker
+Anne Murray
 Backstreet Boys
-Bob Dylan
-Def Leppard
-Queen
-Britney Spears
-Bon Jovi
-Dave Mathews Band
-John Denver
-Phil Collins
-Collins Phil
-The Doors
-James Taylor
-R. Kelly
-Tom Petty
-Willie Nelson
-Pearl Jam
-Boston
-Dixie Chicks
-Linda Ronstadt
-Ozzy Osbourne
-Lynyrd Skynyrd
-Bee Gees
-Michael Bolton
-Creedence Clearwater Revival
-Linkin Park
-Brooks & Dunn
-John Mellencamp
+Bad Company
+Barbra Streisand
 Barry Manilow
-Boyz II Men
-Frank Sinatra
-Enya
-Janet Jackson
-Luther Vandross
-Steve Miller Band
-Nirvana
-Rush
-Creed
-ZZ Top
-Hootie & the Blowfish
-Red Hot Chili Peppers
-Motley Crue
-Carpenters
-Kid Rock
-Cash Johnny
-Sade
-The Cars
-Earth, Wind & Fire
 Beastie Boys
+Bee Gees
+Bette Midler
+Billy Joel
+Billy Ray Cyrus
+Black Sabbath
+Bob Dylan
+Bob Marley
+Bob Seger
+Bon Jovi
+Bonnie Raitt
+Boston
+Boyz II Men
+Brandy
+Britney Spears
+Brooks Garth
+Brooks & Dunn
+Bruce Springsteen
+Bush
+Carole King
+Carpenters
+Cash Johnny
+Celine Dion
+Cher
+Chicago
+Christina Aguilera
+Collins Phil
+Counting Crows
+Creed
+Creedence Clearwater Revival
+Crosby, Stills, Nash & Young
+Dan Fogelberg
+Dave Mathews Band
+Def Leppard
+Dixie Chicks
+Earth, Wind & Fire
+Depeche Mode
+Destiny's Child
+Dire Straits
+DMX
+Don Henley
+Duran Duran
+Eagles
+Elton John
+Elvis Presley
+Eminem
+Enya
+Eric Clapton
+Fleetwood Mac
+Foreigner
+Frank Sinatra
+Garth Brooks
+Genesis
+George Michael
+Gloria Estefan
+Grand Funk Railroad
+Grateful Dead
+Guns N' Roses
+Hall & Oates
+Hank Williams
+Heart
+Huey Lewis & The News
+INXS
+Jackson Browne
+Jackson Michael
+James Taylor
+Jethro Tull
+Janet Jackson
+Janis Joplin
+Jennifer Lopez
+Jewel
 Jimi Hendrix
 Jimmy Buffett
-TLC
-Heart
-Lionel Richie
-The Beach Boys
-Usher
-Nelly
-The Police
-The Doobie Brothers
-Bob Marley
-Genesis
-Meat Loaf
+John Denver
+John Elton
+John Lennon
+John Mellencamp
+Johnny Mathis
+Journey
+Kansas
+Kenny G
+Kid Rock
 Kiss
-The Who
-Prince
-Alanis Morissette
+Korn
+Led Zeppelin
+Lenny Kravitz
+Linda Ronstadt
+Lionel Richie
+Limp Bizkit
+Live
+Loverboy
+Linkin Park
+Luther Vandross
+Lynyrd Skynyrd
+Madonna
+Mariah Carey
 Mary J. Blige
+Master P
+Meat Loaf
+Melissa Etheridge
+Metallica
+Michael Bolton
+Michael Jackson
+Motley Crue
+Nas
+Nat King Cole
+Natalie
+Neil Young
+New Kids on the Block
+Nelly
+Neil Diamond
+Nirvana
+No Doubt
+Olivia Newton-John
+Ozzy Osbourne
+Pat Benatar
+Patsy Cline
+Paul McCartney
+Paul Simon
+Paula Abdul
+Pearl Jam
+Phil Collins
+Pink Floyd
+Prince
+Queen
+Ricky Martin
 R.E.M
-Stevie Wonder
-Grateful Dead
-The Smashing Pumpkins
-Toni Braxton
-Hank Williams
-Jackson Browne
-Janis Joplin
+R. Kelly
+Red Hot Chili Peppers
+Rod Stewart
+Rogers Kenny
+Rush
+Sade
+Santana
 Sarah McLachlan
-Jewel
-The Monkees
-Crosby, Stills, Nash & Young
+Savage Garden
+Scorpions
+Shania Twain
+Sheryl Crow
+Simon & Garfunkel
+Snoop Dogg
+Spice Girls
+Steely Dan
+Steve Miller Band
+Stevie Nicks
+Stevie Wonder
 Sting
 Stone Temple Pilots
-Destiny's Child
 Styx
-Neil Young
-Bryan Adams
-Amy Grant
-Bonnie Raitt
-Johnny Mathis
-Limp Bizkit
-Korn
-New Kids on the Block
-Sheryl Crow
-Andrea Bocelli
-Prince
-Paul McCartney
-Christina Aguilera
-Dire Straits
-The Isley Brothers
-Bad Company
-Kansas
-No Doubt
-George Michael
-Black Sabbath
-INXS
-Carole King
-The Cranberries
-Patsy Cline
-Gloria Estefan
-Anne Murray
 Ted Nugent
-Dan Fogelberg
-Hall & Oates
-DMX
-Natalie
-Paul Simon
-Yes
-Melissa Etheridge
-Tracy Chapman
-Huey Lewis & The News
-Trisha Yearwood
-Cher
-Pat Benatar
-Snoop Dogg
+TLC
+The Beach Boys
+The Beatles
+The Cars
+The Cranberries
+The Doobie Brothers
+The Doors
+The Isley Brothers
+The Monkees
+The Police
+The Rolling Stones
+The Smashing Pumpkins
 The Temptations
-Whitesnake
-Anita Baker
-Will Smith
-Bette Midler
+The Who
+Tom Petty
+Toni Braxton
+Tracy Chapman
 Travis Tritt
-Duran Duran
-Counting Crows
-Andrew Lloyd Webber
-Nat King Cole
-Live
-Paula Abdul
-Don Henley
+Trisha Yearwood
+U2
+Usher
+Whitney Houston
+Van Halen
+Whitesnake
+Will Smith
+Willie Nelson
+ZZ Top
 Yanni
-Grand Funk Railroad
-Jethro Tull
-Loverboy
-Spice Girls
-Jennifer Lopez
-Olivia Newton-John
-Steely Dan
-Nas
-Alice in Chains
-Brandy
-Andy Williams
-Billy Ray Cyrus
-Ricky Martin
-Bush
-John Lennon
-Lenny Kravitz
-ABBA
-Depeche Mode
-Stevie Nicks
-Scorpions
-Savage Garden
-Master P
+Yes
 
 
 

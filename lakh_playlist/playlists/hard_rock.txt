@@ -1,43 +1,43 @@
-Guns N' Roses
-Led Zeppelin
 AC DC
 Aerosmith
-Black Sabbath
-Motley Crue
-Deep Purple
-Metallica
-Scorpions
-Kiss
-Def Leppard
-Judas Priest
-Iron Maiden
-Bon Jovi
-Whitesnake
 Alice in Chains
-Soundgarden
-Megadeth
-Ratt
-Van Halen
-The Rolling Stones
-Rage Against the Machine
-Skid Row
-Queen
-Blue Oyster Cult
-Thin Lizzy
-Pantera
-Poison
-Korn
-Nirvana
-Quiet Riot
-Rush
-Pearl Jam
-Rainbow
-Godsmack
-Stone Temple Pilots
-The Who
-Faith No More
-Dream Theater
-Foreigner
 Bad Company
+Black Sabbath
+Blue Oyster Cult
+Bon Jovi
+Deep Purple
+Def Leppard
+Dream Theater
+Faith No More
+Foreigner
+Godsmack
+Guns N' Roses
+Iron Maiden
+Judas Priest
+Kiss
+Korn
+Led Zeppelin
+Megadeth
+Metallica
+Motley Crue
+Nirvana
+Pantera
+Pearl Jam
+Poison
+Queen
+Quiet Riot
+Rage Against the Machine
+Rainbow
+Ratt
+Rush
+Scorpions
+Skid Row
+Soundgarden
+Stone Temple Pilots
+The Rolling Stones
+Thin Lizzy
+The Who
+Van Halen
+Whitesnake
 ZZ Top
 

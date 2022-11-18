@@ -1,10 +1,3 @@
-Taylor James
-Carole King
-Paul Simon
-Elton John
-Van Morrison
-Joni Mitchell
-Neil Young
 Alan Jackson
 Alain Souchon
 Alanis Morissette
@@ -21,10 +14,10 @@ Biagio Antonacci
 Brassens Georges
 Britney Spears
 Brooks Garth
-Garth Brooks
 Bruce Hornsby
 Bryan Adams
 Carboni
+Carole King
 Celine Dion
 Chaka Khan
 Charles Aznavour
@@ -33,11 +26,16 @@ Cocciante
 Collins Phil
 Phil Collins
 Crow Sheryl
-Enya
-
-Sheryl Crow
 Dalla
 Daniele
+Enya
+Elton John
+Garth Brooks
+Joni Mitchell
+Neil Young
+Paul Simon
+Sheryl Crow
+Taylor James
 
 
 
