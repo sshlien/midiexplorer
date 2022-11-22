@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.72 2022-11-17 10:10" 
+set midiexplorer_version "MidiExplorer version 3.75 2022-11-22 08:00" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -1042,7 +1042,7 @@ $ww add command -label "supporting executables" -font $df -command {
   set_external_programs}
 
 $ww add command -label "midi player" -font $df -command {
-  set_midi_players}
+  set_midi_players} -accelerator ctrl-p
 
 $ww add command -label "font selector" -font $df -command fontSelector
 
@@ -1363,19 +1363,21 @@ pack .treebrowser.menuline -anchor w
 pack .treebrowser.menuline2 -anchor w
 
 proc bind_accelerators {} {
-bind . <Control-s> {midi_structure_display}
-bind . <Control-r> piano_roll_display
-bind . <Control-d> drumroll_window
-bind . <Control-y> {keymap none}
-bind . <Control-k> {show_console_page $exec_out word}
-bind . <Control-w> {playmidifile 0}
-bind . <Control-t> {detailed_tableau}
-bind . <Control-o> google_search
-bind . <Control-u> duckduckgo_search
-bind . <Control-a> aftertouch
-bind . <Control-h> {chordgram_plot none}
-bind . <Alt-c> {catch console show}
+bind all <Control-a> aftertouch
+bind all <Control-d> drumroll_window
+bind all <Control-h> {chordgram_plot none}
+bind all <Control-k> {show_console_page $exec_out word}
+bind all <Control-o> google_search
+bind all <Control-p> set_midi_players
+bind all <Control-r> piano_roll_display
+bind all <Control-s> {midi_structure_display}
+bind all <Control-t> {detailed_tableau}
+bind all <Control-u> duckduckgo_search
+bind all <Control-w> {playmidifile 0}
+bind all <Control-y> {keymap none}
 }
+
+bind_accelerators
 
 
 
@@ -2064,7 +2066,6 @@ proc selected_midi {} {
    presentMidiInfo
    loadMidiFile
    set cleanData 1
-   bind_accelerators 
    if {[winfo exist .piano]} {
             zero_trksel
             compute_pianoroll
@@ -2090,7 +2091,6 @@ proc load_last_midi_file {} {
  parse_midi_info $midi_info
  SwitchBetweenInfoAndTinfo 
  presentMidiInfo
- bind_accelerators 
 } 
 
 bind . <Control-m> load_last_midi_file
@@ -12701,6 +12701,7 @@ findChildInTree .treebrowser $findname
 proc google_search {} {
 global midi
 global exec_out
+set exec_out "google_search:\n"
 set splitname [file split $midi(midifilein)]
 #puts $splitname
 set l [llength $splitname]
@@ -12717,7 +12718,7 @@ set s "https://www.google.ca/search?q=$searchstring"
 #puts $s
 set cmd "exec [list $midi(browser)] [list $s] &"
 catch {eval $cmd} result
-set exec_out $cmd\n$result
+append exec_out $cmd\n$result
 update_console_page
 }
 
@@ -12944,7 +12945,7 @@ set abcdata [.abcoutput.2.txt get 1.0 end]
 set outhandle [open X.tmp w]
 puts $outhandle $abcdata
 close $outhandle
-set cmd "exec $midi(path_abc2midi) X.tmp"
+set cmd "exec [list $midi(path_abc2midi)] X.tmp"
 catch {eval $cmd} exec_out
 set exec_out $cmd\n\n$exec_out
 #puts $exec_out

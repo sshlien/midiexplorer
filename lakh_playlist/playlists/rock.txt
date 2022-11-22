@@ -36,6 +36,7 @@ Blues Traveler
 Blur
 Bob Dylan
 Bon Jovi
+Bonnie Tyler
 Boston
 Boyzone
 Brian Wilson
@@ -55,7 +56,11 @@ Chicago
 Chris de Burgh
 Chris Isaak
 Chris Rea
+Christie, Tony
 Christina Aguilera
+Christopher Cross
+Checker Chubby
+Chris Montez
 Chuck Berry
 Chumbawamba
 Collective Soul
@@ -78,6 +83,7 @@ Dire Straits
 Donovan
 Dream Theater
 Dr. John
+Drupi
 Duran Duran
 Dusty Springfield
 Eagle-Eye Cherry
@@ -107,6 +113,7 @@ George Michael
 Geri Halliwell
 Gloria Estefan
 Godsmack
+Golden Earring
 Goo Goo Dolls
 Grand Funk Railroad
 Green Day
