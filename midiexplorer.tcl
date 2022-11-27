@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.75 2022-11-22 08:00" 
+set midiexplorer_version "MidiExplorer version 3.77 2022-11-27 16:25" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -1091,7 +1091,7 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
 	    -command google_search
 	$ww add command -label "duckduckgo search" -font $df -accelerator "ctrl-u"\
 	    -command duckduckgo_search
-        $ww add command -label "pgram" -font $df -command pgram_window -accelerator "ctrl-p"
+        $ww add command -label "pgram" -font $df -command pgram_window 
         $ww add command -label keymap -font $df -command {keymap none} -accelerator "ctrl-y"
 	$ww add command -label chordgram -font $df -command {chordgram_plot none} -accelerator "ctrl-h"
 	$ww add command -label "midi structure" -font $df -accelerator "ctrl-s"\
@@ -1368,6 +1368,7 @@ bind all <Control-d> drumroll_window
 bind all <Control-h> {chordgram_plot none}
 bind all <Control-k> {show_console_page $exec_out word}
 bind all <Control-o> google_search
+bind all <Control-n> {notebook}
 bind all <Control-p> set_midi_players
 bind all <Control-r> piano_roll_display
 bind all <Control-s> {midi_structure_display}
@@ -13121,7 +13122,10 @@ pointer from left to right over the region of interest while holding\
 down the left mouse button. You can also specify the midi channels\
 of interest by checking the appropriate check buttons.\n\n\
 This representation is still somewhat experimental. The configuration menu,\
-allows you to change the way it is displayed.
+allows you to change the way it is displayed. For example in chord mode,\
+all the possible notes between the lowest and highest notes in the chord\
+are displayed by a vertical column of dots. The reset button restores\
+the settings to the default.
 
 "
 
@@ -13212,13 +13216,16 @@ if {![winfo exist .pgramcfg]} {
   label $p.height.txt -text "plot height" -font $df
   entry $p.height.ent -textvariable midi(pgramheight) -font $df
   pack $p.height.txt $p.height.ent -side left -anchor w
-  button $p.reset -text reset -font $df -command pgram_reset
   frame $p.linewidth
   pack $p.linewidth
   label $p.linewidth.txt -text "line thickness" -font $df
   entry $p.linewidth.ent -textvariable midi(pgramthick) -font $df
   pack $p.linewidth.txt $p.linewidth.ent -side left -anchor w
-  pack $p.reset -anchor w
+  frame $p.action
+  button $p.action.reset -text "reset" -font $df -command pgram_reset
+  button $p.action.update -text "update" -font $df -command pgram_update
+  pack $p.action.reset $p.action.update -anchor w -side left
+  pack $p.action
   }
 }
 
@@ -13228,7 +13235,15 @@ set midi(pgrammode) nochord
 set midi(pgramwidth) 500
 set midi(pgramheight) 350
 set midi(pgramthick) 2
+destroy .pgram
+pgram_window
 }
+
+proc pgram_update {} {
+destroy .pgram
+pgram_window
+}
+
 
 
 
@@ -15140,6 +15155,36 @@ foreach setting $controlSettings {
     grid $cset.$k -row $rownum -column $col
     incr k
     }
+}
+
+proc notebook {} {
+#This is an undocumented feature for appending a
+#melody.txt file with the name of the file and
+#melody instrument. The file save/melody.txt should
+#exist.
+global midi df
+global notedata
+set notedata ""
+toplevel .notebook
+label .notebook.lab -text $midi(midifilein) -font $df
+pack .notebook.lab
+entry .notebook.ent -textvariable notedata -width 20 -font $df
+pack .notebook.ent
+button .notebook.app -text append -font $df -command add_note 
+pack .notebook.app
+focus .notebook.ent
+}
+
+proc add_note {} {
+global midi
+global notedata
+set outhandle [open save/melody.txt a]
+set front [string length $midi(rootfolder)]
+incr front
+set filename [string range $midi(midifilein) $front end]
+puts $outhandle "$filename\t$notedata"
+close $outhandle
+destroy .notebook
 }
 
 
