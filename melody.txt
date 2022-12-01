@@ -1,0 +1,75 @@
+Here is a random selection of midi files from the Clean Lakh Dataset
+which I analyzed. My object was to identify the channel number
+(from 1 to 16) which carries the main tune. This is usually sung
+by the vocalist. Following the tab in each line, there are two
+numbers. The first number is the channel number containing the
+melody. The second number is the General Midi program number
+starting from 0 (Acoustic Piano).
+
+In some cases, I was unable to identify a melody in any of the
+channels. I used the code -1 -1 to denote this situation.
+In a few cases, the melody shifts around several instruments
+and midi channels. In other cases, two channels may carry the
+melody line. Only one of the channels is indicated.
+
+For some midi files, the channel carrying the melody is barely
+audible. You may need to use a mixer to attenuate the other
+channels which drown out melody.
+
+
+
+Ray Charles/Georgia.1.mid	4 65
+Selena/Baila mi son.mid	4 52
+Faith No More/Easy.1.mid	13 12
+Roberts/Stasera mi butto.mid	4 11
+Thelma Houston/Don't Leave Me This Way.mid	4 65
+Journey/Any Way You Want It.mid	5 11
+David Essex/Everlasting Love.mid	16 65
+The Offspring/All I Want.mid	3 21
+Melanie/Feels So Good (Blacksmith R&B Rub) (feat. Know _uestion).mid	13 75
+Collective Soul/December.1.mid	11 54
+Genesis/A Trick of the Tail.1.mid	9 88
+Wings/Silly Love Songs.mid	16 65
+Mark Morrison/Return of the Mack.mid	4 65
+John Fred/Judy in Disguise.mid	1 0
+The Four Preps/26 Miles (Santa Catalina).mid	4 73
+Boothe, Ken/Everything I Own.mid	6 100
+Sheryl Crow/All I Wanna Do.mid	-1 -1
+Marc Anthony/Hasta Ayer.mid	8 2
+Commodores/Brick House.mid	-1 -1
+Commodores/Easy.1.mid	16 65
+Alberto Fortis/Figlio di niente.mid	4 62
+Player/Baby Come Back.mid	9 74
+White Barry/You're The First, The Last, My Everything.1.mid	3 0
+White Barry/You're The First, The Last, My Everything.mid	4 18
+Gibson Brothers/Cuba.1.mid	1 66
+Gibson Brothers/Cuba.mid	4 29
+Uriah Heep/Easy Livin'.mid	2 18
+Eiffel 65/Another Race.1.mid	3 87
+Captain Hollywood Project/Find Another Way (single mix).mid	15 67
+Captain Hollywood Project/Impossible.mid	8 85
+Pooh/...in concerto.mid	4 73
+Pooh/Air India.mid	4 12
+The Cranberries/Animal Instinct.mid	3 90
+Ed Townsend/For Your Love.mid	4 73
+Peter Koelewijn & Zijn Rockets/Kom Van Dat Dak Af.mid	4 35
+Boxcar/Achy Breaky Heart.mid	-1 -1
+Bob James/Orpheus.mid	4 73
+Cole Porter/Anything Goes.mid	1 65
+Kenny Loggins/Footloose.mid	4 22
+Nas/If I Ruled the World.mid	1 75
+George Michael/Faith.1.mid	5 75
+Charlie Rich/The Most Beautiful Girl.mid	1 22
+Cocciante/Celeste nostalgia.mid	4 21
+War/The Cisco Kid.mid	-1 -1
+Backstreet Boys/As Long as You Love Me.2.mid	-1 -1
+Backstreet Boys/As Long as You Love Me.1.mid	-1 -1
+Fontella Bass/Rescue Me.mid	1 57
+Player/Baby Come Back.mid	9 74
+Andy Williams/Can't Get Used To Losing You.mid	-1 -1
+Andy Williams/The Impossible Dream.mid	1 1
+Powell Bud/I Get a Kick Out of You.mid	3 0
+Duke/I'm So in Love With You.mid	4 65
+Local H/Back in the Day.mid	-1 -1
+Local H/Bag of Hammers.mid	-1 -1
+Paul Simon/Bridge Over Troubled Water.mid	5 4

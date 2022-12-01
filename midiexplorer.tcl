@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.77 2022-11-27 16:25" 
+set midiexplorer_version "MidiExplorer version 3.79 2022-11-29 09:20" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -82,6 +82,7 @@ set briefconsole 1
 #   Part 24.0 Console Support
 #   Part 25.0 internals
 #   Part 26.0 aftertouch
+#   Part 27.0 notebook
 #
 
 set welcome "Welcome to $midiexplorer_version. This application\
@@ -1365,6 +1366,7 @@ pack .treebrowser.menuline2 -anchor w
 proc bind_accelerators {} {
 bind all <Control-a> aftertouch
 bind all <Control-d> drumroll_window
+bind all <Control-e> count_bar_rhythm_patterns
 bind all <Control-h> {chordgram_plot none}
 bind all <Control-k> {show_console_page $exec_out word}
 bind all <Control-o> google_search
@@ -12022,6 +12024,7 @@ proc get_all_note_patterns {} {
         dict set notepat $c,$loc $patfrag 
         #puts "notepat: $loc $patfrag $pitch $pitchindex"
 	#set barnumber [expr $onset / $barsize]
+
 	set barnumber [expr ($onset+$rjitter) / $barsize]
 	if {$barnumber != $lastbarnumber} {
 	   set lastbarnumber $barnumber
@@ -12029,6 +12032,7 @@ proc get_all_note_patterns {} {
 	     set lastunit($e) ""
              }
 	   }
+
 	#set unit [expr $onset % $barsize]
 	set unit [expr ($onset + $rjitter) % $barsize]
 	set unit [expr $unit/$unitlength]
@@ -15157,6 +15161,9 @@ foreach setting $controlSettings {
     }
 }
 
+
+#   Part 27.0 notebook
+
 proc notebook {} {
 #This is an undocumented feature for appending a
 #melody.txt file with the name of the file and
@@ -15164,6 +15171,7 @@ proc notebook {} {
 #exist.
 global midi df
 global notedata
+
 set notedata ""
 toplevel .notebook
 label .notebook.lab -text $midi(midifilein) -font $df
@@ -15187,6 +15195,47 @@ close $outhandle
 destroy .notebook
 }
 
+proc count_bar_rhythm_patterns {} {
+# The function counts the number of unique rhythm patterns
+# in each channel. The code was extracted from full_notedata_analysis
+# which is called by pitch analysis/entropy analysis/ rhythm map/ map all.	
+# This data is useful for finding the channel carrying the melody.	
+global midi
+global pianoresult
+global midilength
+global lasttrack
+global midicommands
+global ntrks
+
+set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
+catch {eval $cmd} pianoresult
+set nrec [llength $pianoresult]
+set midilength [lindex $pianoresult [expr $nrec -1]]
+set beatsperbar 4
+set midicommands [lsort -command compare_onset [split $pianoresult \n]]
+
+if {$midi(midishow_sep) == "track"} {
+   set ntrks $lasttrack
+   incr ntrks} else {
+   set ntrks 17
+   }
+
+set result [get_all_note_patterns]
+set notepat [lindex $result 0]
+set bar_rhythm [lindex $result 1]
+
+set output $midi(midifilein)
+for {set c 0} {$c < $ntrks} {incr c} {
+  if {[dict exists $bar_rhythm $c,size]} {
+    set size  [dict get $bar_rhythm $c,size]
+    #puts "bar_rhythm:\n$bar_rhythm"
+    set rhythmhistogram [make_string_histogram_for $bar_rhythm $c $size]
+    set rhythmsize [llength [dict keys $rhythmhistogram]]
+    append output "\n$c $rhythmsize"
+    }
+  }
+show_message_page  $output word
+}
 
 #trace add execution compute_pianoroll leave "cmdstr"
 
