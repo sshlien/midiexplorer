@@ -74,6 +74,7 @@ Dannii Minogue
 Dave Matthews Band
 David Bowie
 David Byrne
+David Essex
 Deep Purple
 Def Leppard
 Deftones
@@ -141,6 +142,7 @@ J.J. Cale
 Joe Cocker
 Joe Satriani
 John Denver
+John Fred
 John Lennon
 Joni Mitchell
 Journey
@@ -218,6 +220,7 @@ Reel Big Fish
 R.E.M.
 Robbie Williams
 Robert Miles
+Roberts
 Rob Zombie
 Rod Stewart
 Ronan Keating
@@ -283,6 +286,7 @@ The Cult
 The Cure
 The Doobie Brothers
 The Doors
+The Four Preps
 The Hollies
 The Human League
 The Kelly Family

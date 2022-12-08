@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.79 2022-11-29 09:20" 
+set midiexplorer_version "MidiExplorer version 3.81 2022-12-07 16:05" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -613,6 +613,7 @@ proc midiInit {} {
     set midi(dir_abcmidi) .
     if {$tcl_platform(platform) == "windows"} {
         set midi(path_midi2abc) midi2abc.exe
+	set midi(path_midistats) midistats.exe
         set midi(path_midicopy) midicopy.exe
 	set midi(path_abc2midi) abc2midi.exe
 	set midi(path_abcm2ps)  abcm2ps.exe
@@ -623,6 +624,7 @@ proc midiInit {} {
         set midi(browser) " C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
         } else {
         set midi(path_midi2abc) midi2abc
+	set midi(path_midistats) midistats
         set midi(path_midicopy) midicopy
 	set midi(path_abc2midi) abc2midi
 	set midi(path_abcm2ps)  abcm2ps
@@ -903,12 +905,10 @@ if {[file exists midiexplorer.ini]} {
   if {$tcl_platform(platform) == "windows"} {
       set midi(dir_abcmidi) $install_folder
       set midi(path_abc2midi) [file join $install_folder abc2midi.exe]
-      set midi(path_abc2abc) [file join $install_folder abc2abc.exe]
       set midi(path_abcm2ps) [file join $install_folder abcm2ps.exe]
-      set midi(path_abcmatch) [file join $install_folder abcmatch.exe]
       set midi(path_midi2abc) [file join $install_folder midi2abc.exe]
+      set midi(path_midistats) [file join $install_folder midistats.exe]
       set midi(path_midicopy) [file join $install_folder midicopy.exe]
-      set midi(path_yaps) [file join $install_folder yaps.exe]
       set midi(path_gs) ""
   } elseif {$tcl_platform(platform) == "unix"} {
       findLinuxExecutables
@@ -1299,8 +1299,9 @@ track by track (or channel by channel) description will appear\
 in the frames below and other buttons in the menubar will become\
 activated. The descriptors for the individual tracks\
 or channels list the number of notes, chords, the spread of the notes,\
-the average pitch, the  average note duration,  and other channels \
-commands . You can sort the this data by clicking on their respective headers.
+the average pitch, the  average note duration, number of rhythm patterns\
+and other channels  commands . You can sort the this data by clicking\
+on their respective headers.
 
 You can select particular channels or tracks\
 by clicking on them with your mouse pointer. Those tracks will\
@@ -1468,7 +1469,7 @@ if {[winfo exist .midistructure]} {
   midi_structure_window 
   }
 set w .tinfo
-foreach col {trk chn program notes spread pavg duration bends controls pressure} {
+foreach col {trk chn program notes spread pavg duration rpat bends controls} {
   $w.tree column $col -width [expr [font measure $df $col] + 10]
  }
 $w.tree column program -width [font measure $df "WWWWWWWWWWWWWW"]
@@ -1750,9 +1751,9 @@ proc TreeBrowserSortBy {col direction} {
 set w .tinfo
 frame $w 
 set fontheight [font metrics $df -linespace]
-ttk::treeview $w.tree -columns {trk chn program notes spread pavg duration bends controls pressure } -show headings -yscroll "$w.vsb set" -height $fontheight
+ttk::treeview $w.tree -columns {trk chn program notes spread pavg duration rpat bends controls} -show headings -yscroll "$w.vsb set" -height $fontheight
 ttk::scrollbar $w.vsb -orient vertical -command ".tinfo.tree yview"
-foreach col {trk chn program notes spread pavg duration bends controls pressure} {
+foreach col {trk chn program notes spread pavg duration rpat bends controls} {
   $w.tree heading $col -text $col
   $w.tree heading $col -command [list TinfoSortBy $col 0]
   $w.tree column $col -width [expr [font measure $df $col] + 10]
@@ -2139,8 +2140,8 @@ proc get_midi_info_for {} {
  set midilength 0
  set fileexist [file exist $midi(midifilein)]
  if {$fileexist} {
-   set exec_options "[list $midi(midifilein) -stats]"
-   set cmd "exec [list $midi(path_midi2abc)] $exec_options"
+   set exec_options "[list $midi(midifilein) ]"
+   set cmd "exec [list $midi(path_midistats)] $exec_options"
    catch {eval $cmd} midi_info
    set exec_out $cmd\n$midi_info
    update_console_page
@@ -2291,7 +2292,7 @@ proc list_keysigmod {} {
   }  
  
 
-proc get_trkinfo {channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount quietTime token} {
+proc get_trkinfo {channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns token} {
  global ppqn
  global pitchbendsplit
  upvar 1 $channel c
@@ -2303,10 +2304,12 @@ proc get_trkinfo {channel nnotes nharmony pmean duration pitchbendCount cntlpara
  upvar 1 $pressureCount pressCount
  upvar 1 $pitchbendCount pbend
  upvar 1 $quietTime qtime
+ upvar 1 $rhythmpatterns rpat
  set c [lindex $token 1]
  set n [lindex $token 3]
  set h [lindex $token 4]
  set qtime [lindex $token 9]
+ set rpat [lindex $token 10]
  set pavg [lindex $token 5]
  set pavg [expr $pavg/($n +$h)]
  set dur [lindex $token 6]
@@ -2423,7 +2426,7 @@ set trknum 1
 set nlines 1
 foreach token $trkinfo(1) {
   if {[lindex $token 0] == "trkinfo"} {
-    get_trkinfo channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount quietTime $token
+    get_trkinfo channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns $token
     set activechan($channel) 1
     set totalnotes [expr $nnotes+$nharmony]
     set channel2program($channel) $xchannel2program($channel)
@@ -2438,7 +2441,8 @@ foreach token $trkinfo(1) {
       set prog [lindex $mlist $prog]
     }
     set outline "$trknum $channel [list $prog ]"
-    append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
+    append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $rhythmpatterns $pitchbendCount $cntlparamCount"
+    #append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
     set id [$w.tree insert {} end -values $outline -tag fnt]
     incr nlines
     }
@@ -2468,7 +2472,7 @@ $w.tree delete [$w.tree children {}]
 for {set i 1} {$i <= $ntrks} {incr i} {
   foreach token $trkinfo($i) {
     if {[lindex $token 0] == "trkinfo"} {
-      get_trkinfo channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount quietTime $token
+      get_trkinfo channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns $token
       set activechan($channel) 1
       set track2channel($i) $channel
       set totalnotes [expr $nnotes+$nharmony]
@@ -2484,7 +2488,8 @@ for {set i 1} {$i <= $ntrks} {incr i} {
         set prog [lindex $mlist $prog]
       }
       set outline "$i $channel [list $prog ]"
-      append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
+      append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $rhythmpatterns $pitchbendCount $cntlparamCount"
+      #append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
       set id [$w.tree insert {} end -values $outline -tag fnt]
       }
    }
@@ -3819,7 +3824,7 @@ proc locate_abcmidi_executables {} {
     set dirname [tk_chooseDirectory]
     if {[string length $dirname] < 1} return
     set midi(dir_abcmidi) $dirname
-    foreach exec {midi2abc midicopy abc2midi abcm2ps} {
+    foreach exec {midi2abc midistats midicopy abc2midi abcm2ps} {
         if {[file exist $dirname/$exec.exe]} {
             set midi(path_$exec) $dirname/$exec.exe
         } elseif {[file exist $dirname/$exec]} {
@@ -3830,7 +3835,7 @@ proc locate_abcmidi_executables {} {
         }
      
     }
-    check_midi2abc_and_midicopy_versions
+    check_midi2abc_midistats_and_midicopy_versions
     update_console_page
 }
 
@@ -4095,7 +4100,7 @@ set hlp_pianoroll " The function will display the selected MIDI file in a piano\
         also affects the output of action/beat graph."
 
 
-proc check_midi2abc_and_midicopy_versions {} {
+proc check_midi2abc_midistats_and_midicopy_versions {} {
     global midi
     #puts "check_midi2abc : $midi(path_midi2abc)"
     set result [getVersionNumber $midi(path_midi2abc)]
@@ -4109,6 +4114,11 @@ proc check_midi2abc_and_midicopy_versions {} {
     #puts $result
     set msg "You need midicopy.exe version 1.38 or higher.\n"
     if {$err == 0 || $ver < 1.38} { .info.txt insert insert $msg red
+                    return $msg}
+    set result [getVersionNumber $midi(path_midistats)]
+    set msg "You need midistats.exe version 0.56 or higher.\n"
+    set err [scan $result "%f" ver]
+    if {$err == 0 || $ver < 0.56} { .info.txt insert insert $msg red
                     return $msg}
     return pass
 }
@@ -4347,7 +4357,7 @@ proc piano_window {} {
     bind $p.can <ButtonRelease-1> {piano_Button1Release}
     bind $p.can <Double-Button-1> piano_ClearMark
     bind $p.can <Configure> piano_resize
-    set result [check_midi2abc_and_midicopy_versions]
+    set result [check_midi2abc_midistats_and_midicopy_versions]
     if {[string equal $result pass]} {show_events} else {
         .piano.txt configure -text $result -foreground red -font $df}
 }
@@ -7413,7 +7423,7 @@ proc drumroll_window {} {
     bind $p.can <ButtonRelease-1> {drumroll_Button1Release}
     bind $p.can <Double-Button-1> drumroll_ClearMark
     bind $p.can <Configure> {drumroll_resize}
-  set result [check_midi2abc_and_midicopy_versions]
+  set result [check_midi2abc_midistats_and_midicopy_versions]
   if {[string equal $result pass]} {show_drum_events} else {
       .drumroll.txt configure -text $result -foreground red -font $df
       }
@@ -10029,8 +10039,8 @@ foreach midifile $filelist {
        .status.msg configure -text "$elapsedtime / $expectedtime seconds"
        .status.progress configure -value $value
         update}  
-  set exec_options "[list $midifile] -stats"
-  set cmd "exec [list $midi(path_midi2abc)] $exec_options"
+  set exec_options "[list $midifile] "
+  set cmd "exec [list $midi(path_midistats)] $exec_options"
   catch {eval $cmd} midi_info
   get_midi_features $midifile $midi_info $outhandle $i
   if {$i > $sizelimit} break
@@ -11727,7 +11737,7 @@ proc plotProgramDistribution {} {
 #Main
 set ntrk 1
 SwitchBetweenInfoAndTinfo 
-check_midi2abc_and_midicopy_versions 
+check_midi2abc_midistats_and_midicopy_versions 
 if {$midi(rootfolder) == ""} {
   .info.txt insert insert $welcome
   .info.txt configure -height 13
@@ -14180,6 +14190,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 4.75\
             path_midi2abc 3.56\
             path_midicopy 1.38\
+	    path_midistats 0.56\
             path_abcm2ps 8.14.6}
 
 

@@ -25,9 +25,11 @@ Diana Ross
 Dionne Warwick
 Donna Summer
 Eddie Floyd
+Ed Townsend
 En Vogue
 Fats Domino
 Fifth Dimension
+Fontella Bass
 Four Tops
 Frankie Valli
 Gary Moore
@@ -52,6 +54,7 @@ Luther Vandross
 Macy Gray
 MFSB
 Mariah Carey
+Mark Morrison
 Martha Reeves
 Marvin Gaye
 Mary J. Blige
@@ -64,6 +67,7 @@ Ray Charles
 R. Kelly
 Rick James
 Roberta Flack
+Roberts
 Robyn
 Rufus
 Sade
@@ -88,6 +92,7 @@ The Stylistics
 The Supremes
 The Temptations
 The Whispers
+Thelma Houston
 Tina Turner
 Toni Braxton
 Tower of Power
@@ -95,6 +100,7 @@ Us3
 Usher
 Village People
 War
+White Barry
 Whitney Houston
 Wilson Pickett
 All Saints

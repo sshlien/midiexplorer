@@ -20,6 +20,7 @@ Alabama
 Alain Souchon
 Alan Jackson
 Alanis Morissette
+Alberto Fortis
 Alexander O'Neal
 Alice Cooper
 Alice in Chains
@@ -105,9 +106,11 @@ Boney M
 Boney M.
 Bonnie Raitt
 Bonnie Tyler
+Boothe, Ken
 Boris Gardiner
 Boston
 Bowie David
+Boxcar
 Boy George
 Boyz II Men
 Boyzone
@@ -211,6 +214,7 @@ Dave Grusin
 Dave Matthews Band
 David Bowie
 David Byrne
+David Essex
 Davis Miles
 De Deurzakkers
 Debbie Gibson
@@ -252,6 +256,7 @@ E-Rotic
 Eagle-Eye Cherry
 Eagles
 Earth, Wind & Fire
+Ed Townsend
 Eddie Cochran
 Eddie Floyd
 Eddy Arnold
@@ -270,6 +275,7 @@ England Dan
 Enigma
 Enrique Iglesias
 Enya
+Equals
 Erasure
 Eric Clapton
 Eric Johnson
@@ -297,6 +303,7 @@ Firefall
 Firehouse
 Fleetwood Mac
 Floyd Cramer
+Fontella Bass
 Foo Fighters
 Foreigner
 Four Tops
@@ -314,13 +321,23 @@ Garbage
 Garth Brooks
 Gary Burton
 Gary Moore
+Gatto Panceri
+Gaye,Marvin
 Gene Chandler
 Gene Vincent
 Genesis
+George Baker Selection
 George Benson
+George Frideric Handel
 George Harrison
 George Michael
 Geri Halliwell
+Gerry & The Pacemakers
+Gerry Rafferty
+Gibson Brothers
+Gilbert O'Sullivan
+Gin Blossoms
+Giorgia
 Gipsy Kings
 Gladys Knight
 Glen Campbell
@@ -328,16 +345,20 @@ Glenn Miller
 Gloria Estefan
 Gloria Gaynor
 Godsmack
+Golden Earring
 Goo Goo Dolls
 Gordon Lightfoot
+Gounod Charles
 Grace Jones
 Grand Funk Railroad
+Grandi
 Grateful Dead
 Great White
 Green Day
 Guess Who
 Guns N' Roses
 Guns N'Roses
+Haddaway
 Hall & Oates
 Hank Jones
 Hank Williams
@@ -397,7 +418,9 @@ Joe Cocker
 Joe Satriani
 John Denver
 John Elton
+John Farnham
 John Fogerty
+John Fred
 John Lee Hooker
 John Lennon
 John Mellencamp
@@ -419,6 +442,7 @@ Kate Bush
 Kenny Baker
 Kenny Dorham
 Kenny G
+Kenny Loggins
 Kid Rock
 King Crimson
 Kingsmen
@@ -475,6 +499,7 @@ Mariah Carey
 Marianne Faithfull
 Marillion
 Marilyn Manson
+Mark Morrison
 Martha Reeves
 Marvin Gaye
 Mary J. Blige
@@ -485,6 +510,7 @@ Meat Loaf
 Meat Puppets
 Mecano
 Megadeth
+Melanie
 Melissa Etheridge
 Merle Travis
 Metallica
@@ -539,6 +565,7 @@ Pantera
 Papa Roach
 Pat Benatar
 Pat Metheny
+Patrick Swayze
 Patsy Cline
 Patti Smith
 Paul Anka
@@ -552,6 +579,7 @@ Percy Sledge
 Pet Shop Boys
 Peter Frampton
 Peter Gabriel
+Peter Koelewijn & Zijn Rockets
 Peter Tosh
 Phil Collins
 Phish
@@ -559,6 +587,8 @@ Pink Floyd
 Player
 Poco
 Poison
+Pooh
+Powell Bud
 Primus
 Prince
 Procol Harum
@@ -589,6 +619,7 @@ Rob Zombie
 Robbie Williams
 Robert Miles
 Roberta Flack
+Roberts
 Robyn
 Rod Stewart
 Rogers Kenny
@@ -616,6 +647,7 @@ Scorpions
 Scott Joplin
 Seal
 Seals & Crofts
+Selena
 Semisonic
 Shaggy
 Shania Twain
@@ -696,6 +728,7 @@ The Doors
 The Drifters
 The Everly Brothers
 The Five Satins
+The Four Preps
 The Gap Band
 The Hollies
 The Human League
@@ -740,6 +773,7 @@ The Whispers
 The Who
 The Yardbirds
 The Zombies
+Thelma Houston
 Thelonious Monk
 They Might Be Giants
 Thin Lizzy
@@ -788,6 +822,7 @@ Weather Report
 Weezer
 Westlife
 Wet Willie
+White Barry
 White Lion
 White Zombie
 Whitesnake
@@ -799,6 +834,7 @@ William Orbit
 Willie Nelson
 Wilson Pickett
 Winger
+Wings
 Yanni
 Yes
 ZZ Top
