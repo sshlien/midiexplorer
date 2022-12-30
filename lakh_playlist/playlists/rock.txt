@@ -21,6 +21,7 @@ Atomic Kitten
 Bad Company
 Bad Manners
 Barenaked Ladies
+Barlow Gary
 Beck
 Belinda Carlisle
 Ben Folds Five
@@ -37,6 +38,7 @@ Blur
 Bob Dylan
 Bon Jovi
 Bonnie Tyler
+Bonzo Dog Doo Dah Band
 Boston
 Boyzone
 Brian Wilson
@@ -108,10 +110,13 @@ Fleetwood Mac
 Foo Fighters
 Foreigner
 Freddie Mercury
+Freddy Cannon
 Garbage
 George Harrison
 George Michael
 Geri Halliwell
+Glen Campbell
+Glenn Frey
 Gloria Estefan
 Godsmack
 Golden Earring
@@ -123,6 +128,7 @@ Hank Williams
 Hanson
 Harry Nilsson
 Harvey Danger
+Heart
 Hole
 Incognito
 INXS
@@ -161,6 +167,7 @@ Lisa Loeb
 Live
 Local H
 Lou Reed
+Love Sculpture
 Lynyrd Skynyrd
 Madness
 Madonna

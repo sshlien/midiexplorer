@@ -22,6 +22,7 @@ Glenn Miller
 Hank Jones
 Herbie Hancock
 Herbie Mann
+Herman
 Jackie McLean
 Jaco Pastorius
 Jan Hammer
@@ -31,6 +32,8 @@ Kenny G
 Kenny Dorham
 Lee Ritenour
 Louis Armstrong
+Mann Herbie
+Marilyn Monroe
 Nat King Cole
 Nina Simone
 Norman Connors
@@ -48,7 +51,9 @@ Stanley Clarke
 Thelonious Monk
 Tom Jones
 Tommy Flanagan
+UZEB
 Vince Guaraldi
+Watanabe
 Weather Report
 Will Smith
 

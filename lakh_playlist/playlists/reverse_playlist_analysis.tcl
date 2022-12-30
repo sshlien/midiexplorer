@@ -18,7 +18,7 @@ foreach filename $filelist {
 		#puts $artist
 		if {[string length $artist] < 1} continue
 		if {[lsearch $fullartistlist $artist] < 0} {
-			lappend fullartistlist $artist
+			lappend fullartistlist [list $artist $filename]
 		}
 	}
 	set fullartistlist [lsort $fullartistlist]

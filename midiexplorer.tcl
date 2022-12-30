@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.81 2022-12-07 16:05" 
+set midiexplorer_version "MidiExplorer version 3.87 2022-12-19 17:55" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -721,6 +721,7 @@ proc midiInit {} {
     set midi(midishow_sep) track
     set midi(nodrumroll) 1
     set midi(midishow_follow) 1
+    set midi(trackSelector) dynamic
     
     #  for drumeditor.tcl
     set midi(selected_drums) ""
@@ -1089,7 +1090,9 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
 	set ww $w.menuline.view.items
 	menu $ww -tearoff 0
 	$ww add command -label "google search" -font $df -accelerator "ctrl-o"\
-	    -command google_search
+	    -command google_search 
+	$ww add command -label "google genre" -font $df -accelerator "ctrl-g"\
+	    -command "google_search genre"
 	$ww add command -label "duckduckgo search" -font $df -accelerator "ctrl-u"\
 	    -command duckduckgo_search
         $ww add command -label "pgram" -font $df -command pgram_window 
@@ -1368,6 +1371,7 @@ proc bind_accelerators {} {
 bind all <Control-a> aftertouch
 bind all <Control-d> drumroll_window
 bind all <Control-e> count_bar_rhythm_patterns
+bind all <Control-g> {google_search genre}
 bind all <Control-h> {chordgram_plot none}
 bind all <Control-k> {show_console_page $exec_out word}
 bind all <Control-o> google_search
@@ -2879,6 +2883,14 @@ catch {eval $cmd} pianoresult
 #puts "midifilein = $midi(midifilein)"
 set nrec [llength $pianoresult]
 set midilength [lindex $pianoresult [expr $nrec -1]]
+if {![string is integer $midilength]} {
+	.info.txt insert insert "cannot process this file" red
+	return
+#except for midi2abc -mftext, all other functions will fail.
+#midi2abc -midigram does not return midilength and midicopy
+#also fails. Midifile.c exits the application when it encounters
+#an error.
+        }
 set pianoresult [split $pianoresult \n]
 
 set ppqn [lindex [lindex $pianoresult 0] 3]
@@ -2960,7 +2972,7 @@ For each channel, the pitch classes of each note onset are shown as\
 function of time up to a resolution of 1/16 note. These onsets are\
 color coded according to their midi program (musical instrument).\
 The dot size menu controls how prominent these onsets appear in the\
-plots. If the dot sizes are too large, the onsets may overlap.\
+plots. If the dot sizes are too large, the onsets may overlap.\n\
 Hovering the mouse pointer on one of the channel checkboxes will\
 pop up the midi program number and name. The lower horizontal scale\
 indicates the beat number (quarter note) position.\n\n\
@@ -4064,10 +4076,16 @@ set hlp_pianoroll " The function will display the selected MIDI file in a piano\
         mouse button and sweeping an area. This area will be highlighted.\
         (A double click will clear the highlighted area marker -- yellow stipple.)\
         Clicking the zoom button will zoom into the highlighted area.\n\n\
-        Hovering the mouse pointer over any of the channel/track checkbuttons will\
+	The behaviour of the channel/track checkbuttons depend upon whether\
+        dynamic or static highlighting in the config menu is checked. If\
+        dynamic highlighting is chosen,\
+        hovering the mouse pointer over any of the channel/track checkbuttons will\
         highlight the notes of that track in red in the piano roll. (Note that those\
         notes may not be visible in the current view.) If you check one of those\
-        buttons those notes will be highlighted in blue.\n\n\
+        buttons those notes will be highlighted in blue. If static highlighting\
+	is chosen, red accentuation will be suppressed and ticking\
+       	one or more buttons will hide all the other\
+	tracks and expose only the selected tracks in blue \n\n\
         Note that if any of these functions\
         do not seem to run correctly, you should click the console\
         button and view the messages.\n\n The program attempts to follow\
@@ -4116,9 +4134,9 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
     if {$err == 0 || $ver < 1.38} { .info.txt insert insert $msg red
                     return $msg}
     set result [getVersionNumber $midi(path_midistats)]
-    set msg "You need midistats.exe version 0.56 or higher.\n"
+    set msg "You need midistats.exe version 0.58 or higher.\n"
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.56} { .info.txt insert insert $msg red
+    if {$err == 0 || $ver < 0.58} { .info.txt insert insert $msg red
                     return $msg}
     return pass
 }
@@ -4202,10 +4220,24 @@ proc piano_roll_display {} {
    show_events
    }
 
+proc configureTrackSelector {} {
+global midi
+if {$midi(trackSelector) == "static"} {
+ for {set i 0} {$i < 32} {incr i} {
+  .piano.trkchn.$i configure -command "highlightTrackStatic $i"
+   }
+ } else {
+ for {set i 0} {$i < 32} {incr i} {
+  .piano.trkchn.$i configure -command "highlight_track $i"
+   }
+ }
+}
+
 proc piano_window {} {
     global pianorollwidth
     global exec_out
     set exec_out "piano_roll"
+    global midi
     global df
     global midispeed
     if {[winfo exist .piano]} {destroy .piano}
@@ -4228,6 +4260,10 @@ proc piano_window {} {
             -command {zero_trksel
                       compute_pianoroll
                       show_prog_structure}
+    $p.config.items add radiobutton -label "dynamic highlighting" -font $df\
+    -value dynamic -variable midi(trackSelector) -command configureTrackSelector
+    $p.config.items add radiobutton -label "static highlighting" -font $df\
+    -value static -variable midi(trackSelector) -command configureTrackSelector
     $p.config.items add checkbutton -label "suppress drum channel" -font $df\
             -variable midi(nodrumroll) -command compute_pianoroll
     $p.config.items add checkbutton -label "follow while playing" -font $df\
@@ -4331,13 +4367,18 @@ proc piano_window {} {
     grid $p.txt -column 1
     grid rowconfig $p 2 -weight 1 -minsize 0
     grid columnconfig $p 1 -weight 1 -minsize 0
-    
     frame .piano.trkchn
     grid .piano.trkchn -columnspan 3 -sticky nw
     
     for {set i 0} {$i < 32} {incr i} {
-        checkbutton .piano.trkchn.$i -text $i -variable trksel($i) -font $df -command "highlight_track $i"
+        if {$midi(trackSelector) == "static"} {
+          checkbutton .piano.trkchn.$i -text $i -variable trksel($i) -font $df
+         } else {
+          checkbutton .piano.trkchn.$i -text $i -variable trksel($i) -font $df
+        }
     }
+
+    configureTrackSelector
     button .piano.trkchn.play -relief raised -padx 1 -pady 1
     grid .piano.trkchn.play -column 1
     bind .piano.trkchn.play <Button> {
@@ -4374,6 +4415,25 @@ update_displayed_pdf_windows .piano.can
 }
 
 
+
+proc highlightTrackStatic {num} {
+global trksel
+global last_checked_button
+
+set nselected [count_trksel]
+if {$nselected == 0} {hideExposeSomePianoRollTracksChannels 0
+	             return}
+
+if {$trksel($num)} {
+  hideExposeSomePianoRollTracksChannels 1 
+  .piano.can itemconfigure trk$num -fill blue -width 4
+  } else {
+  .piano.can itemconfigure trk$num -fill "" -width 4
+  }
+update_displayed_pdf_windows .piano.can
+}
+
+
 proc highlight_all_chosen_tracks {} {
 global trksel
 for {set i 0} {$i < 32} {incr i} {
@@ -4387,6 +4447,17 @@ for {set i 0} {$i < 32} {incr i} {
     set trksel($i) 0
     }
 }
+
+proc count_trksel {} {
+global trksel
+set count 0
+for {set i 0} {$i < 32} {incr i} {
+    if {$trksel($i)} {incr count}
+    }
+return $count
+}
+
+
 #
 
 
@@ -6485,6 +6556,34 @@ proc qnote_offset_adjustment {offset} {
     if {[winfo exists .beatgraph]} {beat_graph}
 }
 
+
+proc hideExposeSomePianoRollTracksChannels {hide} {
+global activechan
+global track2channel
+global midi
+global trksel
+if {$hide == 1} {
+  set col ""
+  } else {
+  set col black
+  }
+if {$midi(midishow_sep) == "track"} {
+  for {set i 2} {$i < 32} {incr i} {
+    if {[info exist track2channel($i)] && $trksel($i) == 0} {
+      .piano.can itemconfigure trk$i -fill $col -width 4
+      }
+  }
+} else {
+  for {set i 0} {$i <17} {incr i} {
+    if {[info exist activechan($i)] && $trksel($i) == 0} {
+      .piano.can itemconfigure trk$i -fill $col -width 4
+    }
+  }
+}
+}
+
+
+
 proc put_trkchan_selector {} {
 # places a line of buttons at the bottom of the .piano window
 # for selecting midi channels or tracks for further action.
@@ -6512,7 +6611,7 @@ proc put_trkchan_selector {} {
 
         .piano.trkchn.play configure -text "play selected channels" -font $df
         .piano.trkchn.display configure -text "display selected channels" -font $df
-	for {set i 0} {$i <16} {incr i} {
+	for {set i 0} {$i <17} {incr i} {
             if {[info exist activechan($i)]} {
               grid .piano.trkchn.$i -sticky nw -row [expr $j/10] -column [expr 2 +( $j % 10)]
               incr j
@@ -6543,7 +6642,7 @@ proc put_trkchan_selector {} {
 
               #puts ".piano.trkchn.$i bound to trk$n"
 	      #puts "trksel($n) = $trksel($n)"
-              if {$trksel($n) == 0} {
+              if {$trksel($n) == 0 && $midi(trackSelector) == "dynamic"} {
                  .piano.can itemconfigure trk$n -fill red -width 3
                  } 
               # restore checkbutton to black in case it is still red.
@@ -6555,7 +6654,7 @@ proc put_trkchan_selector {} {
 
             bind .piano.trkchn.$i <Leave> {
               set n [lindex [split %W .] 3]
-              if {$trksel($n) == 0} {
+              if {$trksel($n) == 0 && $midi(trackSelector) == "dynamic"} {
                 .piano.can itemconfigure trk$n -fill black -width 3
                 }
               }
@@ -6762,6 +6861,8 @@ proc midi_to_midi {sel} {
     set midipulse_limits [midi_limits .piano.can]
     set begin [lindex $midipulse_limits 0]
     set end   [lindex $midipulse_limits 1]
+    #quantize to beat unit
+    set begin [expr $ppqn*($begin/$ppqn)]
     
     #puts "sel = $sel"
     set tsel 0
@@ -7325,6 +7426,7 @@ proc drumroll_ClearMark {} {
 
 set drumrollwidth 400
 
+
 proc drumroll_window {} {
     global df
     global midispeed
@@ -7525,7 +7627,7 @@ proc drumroll_qnotelines {} {
         for {set i $piano_qnote_offset} {$i < $midilength} {incr i $vspace} {
             set ix1 [expr $i/$drumxscale]
             if {$ix1 < 0} continue
-            $p.can create line $ix1 $top $ix1 $bot -width 1 -tag barline -dash {1 2}
+            $p.can create line $ix1 $top $ix1 $bot -width 1 -tag barline -dash {1 2} -fill yellow
         }
         
         for {set i $piano_qnote_offset} {$i < $midilength} {incr i $txspace} {
@@ -7604,7 +7706,7 @@ proc compute_drumroll {} {
 	     set item [$p.cany create window 10 [expr $i*20 + 0] -anchor nw -window $p.cany.drm$i]
         }
     set canheight [expr $gram_ndrums*20 + 10]
-    $p.can configure -height $canheight -background grey
+    $p.can configure -height $canheight -background grey28
     $p.cany configure -height $canheight
     
     drumroll_qnotelines
@@ -7816,10 +7918,13 @@ proc drum_to_midi  {} {
     global midipulse_limits
     global midispeed
     global rdrumstrip
+    global ppqn
     
     set midipulse_limits [midi_limits .drumroll.can]
     set begin [lindex $midipulse_limits 0]
     set end   [lindex $midipulse_limits 1]
+    #quantize to beat unit
+    set begin [expr $ppqn*($begin/$ppqn)]
     
     # We first delete the old file in case winamp is still playing it.
     set cmd "file delete -force -- $midi(outfilename)"
@@ -12713,7 +12818,7 @@ findChildInTree .treebrowser $findname
 
 
 #   Part 18.0 google_search
-proc google_search {} {
+proc google_search {{modifier ""}} {
 global midi
 global exec_out
 set exec_out "google_search:\n"
@@ -12726,7 +12831,7 @@ set title [file root [lindex $splitname $l1]]
 set artist [lindex $splitname $l2]
 #puts $artist
 #puts $title
-set searchstring "$artist+$title"
+set searchstring "$artist+$title+$modifier"
 set searchstring [string map {{ } + & +} $searchstring]
 #puts $searchstring
 set s "https://www.google.ca/search?q=$searchstring"
