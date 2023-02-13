@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.87 2022-12-19 17:55" 
+set midiexplorer_version "MidiExplorer version 3.90 2023-02-13 13:15" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -1194,7 +1194,7 @@ menu $ww -tearoff 0
         $ww add command  -label "velocity map" -font $df \
             -command plot_velocity_map
         $ww add command  -label "beat graph" -font $df \
-            -command beat_graph
+            -command {beat_graph none}
 
 tooltip::tooltip $w.menuline.rhythm "Computes the and plots the distribution
 of various rhythm related parameters of the selected midi file."
@@ -4313,7 +4313,7 @@ proc piano_window {} {
     $p.action.items add command  -label "velocity map" -font $df \
             -command plot_velocity_map
     $p.action.items add command  -label "beat graph" -font $df \
-            -command beat_graph
+            -command {beat_graph pianoroll}
     $p.action.items add command  -label "notegram" -font $df \
             -command {notegram_plot pianoroll}
     $p.action.items add command  -label "chordtext" -font $df \
@@ -4431,6 +4431,21 @@ if {$trksel($num)} {
   .piano.can itemconfigure trk$num -fill "" -width 4
   }
 update_displayed_pdf_windows .piano.can
+}
+
+proc applyHighlightTrackStatic {} {
+global trksel
+global midi
+if {$midi(trackSelector) != "static"} return
+if {[count_selected_midi_tracks] == 0} return
+for {set i 0} {$i < 32} {incr i} {
+ if {$trksel($i)} {
+   hideExposeSomePianoRollTracksChannels 1 
+  .piano.can itemconfigure trk$i -fill blue -width 4
+   } else {
+  .piano.can itemconfigure trk$i -fill "" -width 4
+  }
+ }
 }
 
 
@@ -4572,6 +4587,7 @@ proc piano_zoom {} {
         piano_horizontal_scroll $xv
     }
     update_displayed_pdf_windows .piano.can
+    applyHighlightTrackStatic 
 }
 
 
@@ -4593,6 +4609,7 @@ proc piano_unzoom {factor} {
     compute_pianoroll
     piano_horizontal_scroll $xvl
     update_displayed_pdf_windows .piano.can
+    applyHighlightTrackStatic 
 }
 
 proc piano_total_unzoom {} {
@@ -4604,6 +4621,7 @@ proc piano_total_unzoom {} {
     compute_pianoroll
     .piano.can configure -scrollregion [.piano.can bbox all]
     update_displayed_pdf_windows .piano.can
+    applyHighlightTrackStatic 
 }
 
 proc piano_zoom_to {beginbeat endbeat} {
@@ -4617,6 +4635,7 @@ proc piano_zoom_to {beginbeat endbeat} {
     set xvl [expr $beginbeat/$lastbeat]
     piano_horizontal_scroll $xvl
     update_displayed_pdf_windows .piano.can
+    applyHighlightTrackStatic 
     }
  
 proc piano_resize {} {
@@ -4658,19 +4677,18 @@ set hlp_pianoroll_actions "The action menu provides miscellaneous\
         
 
 #         beat graph
-proc beat_graph {} {
+proc beat_graph {source} {
     global scanwidth scanheight
     global xlbx ytbx xrbx ybbx
     global pianoresult ppqn
     global midi
+    global fbeat
+    global tbeat
     
     
-    set limits [midi_limits .piano.can]
-    set start [expr double([lindex $limits 0])/$ppqn]
-    set stop  [expr double([lindex $limits 1])/$ppqn]
     set tsel [count_selected_midi_tracks]
 
-    copyMidiToTmp pianoroll
+    copyMidiToTmp $source
     set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
     catch {eval $cmd} pianoresult
     set nrec [llength $pianoresult]
@@ -4688,28 +4706,26 @@ proc beat_graph {} {
     # white or black characters
     set colfg [lindex [.info.txt config -fg] 4]
 
-    if {$start > 1.0} {set start [expr $start -1.0]}
-    set delta_tick [expr int(($stop - $start)/10.0)]
+    set delta_tick [expr int(($tbeat - $fbeat)/10.0)]
     if {$delta_tick < 1} {set delta_tick 1}
     $bgraph create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
             -width 2 -fill white
-    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx $start $stop -0.0625 1.0
-    Graph::draw_x_ticks $bgraph $start $stop $delta_tick 2 0 %3.0f $colfg
+    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx $fbeat $tbeat -0.0625 1.0
+    Graph::draw_x_ticks $bgraph $fbeat $tbeat $delta_tick 2 0 %3.0f $colfg
     Graph::draw_y_ticks $bgraph 0.0 1.0 0.125 2 %3.2f $colfg
     
     set i 0
     foreach line $pianoresult {
         if {[llength $line] != 6} continue
         set onset [expr double([lindex $line 1])/$ppqn]
-        if {$onset < $start} continue
-        if {$onset > $stop} break
         set beat [expr floor($onset)]
         set frac [expr $onset - $beat]
-        #  puts "$beat $frac"
+	set beat [expr $beat + $fbeat]
+	if {$beat > $tbeat} break
         incr i
         set ix [Graph::ixpos $beat]
         set iy [Graph::iypos $frac]
-        $bgraph create rectangle $ix $iy [expr $ix +1] [expr $iy +1] -fill black
+        $bgraph create rectangle $ix $iy [expr $ix +2] [expr $iy +2] -fill black
     }
 }
 
@@ -6546,14 +6562,14 @@ proc qnote_spacing_adjustment {ppqn_incr} {
     incr piano_qnote_offset $offset_adjustment
     piano_qnotelines
     .piano.txt configure -text [format "ppqn = %d" $ppqn] -foreground Black
-    if {[winfo exists .beatgraph]} {beat_graph}
+    if {[winfo exists .beatgraph]} {beat_graph pianoroll}
 }
 
 proc qnote_offset_adjustment {offset} {
     global piano_qnote_offset
     incr piano_qnote_offset $offset
     piano_qnotelines
-    if {[winfo exists .beatgraph]} {beat_graph}
+    if {[winfo exists .beatgraph]} {beat_graph pianoroll}
 }
 
 
@@ -9110,6 +9126,7 @@ proc plotmidi_duration_pdf {} {
 
 
 proc update_displayed_pdf_windows {canvs} {
+#puts "canvs = $canvs"
 if {$canvs == ".drumroll.can"} {
    update_drumroll_pdfs
    return
@@ -9150,7 +9167,7 @@ if {[winfo exists .entropy]} {
    analyze_note_patterns
    }
 if {[winfo exists .beatgraph]} {
-   beat_graph
+   beat_graph pianoroll
    }
 if {[winfo exists .channel9]} {
    compute_drum_pattern
@@ -9206,7 +9223,7 @@ if {[winfo exists .notegram]} {
    notegram_plot $source
    }
 if {[winfo exists .beatgraph]} {
-   beat_graph
+   beat_graph $source
    }
 if {[winfo exists .pgram]} {
    compute_pgram
@@ -9244,7 +9261,7 @@ if {[winfo exists .velocitypdf]} {
    plotmidi_velocity_pdf
    } 
 if {[winfo exist .drumanalysis]} {
-   analyze_drum_patterns 1
+   analyze_drum_patterns 0
    }
 }
   
@@ -12902,6 +12919,7 @@ speakers and follow the score.\n\n\
 proc create_abc_file {source} {
 global midi
 global exec_out
+set exec_out "create_abc_file $source\n\n"
 set title [file root [file tail $midi(midifilein)]]
 copyMidiToTmp $source
 # -sr 2 swallow small rests
