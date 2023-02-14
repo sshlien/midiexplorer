@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.90 2023-02-13 13:15" 
+set midiexplorer_version "MidiExplorer version 3.91 2023-02-14 09:50" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -8905,6 +8905,7 @@ proc midi_statistics {choice source} {
     global cleanData
     global briefconsole
 
+
     set cleanData 0
     set exec_out "midi_statistics $choice $source\n\n"
     copyMidiToTmp $source
@@ -9147,6 +9148,10 @@ if {[winfo exists .onsetpdf]} {
    pianoroll_statistics onset $canvs
    plotmidi_onset_pdf
    }
+if {[winfo exists .offsetpdf]} {
+   midi_statistics offset pianoroll
+   plotmidi_offset_pdf
+   }
 if {[winfo exists .durpdf]} {
    pianoroll_statistics duration $canvs
    plotmidi_duration_pdf
@@ -9179,7 +9184,7 @@ if {[winfo exists .notegram]} {
 
 
 proc updateAllWindows {source} {
-#puts "updateAllWindows $source"
+puts "updateAllWindows $source"
 if {[winfo exists .pitchpdf]} {
    midi_statistics pitch $source
    plotmidi_pitch_pdf
