@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.91 2023-02-14 09:50" 
+set midiexplorer_version "MidiExplorer version 3.93 2023-02-16 08:45" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -6868,6 +6868,7 @@ proc midi_to_midi {sel} {
     global midi
     global midipulse_limits
     global midispeed
+    global ppqn
     
     # We first delete the old file in case winamp is still playing it.
     set cmd "file delete -force -- $midi(outfilename)"
@@ -9184,7 +9185,7 @@ if {[winfo exists .notegram]} {
 
 
 proc updateAllWindows {source} {
-puts "updateAllWindows $source"
+#puts "updateAllWindows $source"
 if {[winfo exists .pitchpdf]} {
    midi_statistics pitch $source
    plotmidi_pitch_pdf
@@ -9889,7 +9890,7 @@ proc plot_velocity_map {} {
         set ix1 [Graph::ixpos $begin]
         set ix2 [Graph::ixpos $end]
         set iy [Graph::iypos $v]
-        $velmap create line $ix1 $iy $ix2 $iy -width 2
+        $velmap create line $ix1 $iy $ix2 $iy -width 3
     }
 }
 
