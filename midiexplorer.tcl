@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.93 2023-02-16 08:45" 
+set midiexplorer_version "MidiExplorer version 3.94 2023-02-16 14:45" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -2054,6 +2054,8 @@ proc selected_midi {} {
  global ntrks
  global df
  global cleanData
+ global pianorollwidth
+ global pianoPixelsPerFile
  set cleanData 0
  set sel [.treebrowser.tree selection]
  set c [.treebrowser.tree item $sel -values]
@@ -2076,6 +2078,7 @@ proc selected_midi {} {
    set cleanData 1
    if {[winfo exist .piano]} {
             zero_trksel
+            set pianoPixelsPerFile $pianorollwidth
             compute_pianoroll
             update_displayed_pdf_windows .piano.can}
    if {[winfo exist .midistructure]} {
