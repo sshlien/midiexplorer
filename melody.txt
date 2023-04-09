@@ -18,88 +18,86 @@ channels which drown out melody.
 
 
 
-Ray Charles/Georgia.1.mid	4 65
-Selena/Baila mi son.mid	4 52
-Faith No More/Easy.1.mid	13 12
-Roberts/Stasera mi butto.mid	4 11
-Thelma Houston/Don't Leave Me This Way.mid	4 65
-Journey/Any Way You Want It.mid	5 11
-David Essex/Everlasting Love.mid	16 65
-The Offspring/All I Want.mid	3 21
-Melanie/Feels So Good (Blacksmith R&B Rub) (feat. Know _uestion).mid	13 75
-Collective Soul/December.1.mid	11 54
-Genesis/A Trick of the Tail.1.mid	9 88
-Wings/Silly Love Songs.mid	16 65
-Mark Morrison/Return of the Mack.mid	4 65
-John Fred/Judy in Disguise.mid	1 0
-The Four Preps/26 Miles (Santa Catalina).mid	4 73
-Boothe, Ken/Everything I Own.mid	6 100
-Sheryl Crow/All I Wanna Do.mid	-1 -1
-Marc Anthony/Hasta Ayer.mid	8 2
-Commodores/Brick House.mid	-1 -1
-Commodores/Easy.1.mid	16 65
+Al Jolson/You Made Me Love You.mid	4 24
 Alberto Fortis/Figlio di niente.mid	4 62
-Player/Baby Come Back.mid	9 74
-White Barry/You're The First, The Last, My Everything.1.mid	3 0
-White Barry/You're The First, The Last, My Everything.mid	4 18
-Gibson Brothers/Cuba.1.mid	1 66
-Gibson Brothers/Cuba.mid	4 29
-Uriah Heep/Easy Livin'.mid	2 18
-Eiffel 65/Another Race.1.mid	3 87
+Andy Williams/Can't Get Used To Losing You.mid	-1 -1 vocal line missing
+Andy Williams/The Impossible Dream.mid	1 1
+Backstreet Boys/As Long as You Love Me.2.mid	-1 -1  vocal line missing
+Backstreet Boys/As Long as You Love Me.1.mid	-1 -1  vocal line missing
+Blue Oyster Cult/Godzilla.mid	4 61
+Boothe, Ken/Everything I Own.mid	6 100
+Bob James/Orpheus.mid	4 73
+Boxcar/Achy Breaky Heart.mid	-1 -1
+Byrd Charlie/The Girl From Ipanema.mid	1 21
 Captain Hollywood Project/Find Another Way (single mix).mid	15 67
 Captain Hollywood Project/Impossible.mid	8 85
-Pooh/...in concerto.mid	4 73
-Pooh/Air India.mid	4 12
-The Cranberries/Animal Instinct.mid	3 90
-Ed Townsend/For Your Love.mid	4 73
-Peter Koelewijn & Zijn Rockets/Kom Van Dat Dak Af.mid	4 35
-Boxcar/Achy Breaky Heart.mid	-1 -1
-Bob James/Orpheus.mid	4 73
-Cole Porter/Anything Goes.mid	1 65
-Kenny Loggins/Footloose.mid	4 22
-Nas/If I Ruled the World.mid	1 75
-George Michael/Faith.1.mid	5 75
+Carboni/Ci vuole un fisico bestiale.2.mid	12 11
 Charlie Rich/The Most Beautiful Girl.mid	1 22
 Cocciante/Celeste nostalgia.mid	4 21
-War/The Cisco Kid.mid	-1 -1
-Backstreet Boys/As Long as You Love Me.2.mid	-1 -1
-Backstreet Boys/As Long as You Love Me.1.mid	-1 -1
-Fontella Bass/Rescue Me.mid	1 57
-Player/Baby Come Back.mid	9 74
-Andy Williams/Can't Get Used To Losing You.mid	-1 -1
-Andy Williams/The Impossible Dream.mid	1 1
-Powell Bud/I Get a Kick Out of You.mid	3 0
+Collective Soul/December.1.mid	11 54
+Cole Porter/Anything Goes.mid	1 65
+Commodores/Brick House.mid	2 61
+Commodores/Easy.1.mid	16 65
+David Essex/Everlasting Love.mid	16 65
 Duke/I'm So in Love With You.mid	4 65
-Local H/Back in the Day.mid	-1 -1
-Local H/Bag of Hammers.mid	-1 -1
-Paul Simon/Bridge Over Troubled Water.mid	5 4
-Patrick Swayze/She's Like the Wind.mid	5 25
-Holly Buddy/It's So Easy.mid	4 26
-Freddy Martin/Managua, Nicaragua.mid	-1 -1
-Byrd Charlie/The Girl From Ipanema.mid	1 21
-Rich , Buddy/Groovin' Hard.mid	-1 -1
-John Farnham/Playing to Win.mid	4 17
-Holly Buddy/I'm Lookin' For Someone To Love.mid	4 26
-Grease/Summer Saturdays.mid	-1 -1
-The Trammps/Disco Inferno.mid	-1 -1
-The Trammps/Zing Went the Strings of My Heart.mid	4 58
-Donovan/Mellow Yellow.mid	5 76
-Equals/Baby Come Back.1.mid	4 65
-Jones Grace/Love Is the Drug.mid	3 18
-Carboni/Ci vuole un fisico bestiale.2.mid	12 11
-Free/Allright Now.2.mid	4 80
-Blue Oyster Cult/Godzilla.mid	4 61
-Shaggy/Angel.2.mid	4 70
-Taco/Puttin'on the Ritz.mid	-1 -1
-Rita Coolidge/(Your Love Has Lifted Me) Higher and Higher.mid	5 0
-Todd Rundgren/Can We Still Be Friends.1.mid	1 0
 Duran Duran/Come Undone.2.mid	3 65
-Al Jolson/You Made Me Love You.mid	4 24
-Supermax/Love Machine, Part 1.mid	-1 -1
-Oingo Boingo/Dead Man's Party.mid	-1 -1
-Oingo Boingo/Grey Matter.mid	9 85
-The Cyrkle/Red Rubber Ball.1.mid	6 20
-Steve Winwood/Higher Love.2.mid	-1 -1
-Wax/Building a Bridge to Your Heart.mid	1 99
+Ed Townsend/For Your Love.mid	4 73
+Equals/Baby Come Back.1.mid	4 65
+Eiffel 65/Another Race.1.mid	3 87
+Faith No More/Easy.1.mid	13 12
+Fontella Bass/Rescue Me.mid	1 57
+Freddy Martin/Managua, Nicaragua.mid	-1 -1 shifting melody among channels
+Free/Allright Now.2.mid	4 80
+Genesis/A Trick of the Tail.1.mid	9 88
+George Michael/Faith.1.mid	5 75
+Gibson Brothers/Cuba.1.mid	1 66
+Gibson Brothers/Cuba.mid	4 29
+Grease/Summer Saturdays.mid	-1 -1 shifting melody among channels
+Holly Buddy/It's So Easy.mid	4 26
+Holly Buddy/I'm Lookin' For Someone To Love.mid	4 26
+John Farnham/Playing to Win.mid	4 17
+John Fred/Judy in Disguise.mid	1 0
 Johnny Rivers/Midnight Special.mid	6 29
+Jones Grace/Love Is the Drug.mid	3 18
+Journey/Any Way You Want It.mid	5 11
+Kenny Loggins/Footloose.mid	4 22
+Local H/Back in the Day.mid	-1 -1 no melody
+Local H/Bag of Hammers.mid	-1 -1 no melody
+Marc Anthony/Hasta Ayer.mid	8 2
+Mark Morrison/Return of the Mack.mid	4 65
+Melanie/Feels So Good (Blacksmith R&B Rub) (feat. Know _uestion).mid	13 75
+Nas/If I Ruled the World.mid	1 75
+Oingo Boingo/Dead Man's Party.mid	-1 -1 melody in various channels
+Oingo Boingo/Grey Matter.mid	9 85
+Patrick Swayze/She's Like the Wind.mid	5 25
+Paul Simon/Bridge Over Troubled Water.mid	5 4
+Peter Koelewijn & Zijn Rockets/Kom Van Dat Dak Af.mid	4 35
+Player/Baby Come Back.mid	9 74
+Pooh/...in concerto.mid	4 73
+Pooh/Air India.mid	4 12
+Powell Bud/I Get a Kick Out of You.mid	3 0
+Ray Charles/Georgia.1.mid	4 65
+Rich , Buddy/Groovin' Hard.mid	-1 -1 melody spread out in many channels
+Rita Coolidge/(Your Love Has Lifted Me) Higher and Higher.mid	5 0
+Roberts/Stasera mi butto.mid	4 11
+Selena/Baila mi son.mid	4 52
+Shaggy/Angel.2.mid	4 70
+Sheryl Crow/All I Wanna Do.mid	4 75
 Special EFX/Uptown East.mid	4 82
+Steve Winwood/Higher Love.2.mid	-1 -1
+Supermax/Love Machine, Part 1.mid	-1 -1 no melody
+Taco/Puttin'on the Ritz.mid	-1 -1 shifting melody
+Thelma Houston/Don't Leave Me This Way.mid	4 65
+The Cranberries/Animal Instinct.mid	3 90
+The Cyrkle/Red Rubber Ball.1.mid	6 20
+The Four Preps/26 Miles (Santa Catalina).mid	4 73
+The Offspring/All I Want.mid	3 21
+The Trammps/Disco Inferno.mid	1 7
+The Trammps/Zing Went the Strings of My Heart.mid	4 58
+Todd Rundgren/Can We Still Be Friends.1.mid	1 0
+Uriah Heep/Easy Livin'.mid	2 18
+Wings/Silly Love Songs.mid	16 65
+White Barry/You're The First, The Last, My Everything.1.mid	3 0
+White Barry/You're The First, The Last, My Everything.mid	4 18
+War/The Cisco Kid.mid	-1 -1
+Wax/Building a Bridge to Your Heart.mid	1 99

@@ -5,6 +5,7 @@
 ABBA disco.txt
 ABBA platinum_and_gold.txt
 ABBA rock.txt
+Aaliyah rnb.txt
 Adele pop_rock.txt
 Aerosmith blues_rock.txt
 Aerosmith glam_rock.txt
@@ -17,23 +18,31 @@ Alabama platinum_and_gold.txt
 Alphaville rock.txt
 America soft_rock.txt
 Anastacia rock.txt
+Anggun pop.txt
 Aqua rap.txt
 Asia rock.txt
 Aswad reggae.txt
+Attila alternativerock.txt
+Attila punk.txt
 BZN pop.txt
 Babyface rnb.txt
 Bananarama dance_music.txt
 Band country_rock.txt
 Band roots_rock.txt
+Basia electronica.txt
 Battisti songwriters.txt
 Beck alternativerock.txt
 Beck rock.txt
+Bennett jazz.txt
+Bilk easy_listerning.txt
 Bjork electronica.txt
 Blackstreet rnb.txt
 Blondie disco.txt
 Blondie new_wave.txt
 Blondie rock.txt
 Blur rock.txt
+Bobby_Boris_Pickett rock.txt
+Bommbastic electronica.txt
 Boston platinum_and_gold.txt
 Boston rock.txt
 Boxcar electronica.txt
@@ -68,11 +77,13 @@ Chicago rock.txt
 Chicago soft_rock.txt
 Chumbawamba rock.txt
 Clementi classical.txt
+Climax soft_rock.txt
 Coasters rockabilly.txt
 Cocciante songwriters.txt
 Commodores disco.txt
 Coolio hip_hop.txt
 Corona rnb.txt
+Cosmix dance_music.txt
 Cream blues_rock.txt
 Cream psychedelia.txt
 Cream rap.txt
@@ -93,7 +104,9 @@ Devo rock.txt
 Donovan psychedelia.txt
 Donovan rock.txt
 Dorsey rockabilly.txt
+Drukwerk pop.txt
 Drupi rock.txt
+Duke dance_music.txt
 Dune jazz.txt
 Dvorak classical.txt
 E-Rotic rock.txt
@@ -129,6 +142,7 @@ Foreigner hard_rock.txt
 Foreigner platinum_and_gold.txt
 Foreigner rock.txt
 Foreigner soft_rock.txt
+Fortunes pop.txt
 Fourplay jazz.txt
 Fugees hip_hop.txt
 Fugees rap.txt
@@ -144,7 +158,9 @@ Giorgia pop.txt
 Godsmack hard_rock.txt
 Godsmack rock.txt
 Godsmack {heavy metal.txt}
+Godspell folk_rock.txt
 Grandi pop.txt
+Graziani pop.txt
 Haddaway dance_music.txt
 Haddaway electronica.txt
 Haddaway pop.txt
@@ -160,11 +176,13 @@ Hole rock.txt
 INXS platinum_and_gold.txt
 INXS rock.txt
 Incognito rock.txt
+James garage_rock.txt
 James rap.txt
 Jamiroquai disco.txt
 Jamiroquai rock.txt
 Jewel platinum_and_gold.txt
 Jewel rock.txt
+Jigsaw disco.txt
 Joe rap.txt
 Journey platinum_and_gold.txt
 Journey rock.txt
@@ -172,12 +190,14 @@ Journey soft_rock.txt
 Kansas platinum_and_gold.txt
 Kansas progressive_rock.txt
 Kansas rock.txt
+Kaoma latin.txt
 Kingsmen garage_rock.txt
 Kiss disco.txt
 Kiss glam_rock.txt
 Kiss hard_rock.txt
 Kiss platinum_and_gold.txt
 Kiss {heavy metal.txt}
+Korgis pop.txt
 Korn hard_rock.txt
 Korn nu_metal.txt
 Korn platinum_and_gold.txt
@@ -212,6 +232,7 @@ Metallica rock.txt
 Metallica {heavy metal.txt}
 Mina rock.txt
 Moby electronica.txt
+Mocedades pop.txt
 Morandi world.txt
 Mud glam_rock.txt
 N-Trance dance_music.txt
@@ -238,6 +259,7 @@ Orleans soft_rock.txt
 Pantera hard_rock.txt
 Pantera rock.txt
 Pantera {heavy metal.txt}
+Petty country_rock.txt
 Phish rock.txt
 Player soft_rock.txt
 Poco country_rock.txt
@@ -267,9 +289,11 @@ Rainbow {heavy metal.txt}
 Rammstein industrial_rock.txt
 Rammstein rock.txt
 Rammstein {heavy metal.txt}
+Rastape latin.txt
 Ratt hard_rock.txt
 Ratt {heavy metal.txt}
 Red rap.txt
+Redbone pop_rock.txt
 Roberts funk.txt
 Roberts rnb.txt
 Roberts rock.txt
@@ -296,15 +320,21 @@ Seal rock.txt
 Selena pop.txt
 Semisonic rock.txt
 Shaggy reggae.txt
+Shalom electronica.txt
 Silverchair rock.txt
+Skylark soft_rock.txt
+Smokie rock.txt
 Soundgarden hard_rock.txt
 Soundgarden rock.txt
 Sparks glam_rock.txt
 Sparks jazz_rock.txt
 Sparks rap.txt
+Squeeze rnb.txt
+Starship hard_rock.txt
 Steppenwolf rock.txt
 Sting platinum_and_gold.txt
 Sting rnb.txt
+Stories pop_rock.txt
 Styx platinum_and_gold.txt
 Styx progressive_rock.txt
 Styx rock.txt
@@ -313,6 +343,7 @@ Sublime rock.txt
 Supertramp progressive_rock.txt
 Supertramp rock.txt
 Supertramp soft_rock.txt
+Survivor hard_rock.txt
 Sweet glam_rock.txt
 TLC platinum_and_gold.txt
 TLC pop_rock.txt
@@ -335,6 +366,7 @@ U2 platinum_and_gold.txt
 U2 pop_rock.txt
 U2 rock.txt
 UB40 rock.txt
+UZEB jazz.txt
 Ultravox rock.txt
 Us3 rnb.txt
 Usher platinum_and_gold.txt
@@ -343,9 +375,15 @@ Vangelis electronica.txt
 Vega rap.txt
 Vengaboys rock.txt
 War rnb.txt
+Watanabe jazz.txt
 Weezer alternativerock.txt
 Weezer rock.txt
+Werner pop.txt
+Westbam electronica.txt
+Westernhagen pop.txt
+Westernhagen rock.txt
 Westlife rock.txt
+Wham! rnb.txt
 Whitesnake glam_rock.txt
 Whitesnake hard_rock.txt
 Whitesnake platinum_and_gold.txt
@@ -379,7 +417,10 @@ blink-182 rock.txt
 {Aaron Neville} rnb.txt
 {Ace of Base} dance_music.txt
 {Ace of Base} rock.txt
+{Adam & Eve} pop.txt
 {Adriano Celentano} rock.txt
+{Adventures of Stevie V} dance_music.txt
+{Adventures of Stevie V} electronica.txt
 {Air Supply} rock.txt
 {Air Supply} soft_rock.txt
 {Al Green} rnb.txt
@@ -407,10 +448,12 @@ blink-182 rock.txt
 {All Saints} rnb.txt
 {All Saints} rock.txt
 {Allen Toussaint} rnb.txt
+{Amanda McBroom} pop.txt
 {Amedeo Minghi} songwriters.txt
 {Amos, Tori} songwriters.txt
 {Amy Grant} platinum_and_gold.txt
 {Amy Grant} songwriters.txt
+{Ana Belen} latin.txt
 {Andrea Bocelli} platinum_and_gold.txt
 {Andrea Bocelli} songwriters.txt
 {Andrew Lloyd Webber} platinum_and_gold.txt
@@ -423,11 +466,13 @@ blink-182 rock.txt
 {Anne Murray} platinum_and_gold.txt
 {Annie Lennox} rock.txt
 {Antonello Venditti} songwriters.txt
+{Apollo 100} funk.txt
 {Aretha Franklin} rnb.txt
 {Aretha Franklin} southern_rock.txt
 {Astrud Gilberto} latin.txt
 {Atlanta Rhythm Section} soft_rock.txt
 {Atlanta Rhythm Section} southern_rock.txt
+{Atlantic Starr} rnb.txt
 {Atomic Kitten} rock.txt
 {Average White Band} disco.txt
 {Axelle Red} world.txt
@@ -438,10 +483,15 @@ blink-182 rock.txt
 {Bad Company} hard_rock.txt
 {Bad Company} platinum_and_gold.txt
 {Bad Company} rock.txt
+{Bad English} glam_rock.txt
+{Bad English} soft_rock.txt
 {Bad Manners} rock.txt
 {Barbara Streisand} songwriters.txt
 {Barbra Streisand} platinum_and_gold.txt
 {Barenaked Ladies} rock.txt
+{Barlow Gary} electronica.txt
+{Barlow Gary} pop.txt
+{Barlow Gary} rock.txt
 {Barry Manilow} platinum_and_gold.txt
 {Barry Manilow} songwriters.txt
 {Barry White} rnb.txt
@@ -455,6 +505,8 @@ blink-182 rock.txt
 {Belinda Carlisle} rock.txt
 {Ben Folds Five} rock.txt
 {Beres Hammond} reggae.txt
+{Bernhard Brink} pop.txt
+{Bernstein Leonard} classical.txt
 {Bette Midler} platinum_and_gold.txt
 {Biagio Antonacci} songwriters.txt
 {Big Bad Voodoo Daddy} rock.txt
@@ -463,6 +515,7 @@ blink-182 rock.txt
 {Billy Idol} rock.txt
 {Billy Joel} platinum_and_gold.txt
 {Billy Joel} rock.txt
+{Billy Mayerl} jazz.txt
 {Billy Mayerl} light_music.txt
 {Billy Ocean} rnb.txt
 {Billy Paul} rnb.txt
@@ -498,10 +551,13 @@ blink-182 rock.txt
 {Bonnie Raitt} platinum_and_gold.txt
 {Bonnie Tyler} country.txt
 {Bonnie Tyler} rock.txt
+{Bonzo Dog Doo Dah Band} pop.txt
+{Bonzo Dog Doo Dah Band} rock.txt
 {Boothe, Ken} reggae.txt
 {Boris Gardiner} reggae.txt
 {Bowie David} glam_rock.txt
 {Boy George} dance_music.txt
+{Boys Town Gang} disco.txt
 {Boyz II Men} platinum_and_gold.txt
 {Boyz II Men} rnb.txt
 {Brassens Georges} songwriters.txt
@@ -526,6 +582,7 @@ blink-182 rock.txt
 {Busta Rhymes} rap.txt
 {C'est Tout} pop.txt
 {C+C Music Factory} dance_music.txt
+{C.J. Lewis} reggae.txt
 {Cabrel Francis} blues.txt
 {Cabrel Francis} country.txt
 {Canned Heat} blues_rock.txt
@@ -564,6 +621,7 @@ blink-182 rock.txt
 {Chuck Berry} rock.txt
 {Chuck Berry} rockabilly.txt
 {Chuck Mangione} jazz.txt
+{Cindy & Bert} pop.txt
 {Claude Boiling} jazz.txt
 {Claude Debussy} classical.txt
 {Claude Francois} pop.txt
@@ -598,6 +656,7 @@ blink-182 rock.txt
 {Dalla Lucio} pop.txt
 {Dan Fogelberg} platinum_and_gold.txt
 {Dannii Minogue} rock.txt
+{Danyel Gerard} pop.txt
 {Dave Brubeck} jazz.txt
 {Dave Grusin} jazz.txt
 {Dave Matthews Band} platinum_and_gold.txt
@@ -608,6 +667,7 @@ blink-182 rock.txt
 {David Essex} rock.txt
 {Davis Miles} jazz_rock.txt
 {De Deurzakkers} folk_rock.txt
+{De Dijk} pop_rock.txt
 {Debbie Gibson} pop.txt
 {Deep Purple} blues_rock.txt
 {Deep Purple} hard_rock.txt
@@ -620,6 +680,7 @@ blink-182 rock.txt
 {Def Leppard} platinum_and_gold.txt
 {Def Leppard} rock.txt
 {Def Leppard} {heavy metal.txt}
+{Deniece Williams} rnb.txt
 {Depeche Mode} alternativerock.txt
 {Depeche Mode} dance_music.txt
 {Depeche Mode} platinum_and_gold.txt
@@ -663,6 +724,7 @@ blink-182 rock.txt
 {Eagle-Eye Cherry} rock.txt
 {Earth, Wind & Fire} disco.txt
 {Earth, Wind & Fire} platinum_and_gold.txt
+{Echo & The Bunnymen} rock.txt
 {Ed Townsend} rnb.txt
 {Eddie Cochran} rockabilly.txt
 {Eddie Floyd} rnb.txt
@@ -693,6 +755,7 @@ blink-182 rock.txt
 {Eric Johnson} rap.txt
 {Eros Ramazzotti} world.txt
 {Erroll Garner} jazz.txt
+{Estefan Gloria} dance_music.txt
 {Eubie Blake} jazz.txt
 {Evans Bill} jazz.txt
 {Faith No More} hard_rock.txt
@@ -705,6 +768,7 @@ blink-182 rock.txt
 {Fifth Dimension} rnb.txt
 {Fiona Apple} rock.txt
 {Fiorella Mannoia} pop.txt
+{Five Man Electrical Band} hard_rock.txt
 {Fleetwood Mac} blues_rock.txt
 {Fleetwood Mac} platinum_and_gold.txt
 {Fleetwood Mac} rock.txt
@@ -722,11 +786,13 @@ blink-182 rock.txt
 {Frankie Valli} rnb.txt
 {Frans Bauer} pop.txt
 {Freddie Mercury} rock.txt
+{Freddy Cannon} rock.txt
 {G.G. Anderson} pop.txt
 {Garth Brooks} country.txt
 {Garth Brooks} platinum_and_gold.txt
 {Garth Brooks} songwriters.txt
 {Gary Burton} jazz.txt
+{Gary Glitter} glam_rock.txt
 {Gary Moore} rnb.txt
 {Gatto Panceri} pop.txt
 {Gene Chandler} rnb.txt
@@ -735,8 +801,10 @@ blink-182 rock.txt
 {George Benson} jazz.txt
 {George Frideric Handel} classical.txt
 {George Harrison} rock.txt
+{George McCrae} disco.txt
 {George Michael} platinum_and_gold.txt
 {George Michael} rock.txt
+{Georgie Fame} country.txt
 {Geri Halliwell} rock.txt
 {Gerry & The Pacemakers} pop.txt
 {Gerry Rafferty} dance_music.txt
@@ -771,6 +839,8 @@ blink-182 rock.txt
 {Great White} {heavy metal.txt}
 {Green Day} punk.txt
 {Green Day} rock.txt
+{Greenbaum Norman} hard_rock.txt
+{Greenbaum Norman} psychedelia.txt
 {Guess Who} blues_rock.txt
 {Guns N' Roses} hard_rock.txt
 {Guns N' Roses} platinum_and_gold.txt
@@ -783,6 +853,7 @@ blink-182 rock.txt
 {Hank Williams} country.txt
 {Hank Williams} platinum_and_gold.txt
 {Hank Williams} rock.txt
+{Harold Faltermeyer} electronica.txt
 {Harold Melvin} disco.txt
 {Harold Melvin} rnb.txt
 {Harry Nilsson} rock.txt
@@ -792,16 +863,21 @@ blink-182 rock.txt
 {Herbie Mann} jazz.txt
 {Herman's Hermits} pop.txt
 {Holly Buddy} rockabilly.txt
+{Hooker John Lee} blues.txt
 {Hootie & the BlowFish} country.txt
 {Hot Chocolate} rnb.txt
 {Howard Carpendale} folk.txt
 {Howard Carpendale} pop.txt
 {Howard Jones} dance_music.txt
+{Hue & Cry} electronica.txt
+{Hue & Cry} funk.txt
 {Huey Lewis & The News} platinum_and_gold.txt
 {Huey Lewis} new_wave.txt
 {Humperdinck Englebert} pop.txt
 {Humperdinck Englebert} rnb.txt
 {Ice Cube} rap.txt
+{Imca Marina} pop.txt
+{Ingram James} rnb.txt
 {Inner Circle} reggae.txt
 {Inner City} dance_music.txt
 {Inner City} electronica.txt
@@ -821,6 +897,7 @@ blink-182 rock.txt
 {Jackson Michael} dance_music.txt
 {Jackson Michael} platinum_and_gold.txt
 {Jaco Pastorius} jazz.txt
+{Jam & Spoon} dance_music.txt
 {James Brown} funk.txt
 {James Brown} rnb.txt
 {James Brown} southern_rock.txt
@@ -844,6 +921,7 @@ blink-182 rock.txt
 {Jefferson Starship} soft_rock.txt
 {Jennifer Lopez} platinum_and_gold.txt
 {Jennifer Lopez} rnb.txt
+{Jeremy Jackson} pop.txt
 {Jerry Lee Lewis} rockabilly.txt
 {Jessica Simpson} folk_rock.txt
 {Jethro Tull} platinum_and_gold.txt
@@ -887,6 +965,7 @@ blink-182 rock.txt
 {Judy Collins} folk_rock.txt
 {Junior Walker} rnb.txt
 {KC and the Sunshine Band} disco.txt
+{Karas Anton} pop.txt
 {Kate Bush} rock.txt
 {Kenny Baker} country.txt
 {Kenny Dorham} jazz.txt
@@ -896,12 +975,14 @@ blink-182 rock.txt
 {Kid Rock} platinum_and_gold.txt
 {Kid Rock} rock.txt
 {Kid Rock} {heavy metal.txt}
+{Kim Appleby} dance_music.txt
 {King Crimson} art_rock.txt
 {King Crimson} jazz_rock.txt
 {King Crimson} progressive_rock.txt
 {King Crimson} rock.txt
 {Kool & The Gang} disco.txt
 {Kris Kristofferson} country.txt
+{Kristina Bach} pop.txt
 {Kylie Minogue} rock.txt
 {LL Cool J} rap.txt
 {La Bouche} dance_music.txt
@@ -935,11 +1016,13 @@ blink-182 rock.txt
 {Lisa Stansfield} rnb.txt
 {Little Richard} rockabilly.txt
 {Little River Band} soft_rock.txt
+{Little Texas} country.txt
 {Local H} rock.txt
 {Los Lobos} roots_rock.txt
 {Lou Rawls} rnb.txt
 {Lou Reed} rock.txt
 {Louis Armstrong} jazz.txt
+{Love Sculpture} rock.txt
 {Love Unlimited Orchestra} disco.txt
 {Luther Vandross} platinum_and_gold.txt
 {Luther Vandross} rnb.txt
@@ -953,15 +1036,19 @@ blink-182 rock.txt
 {Mac Davis} country.txt
 {Macy Gray} rnb.txt
 {Mandy Moore} rock.txt
+{Mann Herbie} jazz.txt
 {Marc Anthony} latin.txt
 {Marc Cohn} rock.txt
 {Mariah Carey} platinum_and_gold.txt
 {Mariah Carey} rnb.txt
+{Marianne & Michael} folk.txt
 {Marianne Faithfull} rock.txt
 {Marilyn Manson} industrial_rock.txt
 {Marilyn Manson} rock.txt
 {Marilyn Manson} {heavy metal.txt}
+{Marilyn Monroe} jazz.txt
 {Mark Morrison} rnb.txt
+{Marky Ramone} pop.txt
 {Martha Reeves} rnb.txt
 {Marvin Gaye} rnb.txt
 {Mary J. Blige} platinum_and_gold.txt
@@ -969,10 +1056,12 @@ blink-182 rock.txt
 {Mary Wells} rnb.txt
 {Master P} platinum_and_gold.txt
 {Maxi Priest} reggae.txt
+{Maxime Le Forestier} songwriters.txt
 {Meat Loaf} platinum_and_gold.txt
 {Meat Loaf} rock.txt
 {Meat Puppets} rock.txt
 {Melissa Etheridge} platinum_and_gold.txt
+{Men at Work} new_wave.txt
 {Merle Travis} country.txt
 {Michael Bolton} platinum_and_gold.txt
 {Michael Bolton} rock.txt
@@ -982,8 +1071,10 @@ blink-182 rock.txt
 {Michael Jackson} rnb.txt
 {Midnight Oil} rock.txt
 {Mike + The Mechanics} soft_rock.txt
+{Miles John} progressive_rock.txt
 {Missy Elliott} rap.txt
 {Modern Talking} rock.txt
+{Morris Albert} soft_rock.txt
 {Motley Crue} glam_rock.txt
 {Motley Crue} hard_rock.txt
 {Motley Crue} platinum_and_gold.txt
@@ -1026,6 +1117,7 @@ blink-182 rock.txt
 {Papa Roach} rock.txt
 {Pat Benatar} platinum_and_gold.txt
 {Pat Metheny} jazz.txt
+{Patrick Bruel} pop.txt
 {Patrick Swayze} pop.txt
 {Patsy Cline} country.txt
 {Patsy Cline} platinum_and_gold.txt
@@ -1054,6 +1146,7 @@ blink-182 rock.txt
 {Peter Gabriel} art_rock.txt
 {Peter Gabriel} rock.txt
 {Peter Koelewijn & Zijn Rockets} pop.txt
+{Peter Schilling} new_wave.txt
 {Peter Tosh} reggae.txt
 {Phil Collins} platinum_and_gold.txt
 {Phil Collins} rock.txt
@@ -1068,6 +1161,7 @@ blink-182 rock.txt
 {Procol Harum} progressive_rock.txt
 {Procol Harum} rock.txt
 {Professor Longhair} blues.txt
+{Puff Daddy} hip_hop.txt
 {Quiet Riot} glam_rock.txt
 {Quiet Riot} hard_rock.txt
 {Quiet Riot} {heavy metal.txt}
@@ -1075,6 +1169,7 @@ blink-182 rock.txt
 {R. Kelly} platinum_and_gold.txt
 {R. Kelly} rnb.txt
 {REO Speedwagon} soft_rock.txt
+{RODGERS RICHARD} pop.txt
 {Rage Against the Machine} hard_rock.txt
 {Rage Against the Machine} rock.txt
 {Rage Against the Machine} {heavy metal.txt}
@@ -1083,6 +1178,7 @@ blink-182 rock.txt
 {Red Hot Chili Peppers} platinum_and_gold.txt
 {Reel Big Fish} rock.txt
 {Restless Heart} country.txt
+{Rich, Buddy} jazz.txt
 {Rick James} rnb.txt
 {Ricky Martin} latin.txt
 {Ricky Martin} platinum_and_gold.txt
@@ -1090,12 +1186,17 @@ blink-182 rock.txt
 {Rob Zombie} rock.txt
 {Rob Zombie} {heavy metal.txt}
 {Robbie Williams} rock.txt
+{Robert Knight} pop.txt
 {Robert Miles} rock.txt
 {Roberta Flack} rnb.txt
+{Robin S} electronica.txt
+{Rocky Horror} glam_rock.txt
 {Rod Stewart} platinum_and_gold.txt
 {Rod Stewart} rock.txt
 {Rogers Kenny} platinum_and_gold.txt
 {Ronan Keating} rock.txt
+{Ronny Jordan} electronica.txt
+{Ronny Jordan} jazz.txt
 {Rose Royce} disco.txt
 {Roxy Music} art_rock.txt
 {Roxy Music} glam_rock.txt
@@ -1110,6 +1211,8 @@ blink-182 rock.txt
 {Sam Cooke} rnb.txt
 {Sam Cooke} rockabilly.txt
 {Sandy Denny} folk_rock.txt
+{Santa Esmeralda} disco.txt
+{Santa Esmeralda} latin.txt
 {Sarah McLachlan} platinum_and_gold.txt
 {Sarah McLachlan} rock.txt
 {Savage Garden} platinum_and_gold.txt
@@ -1139,6 +1242,7 @@ blink-182 rock.txt
 {Sly & The Family Stone} psychedelia.txt
 {Smash Mouth} rock.txt
 {Smokey Robinson} rnb.txt
+{Sniff'n' the Tears} new_wave.txt
 {Snoop Dogg} platinum_and_gold.txt
 {Snoop Dogg} rap.txt
 {Soft Cell} rock.txt
@@ -1159,6 +1263,8 @@ blink-182 rock.txt
 {Steely Dan} jazz_rock.txt
 {Steely Dan} platinum_and_gold.txt
 {Steely Dan} rock.txt
+{Stephanie Mills} disco.txt
+{Stern Mike} jazz.txt
 {Steve Miller Band} platinum_and_gold.txt
 {Steve Miller Band} rock.txt
 {Steve Vai} rock.txt
@@ -1177,10 +1283,14 @@ blink-182 rock.txt
 {Swing Out Sister} rock.txt
 {T. Rex} glam_rock.txt
 {T. Rex} rock.txt
+{Tag Team} hip_hop.txt
+{Tag Team} rap.txt
 {Take That} rock.txt
 {Talk Talk} rock.txt
 {Talking Heads} rock.txt
 {Tammy Wynette} country.txt
+{Taylor Dayne} dance_music.txt
+{Taylor Dayne} electronica.txt
 {Taylor James} songwriters.txt
 {Tears for Fears} rock.txt
 {Ted Nugent} platinum_and_gold.txt
@@ -1199,11 +1309,11 @@ blink-182 rock.txt
 {The Beach Boys} rock.txt
 {The Beatles} platinum_and_gold.txt
 {The Beatles} pop_rock.txt
-{The Beatles} pop_rock.txt
 {The Beatles} psychedelia.txt
 {The Beatles} rock.txt
 {The Beautiful South} rock.txt
 {The Blues Brothers} rnb.txt
+{The Brown James} rnb.txt
 {The Byrds} country_rock.txt
 {The Byrds} folk_rock.txt
 {The Byrds} rock.txt
@@ -1211,6 +1321,7 @@ blink-182 rock.txt
 {The Cars} new_wave.txt
 {The Cars} platinum_and_gold.txt
 {The Cars} rock.txt
+{The Christians} pop_rock.txt
 {The Clash} punk.txt
 {The Clash} rock.txt
 {The Corrs} rock.txt
@@ -1230,6 +1341,7 @@ blink-182 rock.txt
 {The Drifters} rockabilly.txt
 {The Everly Brothers} rockabilly.txt
 {The Five Satins} rnb.txt
+{The Five Stairsteps} rnb.txt
 {The Four Preps} pop.txt
 {The Four Preps} rock.txt
 {The Gap Band} rnb.txt
@@ -1250,6 +1362,7 @@ blink-182 rock.txt
 {The Marshall Tucker Band} country_rock.txt
 {The Marshall Tucker Band} southern_rock.txt
 {The Mavericks} country.txt
+{The McCoys} rnb.txt
 {The Mighty Mighty Bosstones} rock.txt
 {The Monkees} platinum_and_gold.txt
 {The Moody Blues} progressive_rock.txt
@@ -1279,16 +1392,20 @@ blink-182 rock.txt
 {The Smashing Pumpkins} rock.txt
 {The Smiths} alternativerock.txt
 {The Smiths} rock.txt
+{The Spotnicks} rock.txt
 {The Stranglers} rock.txt
 {The Stylistics} rnb.txt
 {The Sugarhill Gang} rap.txt
 {The Supremes} disco.txt
 {The Supremes} rnb.txt
+{The Sylvers} rnb.txt
 {The Temptations} disco.txt
 {The Temptations} platinum_and_gold.txt
 {The Temptations} rnb.txt
+{The Tony Rich Project} rnb.txt
 {The Tragically Hip} rock.txt
 {The Trammps} disco.txt
+{The Tremeloes} pop_rock.txt
 {The Troggs} garage_rock.txt
 {The Ventures} rock.txt
 {The Ventures} rockabilly.txt
@@ -1317,6 +1434,7 @@ blink-182 rock.txt
 {Three Dog Night} soft_rock.txt
 {Three degrees} disco.txt
 {Tina Turner} rnb.txt
+{Toad the Wet Sprocket} alternativerock.txt
 {Todd Rundgren} rock.txt
 {Tom Jones} jazz.txt
 {Tom Petty and the Heartbreakers} roots_rock.txt
@@ -1334,6 +1452,7 @@ blink-182 rock.txt
 {Tracy Chapman} rock.txt
 {Travis Tritt} country.txt
 {Travis Tritt} platinum_and_gold.txt
+{Trio Hellenique} folk.txt
 {Trisha Yearwood} country.txt
 {Trisha Yearwood} platinum_and_gold.txt
 {Type O Negative} rock.txt
@@ -1353,6 +1472,8 @@ blink-182 rock.txt
 {Village People} disco.txt
 {Village People} rnb.txt
 {Vince Guaraldi} jazz.txt
+{Vincent Gene} rockabilly.txt
+{Walter Donaldson} pop.txt
 {Warren Zevon} rock.txt
 {Weather Report} jazz.txt
 {Weather Report} jazz_rock.txt
@@ -1369,6 +1490,7 @@ blink-182 rock.txt
 {Will Smith} jazz.txt
 {Will Smith} platinum_and_gold.txt
 {William Orbit} electronica.txt
+{Williams Deniece} rnb.txt
 {Willie Nelson} country.txt
 {Willie Nelson} platinum_and_gold.txt
 {Wilson Pickett} rnb.txt

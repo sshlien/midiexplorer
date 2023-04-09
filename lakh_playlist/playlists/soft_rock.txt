@@ -8,6 +8,7 @@ Bread
 Carpenter
 Cats
 Chicago
+Climax
 Crosby, Stills, Nash & Young
 Eagles
 England Dan
@@ -22,6 +23,7 @@ Led Zeppelin
 Leo Sayer
 Little River Band
 Mike + The Mechanics
+Morris Albert
 Orleans
 Paul McCartney
 Player
@@ -29,6 +31,7 @@ Poco
 REO Speedwagon
 Seals & Crofts
 Simon & Garfunkel
+Skylark
 Styx
 Supertramp
 The Doobie Brothers

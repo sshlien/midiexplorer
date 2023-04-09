@@ -36,6 +36,7 @@ Blondie
 Blues Traveler
 Blur
 Bob Dylan
+Bobby_Boris_Pickett
 Bon Jovi
 Bonnie Tyler
 Bonzo Dog Doo Dah Band
@@ -90,6 +91,7 @@ Drupi
 Duran Duran
 Dusty Springfield
 Eagle-Eye Cherry
+Echo & The Bunnymen
 Eels
 Electric Light Orchestra
 Elton John
@@ -252,6 +254,7 @@ Sister Hazel
 Sixpence None the Richer
 Skid Row
 Smash Mouth
+Smokie
 Soft Cell
 Sonic Youth
 Soul Asylum
@@ -306,6 +309,7 @@ The Police
 The Rolling Stones
 The Smashing Pumpkins
 The Smiths
+The Spotnicks
 The Stranglers
 The Tragically Hip
 The Ventures
@@ -335,6 +339,7 @@ Vengaboys
 Vertical Horizon
 Warren Zevon
 Weezer
+Westernhagen
 Westlife
 White Lion
 Whitesnake
