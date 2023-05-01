@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 3.98 2023-03-24 08:10" 
+set midiexplorer_version "MidiExplorer version 4.00 2023-05-01 17:05" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -2056,6 +2056,7 @@ proc selected_midi {} {
  global cleanData
  global pianorollwidth
  global pianoPixelsPerFile
+ global compactMidifile
  set cleanData 0
  set sel [.treebrowser.tree selection]
  set c [.treebrowser.tree item $sel -values]
@@ -2171,9 +2172,20 @@ global pitchcl
 global channel_activity
 global midierror
 global useflats
+global compactMidifile
+global midi
 array unset trkinfo
 set midierror ""
 set ntrks 0
+set rootfolder $midi(rootfolder)
+set rootfolderbytes [string length $rootfolder]
+incr rootfolderbytes
+set compactMidifile [string range $midi(midifilein) $rootfolderbytes end]
+if {[string length $compactMidifile] > 40} {
+   set a [string range $compactMidifile 0 40]
+   set b [string range $compactMidifile 40 end]
+   set compactMidifile $a\n$b
+   }
 foreach line [split $midi_info '\n'] {
   #puts $line
   set trk 0
@@ -8979,6 +8991,9 @@ proc plotmidi_pitch_pdf {} {
     global scanwidth scanheight
     global xlbx ytbx xrbx ybbx
     global histogram
+    global midi
+    global df
+    global compactMidifile
     set hgraph ""
     set maxhgraph 0.0
     set statc .pitchpdf.c
@@ -9003,12 +9018,18 @@ proc plotmidi_pitch_pdf {} {
     Graph::draw_x_ticks $statc 0.0 128.0 10.0 2 0 %4.0f $colfg
     Graph::draw_y_ticks $statc 0.0 $maxhgraph 0.05 2 %3.1f $colfg
     Graph::draw_impulses_from_list .pitchpdf.c $hgraph
+    set ypos [expr $ytbx + 15]
+    set xpos [expr $xlbx + 10]
+    .pitchpdf.c create text $xpos $ypos -text $compactMidifile  -anchor w
 }
 
 proc plotmidi_velocity_pdf {} {
     global scanwidth scanheight
     global xlbx ytbx xrbx ybbx
     global histogram
+    global midi
+    global df
+    global compactMidifile
     set hgraph ""
     set maxhgraph 0.0
     set statc .velocitypdf.c
@@ -9033,12 +9054,18 @@ proc plotmidi_velocity_pdf {} {
     Graph::draw_x_ticks $statc 0.0 128.0 10.0 2 0 %4.0f $colfg
     Graph::draw_y_ticks $statc 0.0 $maxhgraph 0.05 2 %3.1f $colfg
     Graph::draw_impulses_from_list .velocitypdf.c $hgraph
+    set ypos [expr $ytbx + 15]
+    set xpos [expr $xlbx + 10]
+    .velocitypdf.c create text $xpos $ypos -text $compactMidifile  -anchor w
 }
 
 proc plotmidi_onset_pdf {} {
     global scanwidth scanheight
     global xlbx ytbx xrbx ybbx
     global histogram
+    global midi
+    global df
+    global compactMidifile
     set hgraph ""
     set maxhgraph 0.0
     set statc .onsetpdf.c
@@ -9064,13 +9091,20 @@ proc plotmidi_onset_pdf {} {
     Graph::draw_x_ticks $statc 0.0 1.01 0.10 2 0 %4.2f $colfg
     Graph::draw_y_ticks $statc 0.0 $maxhgraph 0.05 2 %3.1f $colfg
     Graph::draw_impulses_from_list .onsetpdf.c $hgraph
+
     bind .onsetpdf <Alt-p> {histogram_ps_output .onsetpdf.c}
+    set ypos [expr $ytbx + 15]
+    set xpos [expr $xlbx + 10]
+    .onsetpdf.c create text $xpos $ypos -text $compactMidifile  -anchor w
 }
 
 proc plotmidi_offset_pdf {} {
     global scanwidth scanheight
     global xlbx ytbx xrbx ybbx
     global histogram
+    global midi
+    global df
+    global compactMidifile
     set hgraph ""
     set maxhgraph 0.0
     set statc .offsetpdf.c
@@ -9096,6 +9130,9 @@ proc plotmidi_offset_pdf {} {
     Graph::draw_x_ticks $statc 0.0 1.01 0.10 2 0 %4.2f $colfg
     Graph::draw_y_ticks $statc 0.0 $maxhgraph 0.05 2 %3.1f $colfg
     Graph::draw_impulses_from_list .offsetpdf.c $hgraph
+    set ypos [expr $ytbx + 15]
+    set xpos [expr $xlbx + 10]
+    .offsetpdf.c create text $xpos $ypos -text $compactMidifile  -anchor w
     bind .offsetpdf <Alt-p> {histogram_ps_output .offsetpdf.c}
 }
 
@@ -9103,6 +9140,9 @@ proc plotmidi_duration_pdf {} {
     global scanwidth scanheight
     global xlbx ytbx xrbx ybbx
     global histogram
+    global midi
+    global df
+    global compactMidifile
     set hgraph ""
     set maxhgraph 0.0
     set statc .durpdf.c
@@ -9128,6 +9168,9 @@ proc plotmidi_duration_pdf {} {
     Graph::draw_x_ticks $statc 0.0 3.0 0.5 1 0 %4.2f $colfg
     Graph::draw_y_ticks $statc 0.0 $maxhgraph 0.05 2 %3.1f $colfg
     Graph::draw_impulses_from_list .durpdf.c $hgraph
+    set ypos [expr $ytbx + 15]
+    set xpos [expr $xlbx + 10]
+    .durpdf.c create text $xpos $ypos -text $compactMidifile  -anchor w
     }
 
 
