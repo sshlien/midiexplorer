@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.00 2023-05-01 17:05" 
+set midiexplorer_version "MidiExplorer version 4.01 2023-05-04 10:45" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -861,9 +861,8 @@ proc readMidiexplorerIni {} {
         if {$error_return} continue
         set contents ""
         set param [lindex $line 0]
-        for {set i 1} {$i < $n} {incr i} {
-            set contents [concat $contents [lindex $line $i]]
-        }
+	set from [expr [string length $param] + 1]
+	set contents [string range $line $from end]
         #if param is not already a member of the midi array (set by midiInit),
         #then we ignore it. This prevents midi array filling up with obsolete
         #parameters used in older versions of the program.
@@ -929,6 +928,10 @@ wm protocol . WM_DELETE_WINDOW {
 
 
 proc getVersionNumber {executable} {
+    set found [file exist $executable]
+    if {$found == 0} {
+	    .info.txt insert insert "cannot find $executable\n" red
+             }
     set cmd "exec [list $executable] -ver"
     catch {eval $cmd} result
     return $result}
@@ -3452,13 +3455,6 @@ global midichannels
 global exec_out
 set exec_out "playExposed\ncopyMidiToTmp $source\n"
 copyMidiToTmp $source
-#if {![file exist midi(path_midiplay)]} {
-#     set msg "You need to specify the path to a program which plays
-#midi files. The box to the right can contain any runtime options."
-#     tk_messageBox -message $msg
-#     return
-#     }
-#     The executable may already be in the PATH environment.
 set cmd "exec [list $midi(path_midiplay)]"
 if {![file exist tmp.mid]} {
     set msg "Something is wrong. Midicopy should create a the tmp.mid
@@ -4149,9 +4145,9 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
     if {$err == 0 || $ver < 1.38} { .info.txt insert insert $msg red
                     return $msg}
     set result [getVersionNumber $midi(path_midistats)]
-    set msg "You need midistats.exe version 0.58 or higher.\n"
+    set msg "You need midistats.exe version 0.68 or higher.\n"
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.58} { .info.txt insert insert $msg red
+    if {$err == 0 || $ver < 0.68} { .info.txt insert insert $msg red
                     return $msg}
     return pass
 }
@@ -9089,7 +9085,11 @@ proc plotmidi_onset_pdf {} {
             -width 2 -fill white
     Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx -0.03 1.03 0.0 $maxhgraph
     Graph::draw_x_ticks $statc 0.0 1.01 0.10 2 0 %4.2f $colfg
-    Graph::draw_y_ticks $statc 0.0 $maxhgraph 0.05 2 %3.1f $colfg
+    if {$maxhgraph > 0.2} {
+      Graph::draw_y_ticks $statc 0.0 $maxhgraph 0.05 2 %3.1f $colfg
+    } else {
+      Graph::draw_y_ticks $statc 0.0 $maxhgraph 0.025 2 %3.2f $colfg
+    }
     Graph::draw_impulses_from_list .onsetpdf.c $hgraph
 
     bind .onsetpdf <Alt-p> {histogram_ps_output .onsetpdf.c}
@@ -14380,10 +14380,10 @@ proc show_data_page {text wrapmode clean} {
 }
 
 
-set abcmidilist {path_abc2midi 4.75\
-            path_midi2abc 3.56\
+set abcmidilist {path_abc2midi 4.84\
+            path_midi2abc 3.59\
             path_midicopy 1.38\
-	    path_midistats 0.56\
+	    path_midistats 0.68\
             path_abcm2ps 8.14.6}
 
 

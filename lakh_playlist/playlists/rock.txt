@@ -21,7 +21,6 @@ Atomic Kitten
 Bad Company
 Bad Manners
 Barenaked Ladies
-Barlow Gary
 Beck
 Belinda Carlisle
 Ben Folds Five
@@ -36,10 +35,7 @@ Blondie
 Blues Traveler
 Blur
 Bob Dylan
-Bobby_Boris_Pickett
 Bon Jovi
-Bonnie Tyler
-Bonzo Dog Doo Dah Band
 Boston
 Boyzone
 Brian Wilson
@@ -59,11 +55,7 @@ Chicago
 Chris de Burgh
 Chris Isaak
 Chris Rea
-Christie, Tony
 Christina Aguilera
-Christopher Cross
-Checker Chubby
-Chris Montez
 Chuck Berry
 Chumbawamba
 Collective Soul
@@ -77,7 +69,6 @@ Dannii Minogue
 Dave Matthews Band
 David Bowie
 David Byrne
-David Essex
 Deep Purple
 Def Leppard
 Deftones
@@ -87,11 +78,9 @@ Dire Straits
 Donovan
 Dream Theater
 Dr. John
-Drupi
 Duran Duran
 Dusty Springfield
 Eagle-Eye Cherry
-Echo & The Bunnymen
 Eels
 Electric Light Orchestra
 Elton John
@@ -112,16 +101,12 @@ Fleetwood Mac
 Foo Fighters
 Foreigner
 Freddie Mercury
-Freddy Cannon
 Garbage
 George Harrison
 George Michael
 Geri Halliwell
-Glen Campbell
-Glenn Frey
 Gloria Estefan
 Godsmack
-Golden Earring
 Goo Goo Dolls
 Grand Funk Railroad
 Green Day
@@ -130,7 +115,6 @@ Hank Williams
 Hanson
 Harry Nilsson
 Harvey Danger
-Heart
 Hole
 Incognito
 INXS
@@ -150,7 +134,6 @@ J.J. Cale
 Joe Cocker
 Joe Satriani
 John Denver
-John Fred
 John Lennon
 Joni Mitchell
 Journey
@@ -169,7 +152,6 @@ Lisa Loeb
 Live
 Local H
 Lou Reed
-Love Sculpture
 Lynyrd Skynyrd
 Madness
 Madonna
@@ -229,7 +211,6 @@ Reel Big Fish
 R.E.M.
 Robbie Williams
 Robert Miles
-Roberts
 Rob Zombie
 Rod Stewart
 Ronan Keating
@@ -254,7 +235,6 @@ Sister Hazel
 Sixpence None the Richer
 Skid Row
 Smash Mouth
-Smokie
 Soft Cell
 Sonic Youth
 Soul Asylum
@@ -296,7 +276,6 @@ The Cult
 The Cure
 The Doobie Brothers
 The Doors
-The Four Preps
 The Hollies
 The Human League
 The Kelly Family
@@ -309,7 +288,6 @@ The Police
 The Rolling Stones
 The Smashing Pumpkins
 The Smiths
-The Spotnicks
 The Stranglers
 The Tragically Hip
 The Ventures
@@ -339,7 +317,6 @@ Vengaboys
 Vertical Horizon
 Warren Zevon
 Weezer
-Westernhagen
 Westlife
 White Lion
 Whitesnake

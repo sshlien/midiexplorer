@@ -1,9 +1,6 @@
 Aswad
 Beres Hammond
 Bob Marley
-Boothe, Ken
-Boris Gardiner
-C.J. Lewis
 Desmond Dekker
 Inner Circle
 Jimmy Cliff
@@ -11,4 +8,5 @@ Johnny Nash
 Maxi Priest
 Peter Tosh
 Shaggy
+Bob Marley
 

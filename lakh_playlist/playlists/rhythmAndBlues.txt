@@ -1,4 +1,3 @@
-Aaliyah
 Aaron Neville
 Al Green
 Aretha Franklin
@@ -6,45 +5,30 @@ Alexander O'Neal
 Allen Toussaint
 Anita Baker
 Ann Peebles
-Atlantic Starr
 Babyface
 Barry White
 Bill Withers
-Billy Ocean
 Billy Paul
-Blackstreet
 Boney M.
 Boyz II Men
 Brenton Wood
 Cameo
 Chaka Khan
-Checker Chubby
 Chic
-Corona
 Curtis Mayfield
-Deniece Williams
 Destiny's Child
 Diana Ross
 Dionne Warwick
 Donna Summer
 Eddie Floyd
-Ed Townsend
 En Vogue
 Fats Domino
-Fifth Dimension
-Fontella Bass
-Four Tops
-Frankie Valli
 Gary Moore
-Gaye,Marvin
 Gene Chandler
 Gladys Knight
 Gloria Gaynor
 Grace Jones
 Harold Melvin
-Hot Chocolate
-Humperdinck Englebert
-Ingram James
 Isaac Hayes
 Jackie Wilson
 James Brown
@@ -60,7 +44,6 @@ Luther Vandross
 Macy Gray
 MFSB
 Mariah Carey
-Mark Morrison
 Martha Reeves
 Marvin Gaye
 Mary J. Blige
@@ -73,38 +56,30 @@ Ray Charles
 R. Kelly
 Rick James
 Roberta Flack
-Roberts
 Robyn
 Rufus
 Sade
 Sam Cooke
 Sister Sledge
 Smokey Robinson
-Squeeze
 Stevie Wonder
 Sting
 TLC
 The Blues Brothers
-The Brown James
 The Drifters
 The Five Satins
-The Five Stairsteps
 The Gap Band
 The Isley Brothers
 The Manhattans
 The Marcels
-The McCoys
 The O'Jays
 The Platters
 The Pointer Sisters
 The Pretenders
 The Stylistics
 The Supremes
-The Sylvers
 The Temptations
-The Tony Rich Project
 The Whispers
-Thelma Houston
 Tina Turner
 Toni Braxton
 Tower of Power
@@ -112,10 +87,7 @@ Us3
 Usher
 Village People
 War
-Wham!
-White Barry
 Whitney Houston
-Williams Deniece
 Wilson Pickett
 All Saints
 
