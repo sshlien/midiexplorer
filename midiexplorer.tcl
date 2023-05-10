@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.01 2023-05-04 10:45" 
+set midiexplorer_version "MidiExplorer version 4.02 2023-05-10 10:10" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -12811,6 +12811,13 @@ of the text file should reflect the type of music of the artists\
 that you are listing. For example, the file rnb.txt would contain\
 a list of the rhythm and blues folders that exist in your database\
 where each folder is on a separate line.\n\n\
+If you are using the the clean_lakh collection, the lakh_playlists\
+folder contains some sample files in the playlists subfolder. In\
+addition there is a file called definitions.text. If you copy\
+this text file into your playlists folder, midiexplorer will\
+display a short definition of the genre you selected. This information\
+was gathered from the web by googling the question 'what is\
+the distinguishing characteristic of ... genre?'\n\n\
 When you start the playlist manager, a window with two listboxes should\
 appear side by side. The left box shows the list of text files in your\
 playlists folder where the txt extension is suppressed. When you\
@@ -12824,35 +12831,60 @@ Sample playlist files for the lakh clean database will be made
 available with the online documentation.
 "
 
+proc load_genre_definitions {playlistfolder} {
+global genreDef
+global midi
+set defhandle [open "$playlistfolder/definitions.text" "r"]
+set genredefs [read $defhandle]
+close $defhandle
+set genredefs [split $genredefs "\n"]
+foreach line $genredefs {
+  if {[llength $line] == 1} {set g $line}
+  if {[llength $line] > 1} {set genreDef($g) $line}
+  }
+set genreDef(none) "These definitions were obtained by googling 'What are\
+ the distinguishing characteristics of country rock' or something similar.\
+ You could also ask google how do you distinguish poprock from rock or\
+ something similar."
+}
+
+
 proc make_playlist_manager {} {
   global midi
   global playlistfiles
   global lastplayfile_item
   global font df
+  global selectedGenre
 
+  set selectedGenre none
   if {![winfo exist .playmanage]} {
     toplevel .playmanage
     positionWindow .playmanage
-    button .playmanage.help -font $df -text help -command {show_message_page $hlp_playlist word}
-    pack .playmanage.help
-    set f .playmanage.left
+    frame .playmanage.menus
+    pack .playmanage.menus
+    button .playmanage.menus.help -font $df -text help -command {show_message_page $hlp_playlist word}
+    pack .playmanage.menus.help 
+    set f .playmanage.frm
+    frame $f
+    pack $f
+    set f .playmanage.frm.left
     frame $f
     pack $f -side left
-    listbox $f.list -yscrollcommand {.playmanage.left.ysbar set} -selectmode single -font $df
-    scrollbar $f.ysbar -orient vertical -command {.playmanage.left.list yview}
+    listbox $f.list -yscrollcommand {.playmanage.frm.left.ysbar set} -selectmode single -font $df
+    scrollbar $f.ysbar -orient vertical -command {.playmanage.frm.left.list yview}
     pack $f.ysbar -side right -fill y -in $f
     pack $f.list -fill both -expand y -in $f
 
-    bind .playmanage.left.list <Button> {playlist_file_update [.playmanage.left.list nearest %y]}
+    bind .playmanage.frm.left.list <Button> {playlist_file_update [.playmanage.frm.left.list nearest %y]}
 
-    set f .playmanage.right
+    set f .playmanage.frm.right
     frame $f
     pack $f -side left
-    listbox $f.list -yscrollcommand {.playmanage.right.ysbar set} -selectmode single -font $df
-    scrollbar $f.ysbar -orient vertical -command {.playmanage.right.list yview}
+    listbox $f.list -yscrollcommand {.playmanage.frm.right.ysbar set} -selectmode single -font $df
+    scrollbar $f.ysbar -orient vertical -command {.playmanage.frm.right.list yview}
     pack $f.ysbar -side right -fill y -in $f
     pack $f.list -fill both -expand y -in $f
-    bind .playmanage.right.list <Button> {playlist_artist_selected [.playmanage.right.list nearest %y]}
+    bind .playmanage.frm.right.list <Button> {playlist_artist_selected [.playmanage.frm.right.list nearest %y]}
   }
 
   set lastplayfile_item -1
@@ -12868,39 +12900,70 @@ proc make_playlist_manager {} {
 
   foreach playfile $playlistfiles {
     set play [file rootname [file tail $playfile]]
-    .playmanage.left.list insert end $play
+    .playmanage.frm.left.list insert end $play
     }
+
+  if {[file exist "$playlistfolder/definitions.text"]} {
+      load_genre_definitions $playlistfolder
+      make_genre_info
+      } else {
+      puts "$playlistfolder/definitions.text was not found"
+      }
   }
+
+proc make_genre_info {} {
+global df
+set f .playmanage.t
+text $f -height 5 -width 50 -wrap word -font $df
+pack $f
+}
+
+proc show_genre_info {genreText} {
+.playmanage.t delete 1.0 end
+.playmanage.t insert end $genreText
+}
 
 proc playlist_file_update {loc} {
 global playlistfiles
 global lastplayfile_item
-set i [.playmanage.left.list index $loc]
-set filepath [lindex $playlistfiles $i]
+global midi
+global selectedGenre
+set selectedGenre [.playmanage.frm.left.list get $loc $loc]
+set filepath [lindex $playlistfiles $loc]
 set inhandle [open $filepath r]
-.playmanage.left.list itemconfigure $i -fg red
+.playmanage.frm.left.list itemconfigure $loc -fg red
 if {$lastplayfile_item >= 0} {
-  .playmanage.left.list itemconfigure $lastplayfile_item -fg black
+  .playmanage.frm.left.list itemconfigure $lastplayfile_item -fg black
   }
-set lastplayfile_item $i
+set lastplayfile_item $loc
 
 #puts $filepath
 set line ""
-.playmanage.right.list delete 0 end
+.playmanage.frm.right.list delete 0 end
 while {[eof $inhandle] != 1} {
    gets $inhandle line
    #set artist [file rootname [file tail $line]]
    set artist $line
-   .playmanage.right.list insert end $artist
+   .playmanage.frm.right.list insert end $artist
    #puts $line
    }
 close $inhandle
+showGenreDefFor $selectedGenre
 }
 
 proc playlist_artist_selected {loc} {
 global findname
-set findname [.playmanage.right.list get $loc]
+set findname [.playmanage.frm.right.list get $loc]
 findChildInTree .treebrowser $findname
+}
+
+
+proc showGenreDefFor {genre} {
+global genreDef
+if {[info exist genreDef(none)]} {
+  set def $genreDef($genre)
+  show_genre_info $def
+  }
 }
 
 

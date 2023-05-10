@@ -18,6 +18,7 @@ channels which drown out melody.
 
 
 
+98 Degrees/She's Out of My Life.mid	4 69
 Al Jolson/You Made Me Love You.mid	4 24
 Alberto Fortis/Figlio di niente.mid	4 62
 Andy Williams/Can't Get Used To Losing You.mid	-1 -1 vocal line missing
@@ -33,12 +34,15 @@ Captain Hollywood Project/Find Another Way (single mix).mid	15 67
 Captain Hollywood Project/Impossible.mid	8 85
 Carboni/Ci vuole un fisico bestiale.2.mid	12 11
 Charlie Rich/The Most Beautiful Girl.mid	1 22
+Cilla Black/Anyone Who Had a Heart.mid	4 69
 Cocciante/Celeste nostalgia.mid	4 21
 Collective Soul/December.1.mid	11 54
 Cole Porter/Anything Goes.mid	1 65
 Commodores/Brick House.mid	2 61
 Commodores/Easy.1.mid	16 65
 David Essex/Everlasting Love.mid	16 65
+Dietrich Marlene/Sag mir wo die Blumen sind.mid	4 22
+Drifters/Under The Boardwalk.mid	2 105
 Duke/I'm So in Love With You.mid	4 65
 Duran Duran/Come Undone.2.mid	3 65
 Ed Townsend/For Your Love.mid	4 73
@@ -55,6 +59,7 @@ Gibson Brothers/Cuba.mid	4 29
 Grease/Summer Saturdays.mid	-1 -1 shifting melody among channels
 Holly Buddy/It's So Easy.mid	4 26
 Holly Buddy/I'm Lookin' For Someone To Love.mid	4 26
+James Last/Medley.mid	7 56
 John Farnham/Playing to Win.mid	4 17
 John Fred/Judy in Disguise.mid	1 0
 Johnny Rivers/Midnight Special.mid	6 29
@@ -65,10 +70,15 @@ Local H/Back in the Day.mid	-1 -1 no melody
 Local H/Bag of Hammers.mid	-1 -1 no melody
 Marc Anthony/Hasta Ayer.mid	8 2
 Mark Morrison/Return of the Mack.mid	4 65
+Matt Bianco/Get Out Of Your Lazy Bed.mid	vocal line missing
 Melanie/Feels So Good (Blacksmith R&B Rub) (feat. Know _uestion).mid	13 75
+Melissa Etheridge/Come To My Window.1.mid	-1 -1 no clear melody
+Motley Crue/Girls Girls Girls.mid	1 0
 Nas/If I Ruled the World.mid	1 75
+Oasis/All Around the World.1.mid	4 62
 Oingo Boingo/Dead Man's Party.mid	-1 -1 melody in various channels
 Oingo Boingo/Grey Matter.mid	9 85
+Oldfield, Mike/Etude (From 'Killing Fields').mid	-1 -1 shifting melody
 Patrick Swayze/She's Like the Wind.mid	5 25
 Paul Simon/Bridge Over Troubled Water.mid	5 4
 Peter Koelewijn & Zijn Rockets/Kom Van Dat Dak Af.mid	4 35
@@ -80,6 +90,7 @@ Ray Charles/Georgia.1.mid	4 65
 Rich , Buddy/Groovin' Hard.mid	-1 -1 melody spread out in many channels
 Rita Coolidge/(Your Love Has Lifted Me) Higher and Higher.mid	5 0
 Roberts/Stasera mi butto.mid	4 11
+Sade/Cherry Pie.mid	7 26
 Selena/Baila mi son.mid	4 52
 Shaggy/Angel.2.mid	4 70
 Sheryl Crow/All I Wanna Do.mid	4 75
@@ -87,6 +98,7 @@ Special EFX/Uptown East.mid	4 82
 Steve Winwood/Higher Love.2.mid	-1 -1
 Supermax/Love Machine, Part 1.mid	-1 -1 no melody
 Taco/Puttin'on the Ritz.mid	-1 -1 shifting melody
+The Wallflowers/Heroes.mid	6 25
 Thelma Houston/Don't Leave Me This Way.mid	4 65
 The Cranberries/Animal Instinct.mid	3 90
 The Cyrkle/Red Rubber Ball.1.mid	6 20
@@ -94,6 +106,7 @@ The Four Preps/26 Miles (Santa Catalina).mid	4 73
 The Offspring/All I Want.mid	3 21
 The Trammps/Disco Inferno.mid	1 7
 The Trammps/Zing Went the Strings of My Heart.mid	4 58
+Timeless/Where Is the Love.mid	5 48
 Todd Rundgren/Can We Still Be Friends.1.mid	1 0
 Uriah Heep/Easy Livin'.mid	2 18
 Wings/Silly Love Songs.mid	16 65
