@@ -1,0 +1,17 @@
+|alternativeRock|15|jazz|49|
+|artRock|15|latin|8|
+|blues|8|newWave|9|
+|countryRock|8|nuMetal|2|
+|country|32|platinumAndGold|206|
+|danceMusic|37|popRock|19|
+|discos|39|progressiveRock|22|
+|electronica|19|psychelia|15|
+|folkRock|12|punk|5|
+|funk|4|rap|26|
+|garageRock|5|reggae|12|
+|glamRock|27|rhythmAndBlues|93|
+|hardRock|43|rockabilly|22|
+|heavyMetal|54 rootsRock|15|
+|industrialRock|5|softRock|36|
+|instrumentalRock|2|songWriters|45|
+|jazzRock|14|world|5|

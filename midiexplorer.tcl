@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.02 2023-05-10 10:10" 
+set midiexplorer_version "MidiExplorer version 4.04 2023-05-25 17:35" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -4695,6 +4695,7 @@ proc beat_graph {source} {
     global midi
     global fbeat
     global tbeat
+    global compactMidifile
     
     
     set tsel [count_selected_midi_tracks]
@@ -4721,9 +4722,11 @@ proc beat_graph {source} {
     if {$delta_tick < 1} {set delta_tick 1}
     $bgraph create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
             -width 2 -fill white
-    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx $fbeat $tbeat -0.0625 1.0
-    Graph::draw_x_ticks $bgraph $fbeat $tbeat $delta_tick 2 0 %3.0f $colfg
-    Graph::draw_y_ticks $bgraph 0.0 1.0 0.125 2 %3.2f $colfg
+    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx $fbeat $tbeat -0.0625 1.15
+    set sbeat $fbeat
+    if {$sbeat < 0.0} {set sbeat 0.0}
+    Graph::draw_x_ticks $bgraph $sbeat $tbeat $delta_tick 2 0 %3.0f $colfg
+    Graph::draw_y_ticks $bgraph 0.0 1.01 0.125 2 %3.2f $colfg
     
     set i 0
     foreach line $pianoresult {
@@ -4738,6 +4741,9 @@ proc beat_graph {source} {
         set iy [Graph::iypos $frac]
         $bgraph create rectangle $ix $iy [expr $ix +2] [expr $iy +2] -fill black
     }
+    set ypos [expr $ytbx + 15]
+    set xpos [expr $xlbx + 10]
+    $bgraph create text $xpos $ypos -text $compactMidifile  -anchor w
 }
 
 
@@ -9398,6 +9404,7 @@ proc plot_pitch_class_histogram {} {
     global flatnotes
     global pitchcl
     global midi
+    global compactMidifile
     
     set w 400
     set h 65 
@@ -9416,6 +9423,7 @@ proc plot_pitch_class_histogram {} {
     set entropy [pdf_entropy $pitchcl]
     set entropy [format "%6.3f" $entropy]
     set maxgraph [expr $maxgraph + 0.2]
+    #puts "maxgraph = $maxgraph"
 
     set flats [expr $notedist(3) + $notedist(10)]
     set sharps [expr $notedist(1) + $notedist(6)]
@@ -9434,7 +9442,7 @@ proc plot_pitch_class_histogram {} {
         
         checkbutton .pitchclass.circle -text "circle of fifths" -variable midi(pitchclassfifths) -font $df -command plot_pitch_class_histogram
         pack .pitchclass.circle
-        pack [canvas $pitchc -width 425 -height 100]\
+        pack [canvas $pitchc -width 425 -height 125]\
                 -expand yes -fill both
     } else {.pitchclass.c delete all}
     
@@ -9463,9 +9471,11 @@ proc plot_pitch_class_histogram {} {
         $pitchc create rectangle $ix $ybbx $ix2 $iyb -fill gray
         incr j
     }
+    set scompactMidifile [string map {\n ""} $compactMidifile]
     $pitchc create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
             -width 2
     $pitchc create text 70 80 -text "entropy = $entropy"
+    $pitchc create text 15 95 -text $scompactMidifile -anchor nw
     bind .pitchclass <Alt-p> {histogram_ps_output .pitchclass.c}
 }
 
