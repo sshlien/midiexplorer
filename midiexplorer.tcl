@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.04 2023-05-25 17:35" 
+set midiexplorer_version "MidiExplorer version 4.07 2023-06-15 17:10" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -2224,6 +2224,8 @@ foreach line [split $midi_info '\n'] {
  set useflats 0
  if {$flats > $sharps} {set useflats 1}
  set cprogsact [normalizeActivity $cprogsact]
+ #puts "cprogs = $cprogs"
+ #puts "cprogsact = $cprogsact"
  return 0
 }
 
@@ -4731,15 +4733,17 @@ proc beat_graph {source} {
     set i 0
     foreach line $pianoresult {
         if {[llength $line] != 6} continue
-        set onset [expr double([lindex $line 1])/$ppqn]
+        set onset [expr double([lindex $line 0])/$ppqn]
         set beat [expr floor($onset)]
-        set frac [expr $onset - $beat]
+	set frac [expr [lindex $line 0] % $ppqn]
+	set frac [expr double($frac)/$ppqn]
+	#puts "frac = $frac $line"
 	set beat [expr $beat + $fbeat]
 	if {$beat > $tbeat} break
         incr i
         set ix [Graph::ixpos $beat]
         set iy [Graph::iypos $frac]
-        $bgraph create rectangle $ix $iy [expr $ix +2] [expr $iy +2] -fill black
+        $bgraph create rectangle $ix $iy [expr $ix +1] [expr $iy +1] -fill black
     }
     set ypos [expr $ytbx + 15]
     set xpos [expr $xlbx + 10]
@@ -6112,9 +6116,9 @@ proc show_prog_structure {} {
   global progmapper
   global groupcolors
   global df
-  global cprogcolor
-  global cprogsact
-  global cprogs
+  #global cprogcolor
+  #global cprogsact
+  #global cprogs
   global exec_out
   #global seglink
 
@@ -6199,8 +6203,8 @@ proc show_prog_structure {} {
   #set sorted_pianoresult [lsort -command compare_onset $pianoresult]
   set taglist {}
 
-  for {set i 0} {$i < 128} {incr i}  {set progactivity($i) 0}
-  for {set i 0} {$i < 17} {incr i} {set koloractivity($i) 0}
+  #for {set i 0} {$i < 128} {incr i}  {set progactivity($i) 0}
+  #for {set i 0} {$i < 17} {incr i} {set koloractivity($i) 0}
 
   foreach line $midicommands {
      set begin [lindex $line 0]
@@ -6221,10 +6225,10 @@ proc show_prog_structure {} {
          set g [lindex $progmapper $p]
          set kolor [lindex $groupcolors $g]
        }
-       if {$c != 10} {
-         set progactivity($p) [expr $progactivity($p) + $end - $begin]
-         set koloractivity($g) [expr $koloractivity($g) + $end - $begin] 
-         }
+       #if {$c != 10} {
+         #set progactivity($p) [expr $progactivity($p) + $end - $begin]
+         #set koloractivity($g) [expr $koloractivity($g) + $end - $begin] 
+       #  }
        set x1 [expr $begin*$pixels_per_beat]
        set x2 [expr $end*$pixels_per_beat]
        if {$midi(midishow_sep) == "track"} {
@@ -6254,20 +6258,23 @@ proc show_prog_structure {} {
     }
 
 
-    set cprogcolor ""
-    for {set i 0} {$i < 17} {incr i} {
-       append cprogcolor " $koloractivity($i)" 
-      }
-    set cprogcolor [normalize_vectorlist $cprogcolor]
+    # All of this info is returned by midistats and
+    # parsed by parse_midi_info
+    #
+    #set cprogcolor ""
+    #for {set i 0} {$i < 17} {incr i} {
+    #   append cprogcolor " $koloractivity($i)" 
+    #  }
+    #set cprogcolor [normalize_vectorlist $cprogcolor]
 
-    set cprogsact ""
-    set cprogs ""
-    for {set i 0} {$i < 128} {incr i} {
-      if {$progactivity($i) != 0} {
-	      append cprogs " $i"
-	      append cprogsact " $progactivity($i)"}
-      }
-    set cprogsact [normalize_vectorlist $cprogsact]
+    #set cprogsact ""
+    #set cprogs ""
+    #for {set i 0} {$i < 128} {incr i} {
+    #  if {$progactivity($i) != 0} {
+    #	      append cprogs " $i"
+    #	      append cprogsact " $progactivity($i)"}
+    #  }
+    #set cprogsact [normalize_vectorlist $cprogsact]
 
       
     plot_programcolor
@@ -8957,8 +8964,11 @@ proc midi_statistics {choice source} {
                 if {$index > 127} {set index 127}
                 set histogram($index) [expr $histogram($index)+1]
             }
-            onset {set s [expr int((100.0*$begin)/$ppqn) % 100]
+            onset {set frac [expr $begin % $ppqn]
+                set frac [expr double($frac)/$ppqn]
+                set s [expr int($frac * 100.0)]
                 set histogram($s) [expr $histogram($s) + 1]
+		#puts "frac = $frac s = $s line = $line"
                 }
             offset {set s [expr int((100.0*$end)/$ppqn) % 100]
                 set histogram($s) [expr $histogram($s) + 1]
@@ -8966,11 +8976,11 @@ proc midi_statistics {choice source} {
         }
     }
     set total 0;
-    for {set i 0} {$i <128} {incr i} {
+    for {set i 0} {$i <100} {incr i} {
         set total [expr $total+$histogram($i)]
     }
     if {$total < 1} return
-    for {set i 0} {$i <128} {incr i} {
+    for {set i 0} {$i <100} {incr i} {
         set histogram($i) [expr double($histogram($i))/$total]
     }
 }
@@ -9539,6 +9549,8 @@ proc plot_program_activity {} {
    global groupcolors
    global progmapper
    global df
+   #puts "cprogs = $cprogs"
+   #puts "cprogsact = $cprogsact"
    set w 400
    set h 60 
    set xlbx 5
@@ -10259,7 +10271,9 @@ load_desc
   
 
 proc get_midi_features {midifile midi_info outhandle index} {
-set programlist {}
+global cprogsact
+#global cprogs
+set cprogs {}
 set tempo 120.0
 set pitchbends 0
 set programcmd 0
@@ -10274,7 +10288,7 @@ foreach line [split $midi_info '\n'] {
   #puts "line = $line"
   set info_id [lindex $line 0] 
   switch $info_id {
-    program {lappend programlist [lindex $line 2]}
+    program {lappend cprogs [lindex $line 2]}
     cprogram {lappend programlist [lindex $line 2]}
     tempo {set tempo [lindex $line 1]}
     pitchbends {set pitchbends [lindex $line 1]}
@@ -10300,15 +10314,16 @@ foreach line [split $midi_info '\n'] {
     }
   }
 
-set progsact {} 
+set cprogsact {} 
 if {[llength $progs] > 0} {
   foreach p $pprogsact {
     set p [format "%6.3f" [expr double($p)/$npulses]]
-    append progsact "$p "
+    append cprogsact "$p "
     }
   }
 
-set programlist [lsort -unique -integer $programlist]
+set cprogs [lsort -unique -integer $cprogs]
+puts "programlist =  $programlist"
 #puts "\nfile = $midifile"
 #puts "progcolor = $progcolor"
 set pcolor [normalize_vectorlist $progcolor]
@@ -15518,3 +15533,11 @@ show_message_page  $output word
 
 restore_root_folder 
 
+#check for argc,argv
+if {$argc != 0} {
+	#puts "argv = $argv"
+        set midi(midifilein) [lindex $argv 0]
+        set msg "Last midi file opened was $midi(midifilein)\nYou can load it using the menu item file/reload last midi file."
+	.info.txt delete 1.0 end
+        .info.txt insert insert $msg 
+        }
