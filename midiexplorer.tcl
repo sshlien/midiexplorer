@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.07 2023-06-15 17:10" 
+set midiexplorer_version "MidiExplorer version 4.07 2023-06-19 10:15" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -1568,7 +1568,7 @@ ttk::style configure Treeview -background azure1
 ttk::treeview $w.tree -columns {fullpath type size criterion} -displaycolumns {size criterion} \
 	-yscroll "$w.vsb set" -xscroll "$w.hsb set" -selectmode browse -padding 3
 #puts [$w.tree configure]
-ttk::scrollbar $w.vsb -orient vertical -command "$w.tree yview"
+ttk::scrollbar $w.vsb -orient vertical -command "$w.tree yview" 
 ttk::scrollbar $w.hsb -orient horizontal -command "$w.tree xview"
 $w.tree heading \#0 -text "Directory Structure"
 $w.tree heading size -text "File Size"
@@ -10288,8 +10288,8 @@ foreach line [split $midi_info '\n'] {
   #puts "line = $line"
   set info_id [lindex $line 0] 
   switch $info_id {
-    program {lappend cprogs [lindex $line 2]}
-    cprogram {lappend programlist [lindex $line 2]}
+    #program {lappend cprogs [lindex $line 2]}
+    #cprogram {lappend programlist [lindex $line 2]}
     tempo {set tempo [lindex $line 1]}
     pitchbends {set pitchbends [lindex $line 1]}
     programcmd {set programcmd [lindex $line 1]}
@@ -10322,8 +10322,8 @@ if {[llength $progs] > 0} {
     }
   }
 
-set cprogs [lsort -unique -integer $cprogs]
-puts "programlist =  $programlist"
+#set cprogs [lsort -unique -integer $cprogs]
+#puts "programlist =  $programlist"
 #puts "\nfile = $midifile"
 #puts "progcolor = $progcolor"
 set pcolor [normalize_vectorlist $progcolor]
@@ -10335,7 +10335,7 @@ puts $outhandle "midilength $midilength"
 puts $outhandle "pitchbend $pitchbends"
 #puts $outhandle "programs [list $programlist]"
 puts $outhandle "progs  $progs"
-puts $outhandle "progsact $progsact"
+puts $outhandle "progsact $cprogsact"
 puts $outhandle "programcmd $programcmd"
 puts $outhandle "drums $drums"
 puts $outhandle "drumhits $drumhits"
@@ -10354,6 +10354,7 @@ if {![info exist vector]} {
   }
 foreach pc $vector {
   set fnorm [expr $fnorm + ($pc*$pc)]
+  #set fnorm [expr $fnorm + $pc]
   }
 set fnorm [expr sqrt($fnorm)]
 if {$fnorm < 0.01} {set fnorm 0.01}
