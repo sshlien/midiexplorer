@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.08 2023-07-02 15:50" 
+set midiexplorer_version "MidiExplorer version 4.09 2023-07-04 17:10" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -2132,6 +2132,7 @@ proc readMidiFileHeader {openfile} {
 
 
 proc normalizeActivity {vector} {
+# divide by root mean square
 set fnorm 0.0
 if {[llength $vector] < 1} {return vector}
 foreach pc $vector {
@@ -6071,7 +6072,7 @@ set groupcolors {{medium blue}
                  gray30         
                  green4         
                  turquoise
-                 firebrick      
+                 lightsteelblue1      
                  sienna4        
                  maroon         
 		 {dodger blue} 
@@ -6258,23 +6259,6 @@ proc show_prog_structure {} {
     }
 
 
-    # All of this info is returned by midistats and
-    # parsed by parse_midi_info
-    #
-    #set cprogcolor ""
-    #for {set i 0} {$i < 17} {incr i} {
-    #   append cprogcolor " $koloractivity($i)" 
-    #  }
-    #set cprogcolor [normalize_vectorlist $cprogcolor]
-
-    #set cprogsact ""
-    #set cprogs ""
-    #for {set i 0} {$i < 128} {incr i} {
-    #  if {$progactivity($i) != 0} {
-    #	      append cprogs " $i"
-    #	      append cprogsact " $progactivity($i)"}
-    #  }
-    #set cprogsact [normalize_vectorlist $cprogsact]
 
       
     plot_programcolor
@@ -10445,8 +10429,12 @@ radiobutton $w.matchcriterion.cosine -text "1 - cosine" -font $df\
  -value 1 -variable midi(matchcriterion) -command switch_criterion
 radiobutton $w.matchcriterion.mse -text "root mean square error" -font $df\
  -value 2 -variable midi(matchcriterion) -command switch_criterion
-pack $w.matchcriterion.cosine $w.matchcriterion.mse -side left
-grid $w.matchcriterion -columnspan 3 -sticky w
+radiobutton $w.matchcriterion.manhat -text "manhattan distance" -font $df\
+ -value 3 -variable midi(matchcriterion) -command switch_criterion
+radiobutton $w.matchcriterion.cheb -text "chebyshev distance" -font $df\
+ -value 4 -variable midi(matchcriterion) -command switch_criterion
+pack $w.matchcriterion.cosine $w.matchcriterion.mse  $w.matchcriterion.manhat $w.matchcriterion.cheb -side left
+grid $w.matchcriterion -columnspan 4 -sticky w
 
 checkbutton $w.checkname -variable searchstate(cname) -command searchname
 label $w.labname -text "string in file name" -font $df 
@@ -10681,18 +10669,9 @@ if {![info exist cprogcolor] && $searchstate(cpcol)} {
     }
 if {$searchstate(cpcol) == 1} {
   set searchstate(cprog) 0
-  if {$midi(matchcriterion) == 1} {
-    set searchstate(cpcol1) 1
-    set searchstate(cpcol2) 0
-    } else {
-    set searchstate(cpcol1) 0
-    set searchstate(cpcol2) 1
-    }
-  } else {
-  set searchstate(cpcol1) 0
-  set searchstate(cpcol2) 0
   }
 }
+
 
 proc searchpitch {} {
 global searchstate pitchcl
@@ -10702,18 +10681,6 @@ if {![info exist pitchcl] && $searchstate(cpitch)} {
     set searchstate(cpitch) 0
     return
     }
-if {$searchstate(cpitch) == 1} {
-  if {$midi(matchcriterion) == 1} {
-    set searchstate(cpitch1) 1
-    set searchstate(cpitch2) 0
-    } else {
-    set searchstate(cpitch1) 0
-    set searchstate(cpitch2) 1
-    }
-  } else {
-  set searchstate(cpitch1) 0
-  set searchstate(cpitch2) 0
-  }
 }
 
 proc searchpitche {} {
@@ -10736,13 +10703,9 @@ set filter_code(cprog1) "if \{\[correlate_progs \$item\] > \$midi(progthr) \} \{
 return 0\}"
 set filter_code(cprog2) "if \{\[mse_progs \$item\] > \$midi(progthr) \} \{
 return 0\}"
-set filter_code(cpcol1) "if \{\[match_progcolor_dot \$item\] > \$midi(pcolthr) \} \{
+set filter_code(cpcol) "if \{\[match_progcolor \$item\] > \$midi(pcolthr) \} \{
 return 0\}"
-set filter_code(cpitch1) "if \{\[match_pitchclass_dot \$item\] > \$midi(pitchthr) \} \{
-return 0\}"
-set filter_code(cpcol2) "if \{\[match_progcolor_mse \$item\] > \$midi(pcolthr) \} \{
-return 0\}"
-set filter_code(cpitch2) "if \{\[match_pitchclass_mse \$item\] > \$midi(pitchthr) \} \{
+set filter_code(cpitch) "if \{\[match_pitchclass \$item\] > \$midi(pcolthr) \} \{
 return 0\}"
 set filter_code(cpitche) "if \{\[match_pitch_entropy \$item\] == -1\} \{return 0\}"
 
@@ -10808,7 +10771,7 @@ if {$searchstate(cpitche)} {
 
 proc init_match_histogram {} {
 global match_hist
-for {set i 0} {$i < 101} {incr i} {
+for {set i 0} {$i < 301} {incr i} {
   set match_hist($i) 0
   }
 }
@@ -10873,7 +10836,7 @@ append revised_procedure "if \{\[dict exists \$desc(\$item) damaged\]\} \{return
 
 
 set i 0
-foreach item {cname ctempo checkprogs checkperc checkexclude cbends cndrums cpcol1 cpcol2 cpitch1 cpitch2 cpitche cprog1 cprog2} {
+foreach item {cname ctempo checkprogs checkperc checkexclude cbends cndrums cpcol cpitch  cpitche cprog1 cprog2} {
   if {$searchstate($item) > 0} {
      append revised_procedure "\n$filter_code($item)"
      incr i
@@ -10908,6 +10871,44 @@ proc root_mean_square_error {vec1 vec2} {
  set sum [expr sqrt($sum/$k)]
  return $sum
 }
+
+proc chebyshev {vec1 vec2} {
+set max 0.0
+foreach v1 $vec1 v2 $vec2 {
+ set d [expr abs($v1 - $v2)]
+ if {$d > $max} {set max $d}
+ }
+return $max
+}
+
+proc manhattan {vec1 vec2} {
+set sum 0.0
+foreach v1 $vec1 v2 $vec2 {
+ set d [expr abs($v1 - $v2)]
+ set sum [expr $sum + $d]
+ }
+# scale it by 20% so its value is comparable with
+# other metrics. This factor depends on the dimension
+# of the vectors.
+set sum [expr $sum * 0.20]
+return $sum
+}
+
+
+proc normalize_activity {vector} {
+set fnorm 0.0
+if {[llength $vector] < 1} {return vector}
+foreach pc $vector {
+  set pc [expr double($pc)]
+  set fnorm [expr $fnorm + ($pc*$pc)]
+  }
+set fnorm [expr sqrt($fnorm)]
+set nvector [list]
+foreach pc $vector {
+  lappend nvector [expr $pc/$fnorm]}
+return $nvector
+}
+
 
 
 proc correlate_progs {item} {
@@ -10995,6 +10996,16 @@ set match_hist($r100) [expr $match_hist($r100) + 1]
 return $r
 }
 
+proc match_progcolor {item} {
+global midi
+switch $midi(matchcriterion) {
+  1 {match_progcolor_dot $item} 
+  2 {match_progcolor_mse $item}
+  3 {match_progcolor_manhattan $item}
+  4 {match_progcolor_chebyshev $item}
+  }
+}
+
 
 proc match_progcolor_dot {item} {
 global cprogcolor
@@ -11024,6 +11035,43 @@ set match_hist($r100) [expr $match_hist($r100) + 1]
 return $r
 }
 
+proc match_progcolor_chebyshev {item} {
+global cprogcolor
+global match_hist
+global desc
+global rcriterion
+set pcol [dict get $desc($item) progcolor]
+set r [chebyshev $cprogcolor $pcol]
+set rcriterion [format %5.3f $r]
+set r100 [expr int(floor($r * 100))]
+set match_hist($r100) [expr $match_hist($r100) + 1]
+return $r
+}
+
+
+proc match_progcolor_manhattan {item} {
+global cprogcolor
+global match_hist
+global desc
+global rcriterion
+set pcol [dict get $desc($item) progcolor]
+set r [manhattan $cprogcolor $pcol]
+set rcriterion [format %5.3f $r]
+set r100 [expr int(floor($r * 100))]
+set match_hist($r100) [expr $match_hist($r100) + 1]
+return $r
+}
+
+proc match_pitchclass {item} {
+global midi
+switch $midi(matchcriterion) {
+  1 {match_pitchclass_dot $item} 
+  2 {match_pitchclass_mse $item}
+  3 {match_pitchclass_manhattan $item}
+  4 {match_pitchclass_chebyshev $item}
+  }
+}
+
 proc match_pitchclass_dot {item} {
 global pitchcl
 global match_hist
@@ -11045,6 +11093,32 @@ global desc
 global rcriterion
 set pcol [dict get $desc($item) pitches]
 set r [root_mean_square_error $pitchcl $pcol]
+set rcriterion [format %5.3f $r]
+set r100 [expr int(floor($r * 100))]
+set match_hist($r100) [expr $match_hist($r100) + 1]
+return $r
+}
+
+proc match_pitchclass_manhattan {item} {
+global pitchcl
+global match_hist
+global desc
+global rcriterion
+set pcol [dict get $desc($item) pitches]
+set r [manhattan $pitchcl $pcol]
+set rcriterion [format %5.3f $r]
+set r100 [expr int(floor($r * 100))]
+set match_hist($r100) [expr $match_hist($r100) + 1]
+return $r
+}
+
+proc match_pitchclass_chebyshev {item} {
+global pitchcl
+global match_hist
+global desc
+global rcriterion
+set pcol [dict get $desc($item) pitches]
+set r [chebyshev $pitchcl $pcol]
 set rcriterion [format %5.3f $r]
 set r100 [expr int(floor($r * 100))]
 set match_hist($r100) [expr $match_hist($r100) + 1]
