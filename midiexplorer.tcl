@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.09 2023-07-04 17:10" 
+set midiexplorer_version "MidiExplorer version 4.10 2023-07-09 11:25" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -83,6 +83,7 @@ set briefconsole 1
 #   Part 25.0 internals
 #   Part 26.0 aftertouch
 #   Part 27.0 notebook
+#   Part 28.0 programcolor
 #
 
 set welcome "Welcome to $midiexplorer_version. This application\
@@ -685,6 +686,7 @@ proc midiInit {} {
     set midi(.touchplot) ""
     set midi(.effect) ""
     set midi(.csettings) ""
+    set midi(.programcolor) ""
 
     
     set midi(player1) ""
@@ -1098,6 +1100,7 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
 	    -command "google_search genre"
 	$ww add command -label "duckduckgo search" -font $df -accelerator "ctrl-u"\
 	    -command duckduckgo_search
+        $ww add command -label "program color" -font $df -command programcolorDisplay
         $ww add command -label "pgram" -font $df -command pgram_window 
         $ww add command -label keymap -font $df -command {keymap none} -accelerator "ctrl-y"
 	$ww add command -label chordgram -font $df -command {chordgram_plot none} -accelerator "ctrl-h"
@@ -5992,6 +5995,7 @@ function"
 
    midiStructureSelect
    show_prog_structure
+   #programcolorDisplay
 }
 
 proc mstruct_Button1Press {x y} {
@@ -7276,7 +7280,7 @@ proc mftext_tmp {} {
 }
 
 
-#end of source pianoroll.tcl
+#end of  midistructure
 
 
 
@@ -9232,6 +9236,9 @@ if {[winfo exists .channel9]} {
 if {[winfo exists .notegram]} {
    notegram_plot pianoroll
    }
+if {[winfo exists .programcolor]} {
+   programcolorDisplay
+   }
 }
 
 
@@ -9305,6 +9312,9 @@ if {[winfo exists .csettings]} {
    }
 if {[winfo exists .data_info]} {
    dirhome 
+   }
+if {[winfo exists .programcolor]} {
+   programcolorDisplay
    }
 }
 
@@ -10518,37 +10528,48 @@ button $w.help -text help -font $df -command {show_message_page $hlp_search word
 grid $w.scan $w.msg $w.help
 }
 
-set hlp_search "This window allows you to search the entire midi\
+set hlp_search "Search Function\
+
+
+This window allows you to search the entire midi\
 collection in this root folder for midi files which satistfy\
 certain properties. Tick the checkboxes of the properties of\
-interest and specify the limits or values for those properties.
+interest and specify the limits or values for those properties.\
 
-If you have not already done so, prior to running this search\
-tool, you need to create a database of all the midi file\
+
+If you have not already done so, \
+you need to create a database of all the midi file\
 descriptors. This data base is stored in the tab separated\
 file called MidiDescriptors.txt. The file is stored in the\
-same folder as the root folder; so you can have separate\
-databases for the different root folders. Note that since\
-that for large collections of midi files it may take some\
-time to scan all the midi files and extract all the\
+same folder as the root folder.  Note that\
+for large collections of midi files it may take a while\
+to scan all the midi files and extract all the\
 information for the database. Defective midi files will\
 also be detected during this scan and will not be included\
-in the database. (You can get a list of those files from\
-the Utilities menu button. Clicking on those files will\
-provide more information about those files.)
+in the database.\
+
 
 Once you have selected the properties of interest,\
 you can now scan the database. Midi files that satisfy your\
 criteria will be listed. For some features, a plot\
 showing the distribution of the matching criteria may\
 pop up. If more than 200 midi files match your criteria,\
-then a random selection of those midi files will be displayed.\
-Doing another scan with display a different random set.
+then the program will produce a random selection of those files.\
+Doing another scan will display a different random set.\
+
 
 You may order these files by clicking on the criterion\
 heading. Clicking on one of those files will display the\
 characteristics of this file in the lower frame of the\
-main window.
+main window.\
+
+
+Certain matching functions such as matching program colors or\
+pitch class distributions involve comparing two vectors. You\
+have a choice of using one of several distance measures appearing\
+at the top of the window. The results may depend on the metric\
+that you choose.
+ 
 "
 
 
@@ -12133,7 +12154,7 @@ proc getGeometryOfAllToplevels {} {
                ".dictview" ".notegram" ".barmap" ".playmanage" ".data_info"
                ".midiplayer" ".tmpfile" ".cfgmidi2abc" ".pgram" ".keystrip"
                ".keypitchclass" ".channel9" ".ribbon" ".ptableau"
-               ".touchplot" ".effect" ".csettings" ".drummap" }
+               ".touchplot" ".effect" ".csettings" ".drummap" ".programcolor"}
   foreach top $toplevellist {
     if {[winfo exist $top]} {
       set g [wm geometry $top]"
@@ -15602,6 +15623,152 @@ for {set c 0} {$c < $ntrks} {incr c} {
   }
 show_message_page  $output word
 }
+
+#Part 28.0 programcolor
+
+set hlp_programcolor "   Program Color
+
+The midi standard defines 128 musical instruments which are referred\
+to as midi programs. Midi files choose a small subset of these programs\
+which give the character to the music. Many of these programs\
+are similar - for example, there are 6 piano instruments\
+can be interchanged. For various reasons, it is convenient\
+to group these 128 programs into 18 classes that are represented\
+by distinct colors. The distribution of these programs into these\
+classes determines the program color of the file. There is a\
+search tool in the database menu for finding other midi\
+files with similar program colors.\
+
+
+The program color mixture is displayed graphically in two ways.\
+On the left, the pie is separated into slices for each of the\
+program classes present in the midi file. The name of this class\
+is indicated if the mouse pointer overlays one of these regions.\
+On the right, there is a histogram representation of the same\
+mixture. The amount of space allotted to each class is determined\
+by the amount of time that the programs in the class are active\
+in the midi file.
+
+"
+
+
+proc programcolorDisplay {} {
+global cprogcolor
+global groupcolors
+set p .programcolor
+if {![winfo exist $p]} {
+  toplevel $p
+  positionWindow $p
+  frame $p.f
+  button $p.f.h -text help -command {show_message_page $hlp_programcolor word}
+  pack $p.f -anchor e
+  pack $p.f.h -side right -anchor e
+  canvas $p.c -height 180
+  label $p.t -text ""
+  pack $p.c $p.t
+  } else {
+  $p.c delete all
+  }
+
+set total 0.0
+foreach prg $cprogcolor {
+  set total [expr $total + $prg]
+  }
+set ncprogcolor {}
+foreach prg $cprogcolor {
+  lappend ncprogcolor [expr $prg/$total]
+  }
+
+set angle 0.0
+set i 0
+foreach prg $ncprogcolor {
+  set deltaAngle [expr $prg*360.0]
+  set color [lindex $groupcolors $i]
+  if {$deltaAngle > 0.1} {
+           #puts "prg = $prg deltaAngle = $deltaAngle angle = $angle i = $i color = $color"
+           if {$deltaAngle > 359.5}  {set deltaAngle 359.6}
+          $p.c create arc 5 5 150 150 -start $angle -extent $deltaAngle -fill $color -style pieslice -tag prog$i
+  set angle [expr $angle + $deltaAngle]
+  }
+  incr i
+ }
+plot_programcolor_histogram 160 50
+bind_programcolor_groups
+}
+
+proc plot_programcolor_histogram {x0 y0} {
+    global centers
+    global df
+    global cprogcolor
+    global groupcolors
+
+    
+    set p .programcolor
+    set w 200
+    set h 100
+    set xlbx [expr 10 + $x0]
+    set xrbx [expr $w -5 +$x0]
+    set ytbx [expr 5 + $y0]
+    set ybbx [expr $h -15 +$y0]
+    #set fillcolor [lindex $colorlist $k]
+
+
+    set maxgraph 0.0
+    for {set i 0} {$i < 18} {incr i} {
+        set nd [lindex $cprogcolor $i]
+        if {$nd > $maxgraph} {set maxgraph $nd}
+    }
+    #puts "maxgraph = $maxgraph"
+    set maxgraph [expr $maxgraph + 0.2]
+
+    $p.c create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
+            -width 2 -fill white
+    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx 0.0 17.0 0.0 $maxgraph
+    
+    set iy [expr $ybbx +10]
+    set iy2 [Graph::iypos $maxgraph]
+
+    set i 0
+    foreach prob $cprogcolor {
+        set ix [Graph::ixpos [expr $i +0.5]]
+        #$pitchc create text $ix $iy -text $note -font $df
+	#puts "note = $note i = $i ix = $ix notedist = [lindex $notedist $j]"
+        set iyb [Graph::iypos $prob]
+        set ix [Graph::ixpos [expr double($i)]]
+        set ix2 [Graph::ixpos [expr double($i+1)]]
+        $p.c create rectangle $ix $ybbx $ix2 $iy2 -outline blue
+        set shade [lindex $groupcolors $i]
+        $p.c create rectangle $ix $ybbx $ix2 $iyb -fill $shade
+        incr i
+       }
+}
+
+
+proc annotate_group {g} {
+  global groupnames
+  global df
+  .programcolor.t configure -text [lindex $groupnames $g] -font $df
+}
+
+proc un_annotate_group {} {
+   global df
+   .programcolor.t configure -text "" -font $df
+}
+
+proc bind_programcolor_groups {} {
+  set p .programcolor.c
+  for {set i 0} {$i < 17} {incr i} {
+    $p bind prog$i <Enter> "annotate_group $i"
+    $p bind prog$i <Leave> "un_annotate_group"
+    }
+  }
+
+
+
+#end of programcolor
+
+
+
 
 #trace add execution compute_pianoroll leave "cmdstr"
 
