@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.10 2023-07-09 11:25" 
+set midiexplorer_version "MidiExplorer version 4.11 2023-08-09 04:45" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -10275,6 +10275,8 @@ set programcmd 0
 set midilength 0
 set drums {}
 set pcolor {}
+set programlist {}
+set progsact {}
 foreach line [split $midi_info '\n'] {
   #puts $line
   #remove any embedded double quotes and braces if present
@@ -10317,7 +10319,7 @@ if {[llength $progs] > 0} {
   }
 
 set cprogs [lsort -unique -integer $cprogs]
-puts "programlist =  $programlist"
+#if {[llength $programlist] > 0} {puts "programlist =  $programlist"}
 #puts "\nfile = $midifile"
 #puts "progcolor = $progcolor"
 set pcolor [normalize_vectorlist $progcolor]

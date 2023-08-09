@@ -109,7 +109,7 @@ set i 0
 set outfile "pitchclass.csv"
 set outnames "filenames4pitches.txt"
 set outhandle [open $outfile  w]
-puts $outhandle "i, C,C#,D,D#,E,F,F#,G,G#,A,A#,B"
+#puts $outhandle "i, C,C#,D,D#,E,F,F#,G,G#,A,A#,B"
 set outhandlenames [open $outnames w]
 #puts "outhandle = $outhandle"
 foreach midi $midifileList {
@@ -129,7 +129,8 @@ if {[string first "exited" $output] > 0 ||
 	  puts "$fname only percussion channel"
 	  continue
   }
-  puts $outhandle $i,$output
+#  puts $outhandle $i,$output
+   puts $outhandle $output
   puts $outhandlenames $fname
   incr i
   if {[expr $i  % 200] == 0} {puts $i}
@@ -260,7 +261,7 @@ return $output
 }
 
 #make_programcolorCdf $inFolderLength
-make_programcolor $inFolderLength
+#make_programcolor $inFolderLength
 #make_pulseanalysis $inFolderLength
 #make_perc_structure $inFolderLength
-#make_pitchanalysis $inFolderLength
+make_pitchanalysis $inFolderLength
