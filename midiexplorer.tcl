@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.14 2023-08-12 19:50" 
+set midiexplorer_version "MidiExplorer version 4.15 2023-08-13 13:05" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -9326,6 +9326,9 @@ if {[winfo exists .data_info]} {
 if {[winfo exists .programcolor]} {
    programcolorDisplay
    }
+if {[winfo exists .genrewindow]} {
+   update_genre_window
+   }
 }
 
 proc update_drumroll_pdfs {} {
@@ -11703,36 +11706,24 @@ close $outhandle
 }
 
 
+
 proc update_genre_database {} {
-global desc
 global midi
 global genre_db
-load_desc
-set descsize [array size desc]
 set csvfile [file join $midi(rootfolder) genre.tsv]
 file delete tmp.tsv
 file rename $csvfile tmp.tsv
+set contents [array names genre_db]
+set alphacontents [lsort $contents]
 set outhandle [open $csvfile w]
-set len [string length $midi(rootfolder)]
-incr len 
-set lastfilepath ""
-for {set i 1} {$i < $descsize} {incr i} {
-  if {[dict exists $desc($i) damaged]} continue
-  set filepath [dict get $desc($i) file]
-  set filepath [string range $filepath $len end]
-  set filepath [file rootname $filepath]
-  set filepath [split $filepath .]
-  set filepath [lindex $filepath 0]
-  if {[string equal $filepath $lastfilepath]} continue
-  set lastfilepath $filepath
-  if {[info exist genre_db($filepath)]} {
-	  set genre_db($filepath) [string trimleft $genre_db($filepath)]
-          puts $outhandle "$filepath\t$genre_db($filepath)"
-          }
-  #puts  "$filepath\t $genre_db($filepath)"
+set i 0
+foreach tuneline $alphacontents {
+  puts $outhandle "$tuneline\t$genre_db($tuneline)"
+  if {$i < 100} {
+     puts "$tuneline\t$genre_db($tuneline)"
+     }
+  incr i
   }
-close $outhandle
-puts "updated $csvfile"
 }
 
 
@@ -13043,6 +13034,7 @@ proc make_playlist_manager {} {
   set lastplayfile_item -1
   set playlistfiles ""
   set playlistfolder [file join $midi(rootfolder) playlists]
+  puts "playlistfolder = $playlistfolder"
   if {![file exist $playlistfolder]} {
     set msg "The folder $playlistfolder was not found."
     tk_messageBox -message $msg -type ok
@@ -13056,7 +13048,7 @@ proc make_playlist_manager {} {
     .playmanage.frm.left.list insert end $play
     }
 
-  if {[file exist "$playlistfolder/definitions.text"]} {
+  if {[file exists "$playlistfolder/definitions.text"]} {
       load_genre_definitions $playlistfolder
       make_genre_info
       } else {
@@ -15821,9 +15813,26 @@ pack $w.lab
 entry $w.ent -textvariable genredata -width 20 -font $df
 pack $w.ent
 button $w.app -text "add or modify" -font $df -command add_genre
-pack $w.app
+label $w.ok -text "" -font $df
+pack $w.app $w.ok -side left
 focus $w.ent
 }
+
+proc update_genre_window {} {
+global df
+global midi
+global genredata
+set rootfolder $midi(rootfolder)
+set rootfolderbytes [string length $rootfolder]
+incr rootfolderbytes
+set midiname  [string range $midi(midifilein) $rootfolderbytes end]
+set midiname [split $midiname \.]
+set midiname [lindex $midiname 0]
+.genrewindow.lab configure -text $midiname -font $df
+set genredata "" 
+.genrewindow.ok configure -text ""
+}
+
 
 proc add_genre {} {
 global midi
@@ -15837,6 +15846,7 @@ set midiname  [string range $midi(midifilein) $rootfolderbytes end]
 set midiname [split $midiname \.]
 set midiname [lindex $midiname 0]
 set genre_db($midiname) $genredata
+.genrewindow.ok configure -text "ok"
 set genreUpdated 1
 }
 
