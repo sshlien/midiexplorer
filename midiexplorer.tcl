@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.11 2023-08-09 04:45" 
+set midiexplorer_version "MidiExplorer version 4.14 2023-08-12 19:50" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -84,6 +84,7 @@ set briefconsole 1
 #   Part 26.0 aftertouch
 #   Part 27.0 notebook
 #   Part 28.0 programcolor
+#   Part 29.0 genre_db support
 #
 
 set welcome "Welcome to $midiexplorer_version. This application\
@@ -801,6 +802,8 @@ proc midiInit {} {
    set midi(tres) 50
 }
 
+set genreUpdated 0
+
 # save all options, current abc file
 proc WriteMidiExplorerIni {} {
     global midi
@@ -924,7 +927,7 @@ if {[file exists midiexplorer.ini]} {
 wm protocol . WM_DELETE_WINDOW {
     getGeometryOfAllToplevels 
     WriteMidiExplorerIni 
-    if {[array exist genre_db]} {update_genre_database}
+    if {$genreUpdated} {update_genre_database}
     exit
     }
 
@@ -1387,6 +1390,7 @@ bind all <Control-r> piano_roll_display
 bind all <Control-s> {midi_structure_display}
 bind all <Control-t> {detailed_tableau}
 bind all <Control-u> duckduckgo_search
+bind all <Control-v> genre_window
 bind all <Control-w> {playmidifile 0}
 bind all <Control-y> {keymap none}
 }
@@ -1630,6 +1634,7 @@ proc populatedir {tree root} {
    $tree delete [$tree children {}]
    set rootnode [$tree insert {} end -text $root -values [list $root directory] -tag fnt]
    populateTree $tree $rootnode
+   load_genre_database
    }
 
 
@@ -1876,7 +1881,9 @@ array unset programmod
 if {[info exist tempo]} {unset tempo}
 set addendum ""
 set i 1
-set miditxt(0) "$midi(midifilein)\n 1 track      $ppqn pulses/beat"
+set genre [search_genre_database]
+append miditxt(0) $genre
+set miditxt(0) "$midi(midifilein)   $genre \n 1 track      $ppqn pulses/beat"
 
 #update_table_header
 
@@ -1972,7 +1979,8 @@ proc interpretMidiType1 {} {
   gatherMidiSummary 
   midiType1Table
 
-  set miditxt(0) "$midi(midifilein)
+  set genre [search_genre_database]
+  set miditxt(0) "$midi(midifilein)  $genre
  $ntrks tracks       $ppqn pulses/beat"
   set addendum ""
 
@@ -1986,7 +1994,9 @@ if {$ntimesig > 0} {append miditxt(0) "     time signature: $timesig"}
 if {$ntimesig > 1} {append miditxt(0) "\nThere are $ntimesig time signatures in the file."}
 if {$nkeysig > 1} {append miditxt(0) "\nThere are $nkeysig key signatures in the file."}
 
- if {[string length $addendum] > 2} {append miditxt(0) $addendum}
+if {[string length $addendum] > 2} {append miditxt(0) $addendum}
+
+
  set txtbuf $miditxt(0)\n  
  .info.txt delete 1.0 end
   if {[string length $midierror]>0} {
@@ -5077,7 +5087,7 @@ set w {0 4 1 5 2 6 3}
 set k {C D E F G A B}
 set sharp #
 set flat b
-set minsum 100
+set minsum 500
 for {set shift 0} {$shift < 7} {incr shift} {
   set sum 0
   foreach note $chordstring {
@@ -11722,7 +11732,7 @@ for {set i 1} {$i < $descsize} {incr i} {
   #puts  "$filepath\t $genre_db($filepath)"
   }
 close $outhandle
-#puts "updated genre.tsv"
+puts "updated $csvfile"
 }
 
 
@@ -11740,6 +11750,27 @@ while {![eof $inhandle]} {
   }
 close $inhandle
 } 
+
+proc search_genre_database {} {
+global genre_db
+global midi
+set rootfolder $midi(rootfolder)
+set rootfolderbytes [string length $rootfolder]
+incr rootfolderbytes
+set midiname  [string range $midi(midifilein) $rootfolderbytes end]
+set midiname [split $midiname \.]
+set midiname [lindex $midiname 0]
+set genre ""
+if {[info exist genre_db($midiname)]} {
+   set genre $genre_db($midiname)
+   } else {
+   set genre Unknown
+   set genre_db($midiname) $genre
+   }
+if {$genre == "0"} {return ""}
+if {$genre == "Unknown"} {return ""}
+return $genre_db($midiname)
+}
 
 
 proc restore_root_folder {} {
@@ -12089,7 +12120,7 @@ return $genre
 }
 
 
-proc get_genre {} {
+proc get_genre_from_wiki {} {
 package require http
 package require tls
 http::register https 443 ::tls::socket
@@ -12098,7 +12129,6 @@ global df
 global genre_db
 global body
 wikipedia_window
-load_genre_database
 set len [string length $midi(rootfolder)]
 incr len 
 set s _(song)
@@ -12132,6 +12162,7 @@ if {$genre == 0 || $genre == "unknown"} {
     set genre [getgenre $body $tune]
     }
 #puts $genre
+  puts "setting genre_db($tune) to $genre"
   set genre_db($tune) $genre
   } else {
   puts "genre already in database"
@@ -12139,7 +12170,7 @@ if {$genre == 0 || $genre == "unknown"} {
 }
 
 
-bind . <Alt-g> get_genre
+bind . <Alt-g> get_genre_from_wiki
 
 
 #   Part 15.0 Screen Layout (getGeometryOfAllToplevels)
@@ -15765,9 +15796,49 @@ proc bind_programcolor_groups {} {
     }
   }
 
-
-
 #end of programcolor
+
+
+#   Part 29.0 genre_db support
+proc genre_window {} {
+#This is an undocumented feature for appending a
+#melody.txt file with the name of the file and
+#melody instrument. The file save/melody.txt should
+#exist.
+global midi df
+global genredata
+set genredata ""
+set w .genrewindow
+toplevel $w 
+set rootfolder $midi(rootfolder)
+set rootfolderbytes [string length $rootfolder]
+incr rootfolderbytes
+set midiname  [string range $midi(midifilein) $rootfolderbytes end]
+set midiname [split $midiname \.]
+set midiname [lindex $midiname 0]
+label $w.lab -text $midiname -font $df
+pack $w.lab
+entry $w.ent -textvariable genredata -width 20 -font $df
+pack $w.ent
+button $w.app -text "add or modify" -font $df -command add_genre
+pack $w.app
+focus $w.ent
+}
+
+proc add_genre {} {
+global midi
+global genredata
+global genre_db
+global genreUpdated
+set rootfolder $midi(rootfolder)
+set rootfolderbytes [string length $rootfolder]
+incr rootfolderbytes
+set midiname  [string range $midi(midifilein) $rootfolderbytes end]
+set midiname [split $midiname \.]
+set midiname [lindex $midiname 0]
+set genre_db($midiname) $genredata
+set genreUpdated 1
+}
 
 
 
@@ -15783,4 +15854,5 @@ if {$argc != 0} {
         set msg "Last midi file opened was $midi(midifilein)\nYou can load it using the menu item file/reload last midi file."
 	.info.txt delete 1.0 end
         .info.txt insert insert $msg 
+        load_last_midi_file 
         }
