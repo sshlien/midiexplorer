@@ -1,3 +1,4 @@
+{} {}
 {10,000 Maniacs/A Campfire Song} {"Alternative rock"}
 {10cc/Dreadlock Holiday} {"Reggae rock"}
 {10cc/I'm Not In Love} {"Soft rock"}
@@ -34,6 +35,7 @@ ABBA/Fernando {"Pop music"}
 {ABBA/Lay All Your Love on Me} {"Dance music"}
 {ABBA/Like an Angel Passing Through My Room} {"Art rock"}
 {ABBA/Lovers (Live a Little Longer)} {"Disco"}
+{ABBA/Mamma Mia} {Pop rock}
 {ABBA/Money, Money, Money} {"Baroque pop"}
 {ABBA/Summer Night City} {"Pop music"}
 {ABBA/Super Trouper} {"Pop music"}
@@ -89,9 +91,13 @@ Aerosmith/Amazing {Blues rock}
 {Alabama/Feels So Right} {"Country music"}
 {Alabama/How Do You Fall in Love} {"Country music"}
 {Alabama/I'm in a Hurry} {"Country music"}
+Alabama/Jubilee {Christian music}
 {Alabama/Jukebox in My Mind} {"Country music"}
+{Alabama/Lady Down On Love} Country
+Alabama/Rain Rock
 {Alabama/Roll On (Eighteen Wheeler)} {"Truck-driving country"}
 {Alabama/She and I} {"Country music"}
+{Alabama/Tennessee River} Country
 {Alabama/The Closer You Get} {"Space rock"}
 {Alabama/Then Again} {"Country music"}
 {Alain Barriere/Elle etait si jolie} {"Punk rock"}
@@ -101,8 +107,10 @@ Aerosmith/Amazing {Blues rock}
 {Alain Souchon/Jamais content} {French pop}
 {Alain Souchon/Rame} downtempo
 {Alan Jackson/(Who Says) You Can't Have It All} {"Country music"}
+{Alan Jackson/Chattahoochee} Country
 {Alan Jackson/Don't Rock the Jukebox} {"Country music"}
 {Alan Jackson/Drive (For Daddy Gene)} {"Country music"}
+{Alan Jackson/Gone Country} Country
 {Alan Jackson/I Don't Even Know Your Name} {"Country music"}
 {Alan Jackson/I'll Try} {"Country music"}
 {Alan Jackson/Little Bitty} {"Country music"}
@@ -124,6 +132,7 @@ Aerosmith/Amazing {Blues rock}
 {Alanis Morissette/UR} {"Alternative rock"}
 {Alanis Morissette/You Oughta Know} {"Alternative rock"}
 {Alannah Myles/Black Velvet} {"Blues rock"}
+{Albert Hammond/It Never Rains In Southern California} {Soft rock}
 {Alice Cooper/Billion Dollar Babies} {"Hard rock"}
 {Alice Cooper/Caught in a Dream} {"Hard rock"}
 {Alice Cooper/Hello Hooray} {"Rock music"}
@@ -148,13 +157,16 @@ Aerosmith/Amazing {Blues rock}
 {All Saints/Under the Bridge} {"Alternative rock"}
 {All-4-One/I Can Love You Like That} {"Country music"}
 {All-4-One/I Swear} {"Country music"}
+{Allan Theo/Lola} Pop
 {Allen Toussaint/Whirlaway} {Rhythm and Blues}
+{Allure/All Cried Out} {R & B / Soul}
 {Alma Cogan/Tennessee Waltz} {"Country music"}
 {Alpert/A Banda} {"Easy listening"}
 {Alpert/Tijuana Taxi} {"Pop music"}
 {Alvin Stardust/I Feel Like Buddy Holly} {"Pop music"}
 {Amber/This Is Your Night} {"Eurodance"}
 {Amedeo Minghi/Cantare e d'amore} Pop
+{Amedeo Minghi/Un uomo venuto da lontano} Pop
 {America/A Horse With No Name} {"Folk rock"}
 {America/Daisy Jane} {"Soft rock"}
 {America/Lonely People} {"Folk rock"}
@@ -162,6 +174,7 @@ Aerosmith/Amazing {Blues rock}
 {America/Sister Golden Hair} {"Folk rock"}
 {America/Ventura Highway} {"Soft rock"}
 {Amos, Tori/Crucify} {"Alternative rock"}
+{Amos, Tori/Josephine} {Electronic dance}
 {Amos, Tori/Raspberry Swirl} {"Alternative dance"}
 {Amos, Tori/Smells Like Teen Spirit} {"Grunge"}
 {Amos, Tori/Spark} {Alternative rock}
@@ -180,6 +193,7 @@ Aerosmith/Amazing {Blues rock}
 {Andrea Bocelli/Sogno} {"Pop music"}
 {Andrea Bocelli/Vivo Per Lei} {"Operatic pop"}
 {Andrea Bocelli/Vivo per lei} {"Operatic pop"}
+{Andrew Lloyd Webber/Requiem_ Pie Jesu} Classical
 {Andy Kim/Baby I Love You} {"Pop music"}
 {Andy Kim/Rock Me Gently} {Pop rock}
 {Andy Williams/(Where Do I Begin) Love Story} {"Easy listening"}
@@ -191,7 +205,6 @@ Aerosmith/Amazing {Blues rock}
 {Anggun/Snow on the Sahara} {"World music"}
 {Anita Meyer/Sometimes When We Touch} {"Soft rock"}
 {Anita Ward/Ring My Bell} {"Disco"}
-{Ann Farina/Sleepwalk} {"R&B"}
 {Ann Peebles/Come to Mama} {"Rock music"}
 {Anna Oxa/Donna con te} {"Pop music"}
 {Anne Murray/You Needed Me} {"Soft rock"}
@@ -204,9 +217,11 @@ Aerosmith/Amazing {Blues rock}
 {Another Level/Freak Me} {"Contemporary R&amp;B"}
 {Another Level/I Want You for Myself} {"Contemporary R&amp;B"}
 {Antonello Venditti/Compagno di scuola} Pop
+{Antonello Venditti/Peppino} Rock
 {Antonello Venditti/Prendilo tu questo frutto amaro} {"Pop music"}
 {Antonello Venditti/Ricordati di me} Pop
 {Antonello Venditti/Sotto il segno dei pesci} {"World music"}
+{Antonello Venditti/Sotto la pioggia} Pop
 {Aphrodite's Child/Rain and Tears} {"Baroque pop"}
 {Apollo 100/Besame Mucho} {"Bolero"}
 {Aqua/Barbie Girl} {"Bubblegum pop"}
@@ -217,6 +232,7 @@ Aerosmith/Amazing {Blues rock}
 {Arrested Development/Everyday People} {"Pop music"}
 {Arrested Development/Mr Wendal} {"Hip hop music"}
 {Asia/Don't Cry} {"Hard rock"}
+{Asia/Heart of the Moment} {Pop rock}
 {Asia/The Smile Has Left Your Eyes} {"Progressive rock"}
 {Aswad/Don't Turn Around} {"Rock music"}
 {Atkins Chet/Georgia on My Mind} {"Traditional pop music"}
@@ -232,9 +248,6 @@ Aerosmith/Amazing {Blues rock}
 {Axelle Red/Rester femme} Pop
 {Axelle Red/Sensualite} {"Pop music"}
 B {Rhythm and Blues}
-{Battiato/Prospettiva Nevski} {"International"}
-{Battiato/Summer on a Solitary Beach} {"Pop"}
-{Battisti/La compagnia.mid} {"Songwriter"}
 {BERRY CHUCK/Johnny B Goode} {"Rock and roll"}
 {BERRY CHUCK/No Particular Place To Go} {"Rock and roll"}
 {BERRY CHUCK/Roll Over Beethoven} {"Rock and roll"}
@@ -257,6 +270,7 @@ B {Rhythm and Blues}
 {Bach Johann Sebastian/Brandenburg Concerto No} Baroque
 {Bach Johann Sebastian/Fugue in G} Baroque
 {Bach Johann Sebastian/Jesus bleibet meine Freude (Herz und Mund und Tat und Leben BWV} Classical
+{Bach Johann Sebastian/March in D major (C} Classical
 {Bach Johann Sebastian/Menuet G-dur, BWV Anh} Classical
 {Bach Johann Sebastian/Sarabande} {"Sarabande (disambiguation)"}
 {Backstreet Boys/All I Have to Give} {"Pop music"}
@@ -271,6 +285,7 @@ B {Rhythm and Blues}
 {Backstreet Boys/We've Got It Going On} {"Pop music"}
 {Bad Company/Can't Get Enough of Your Love} {"Philadelphia soul"}
 {Bad Company/If You Needed Somebody} {"Hard rock"}
+{Bad Company/Shooting Star} {Hard rock}
 {Bad English/When I See You Smile} {"Glam metal"}
 {Baltimora/Tarzan Boy} {"Italo disco"}
 {Band Aid/Do They Know It's Christmas} {"Christmas music"}
@@ -278,6 +293,7 @@ B {Rhythm and Blues}
 {Band/The Night They Drove Old Dixie Down} {"Folk rock"}
 {Barbra Streisand/All I Ask of You} {"Operatic pop"}
 {Barbra Streisand/Don't Rain on My Parade} {"Popular song"}
+{Barbra Streisand/Luck Be a Lady} Jazz
 {Barbra Streisand/Since I Don't Have You} {"Doo-wop"}
 {Barbra Streisand/What Kind of Fool} {"Contemporary R&amp;B"}
 {Barbra Streisand/Woman in Love} {"Adult Contemporary"}
@@ -304,7 +320,9 @@ B {Rhythm and Blues}
 {Basie/Sweet Georgia Brown} {"Jazz"}
 {Basie/Warm Breeze} {"Jazz"}
 {Basie/Ya Gotta Try} Jazz
+Battiato/Cuccurucucu Pop
 {Battiato/L'era del cinghiale bianco} {"Progressive rock"}
+{Battiato/Segnali di vita} {Alternative / Indie}
 {Battisti Lucio/Mi ritorni in mente} Unknown
 {Battisti/Amarsi un po'} {"Pop music"}
 {Battisti/Anima latina} {"Progressive rock"}
@@ -318,11 +336,14 @@ Battisti/Emozioni {"Pop music"}
 {Battisti/Il mio bambino} {Pop music}
 {Battisti/Il mio canto libero} {"Pop/rock"}
 {Battisti/Il nostro caro angelo} {"Pop music"}
+{Battisti/Io vorrei} Singer-songwriter
 Battisti/Luci-ah {Pop music}
 {Battisti/No dottore} {Pop music}
 {Battisti/Orgoglio e dignita} {Pop music}
 {Battisti/Pensieri e parole} {"Pop music"}
+Battisti/Respirando Singer-songwriter
 {Battisti/Umanamente uomo_ il sogno} Pop
+Battisti/Un'avventura {Singer songwriter}
 {Battisti/Una donna per amico} {"Record label"}
 {Battisti/Una giornata uggiosa} {"Rock music"}
 {Battisti/Una montagna} {Pop music}
@@ -346,6 +367,7 @@ Battisti/Luci-ah {Pop music}
 {Bee Gees/Too Much Heaven} {"R&amp;B"}
 {Bee Gees/Woman in Love} {"Adult contemporary"}
 {Bee Gees/You Should Be Dancing} {"Disco"}
+{Bee Gees/You Win Again} Rock
 {Belafonte Harry/Jamaica Farewell} {"Mento"}
 {Belafonte Harry/Mary's Boy Child} {"Christmas music"}
 {Belinda Carlisle/Heaven Is A Place On Earth} {"Power pop"}
@@ -356,8 +378,11 @@ Battisti/Luci-ah {Pop music}
 {Bennett/(I Left My Heart) In San Francisco} {"Traditional pop"}
 {Berlin/Take My Breath Away} {"Synthpop"}
 {Bernd Cluver/Der Junge mit der Mundharmonika} Schlager
+{Bernhard Brink/Ich Glaub' Dir Jede Luge} Pop
 {Berte/Non sono una signora} {"Pop rock"}
 {Berte/Sei bellissima} {"Pop music"}
+Berte/Solitudini Pop
+{Berte/Stiamo come stiamo} Pop
 {Bette Midler/From a Distance} {"Country music"}
 {Bette Midler/The Wind Beneath My Wings} {"Pop music"}
 {Bette Midler/To Deserve You} {"Pop music"}
@@ -404,6 +429,7 @@ Battisti/Luci-ah {Pop music}
 {Billy Joel/We Didn't Start the Fire} {"Pop rock"}
 {Billy Joel/You May Be Right} {"Hard rock"}
 {Billy Joel/You're Only Human (Second Wind)} {"Synthpop"}
+{Billy Mayerl/Eskimo Shivers} {Light music}
 {Billy Ocean/Carribean Queen} {"Post-disco"}
 {Billy Ocean/Get Outta My Dreams, Get Into My Car} {"Dance-pop"}
 {Billy Paul/Me & Mrs Jones} {"Philadelphia soul"}
@@ -452,11 +478,13 @@ Bjork/Hyper-Ballad {"Folktronica"}
 {Bob Dylan/Like A Rolling Stone} {"Folk rock"}
 {Bob Dylan/Positively 4th Street} {"Folk rock"}
 {Bob Dylan/Subterranean Homesick Blues} {"Folk rock"}
+{Bob James/Orpheus} {New Age Jazz}
 {Bob Marley/Could You Be Loved} {"Reggae"}
 {Bob Marley/I shot the Sheriff} {"Reggae"}
 {Bob Marley/Punky Reggae Party} {"Reggae"}
 {Bob Marley/Redemption Song} {"Folk music"}
 {Bob Marley/Three Little Birds} {"Roots reggae"}
+{Bob Marley/Waiting In Vain} Reggae
 {Bob Seger/Fire Lake} {"Rock music"}
 {Bob Seger/Hollywood Nights} {"Rock music"}
 {Bob Seger/Mainstreet} {"Soft rock"}
@@ -477,16 +505,10 @@ Bjork/Hyper-Ballad {"Folktronica"}
 {Bobby McFerrin/Don't Worry Be Happy} {"Reggae"}
 {Bobby Prins/Hello Mary Lou} {"Rockabilly"}
 {Bobby Vee/Take Good Care of My Baby} {"Pop music"}
-{Bobby Vinton/Mr. Lonely} {"Song"}
 {Bobby Vinton/My Special Angel} {"Country music"}
 {Bobby Vinton/Sealed With a Kiss} {"Pop music"}
 {Bobby _Boris_ Pickett/Monster Mash} {"Novelty song"}
 {Bomfunk MC's/Freestyler} {"Breakbeat"}
-{Bon Jovi/Bed of Roses.1} {"Song"}
-{Bon Jovi/Bed of Roses.2} {"Song"}
-{Bon Jovi/Bed of Roses.3} {"Song"}
-{Bon Jovi/Bed of Roses.4} {"Song"}
-{Bon Jovi/Bed of Roses} {"Song"}
 {Bon Jovi/In These Arms} {"Rock music"}
 {Bon Jovi/Keep the Faith} {"Hard rock"}
 {Bon Jovi/Livin' On A Prayer} {"Glam metal"}
@@ -506,6 +528,7 @@ Bjork/Hyper-Ballad {"Folktronica"}
 {Bonnie Tyler/Total Eclipse of My Heart} Rock
 {Bonzo Dog Doo Dah Band/Monster Mash} {"Novelty song"}
 {Boothe, Ken/Everything I Own} {"Soft rock"}
+{Borg Andy/Einmal und immer wieder} Pop
 {Boris Gardiner/Wrong End of the Rainbow} {"Country rock"}
 {Boston/A Man I'll Never Be} {"Rock music"}
 {Boston/Hitch a Ride} {"Hard rock"}
@@ -534,10 +557,11 @@ Bjork/Hyper-Ballad {"Folktronica"}
 {Brassens Georges/Misogynie a part} chanson
 {Brassens Georges/Oncle Archibald} chanson
 {Brassens Georges/Pauvre Martin} chanson
-{Brassens Georges/Pensees des morts} chanson
+{Brassens Georges/Pensees des morts} {French Indie}
 {Brassens Georges/Rien a jeter} Chanson
 {Bread/Baby I'm A Want You} {"Soft rock"}
 {Bread/Everything I Own} {"Soft rock"}
+Bread/If {Soft rock}
 {Bread/It Don't Matter to Me} {"Soft rock"}
 {Bread/Lost Without Your Love} {"Soft rock"}
 {Bread/Make It With You} {"Soft rock"}
@@ -545,6 +569,7 @@ Bjork/Hyper-Ballad {"Folktronica"}
 {Brenton Wood/Gimme Little Sign} {"R&amp;B"}
 {Brewer And Shipley/One Toke Over the Line} {"Country rock"}
 {Brian McKnight/Anytime} Unknown
+{Brian McKnight/Back at One} {Contemporary R & B}
 {Brian Wilson/Love and Mercy} {"Progressive pop"}
 {Britney Spears/(You Drive Me) Crazy} {"Dance-pop"}
 {Britney Spears/Born to Make You Happy} {"Pop ballad"}
@@ -598,6 +623,7 @@ Bjork/Hyper-Ballad {"Folktronica"}
 {Bruce Hornsby/Walk in the Sun} {"Jazz rock"}
 {Bruce Springsteen/Born to Run} {"Rock and roll"}
 {Bruce Springsteen/Brilliant Disguise} {"Pop rock"}
+{Bruce Springsteen/Dancing in the Dark} {Pop rock}
 {Bruce Springsteen/Darkness on the Edge of Town} {"Rock music"}
 {Bruce Springsteen/Human Touch} {"Rock music"}
 {Bruce Springsteen/Hungry Heart} {"Rock music"}
@@ -616,6 +642,7 @@ Bjork/Hyper-Ballad {"Folktronica"}
 {Bryan Adams/Please Forgive Me} Rock
 {Bryan Adams/Run To You} {Hard rock}
 {Bryan Adams/Summer of '69} {"Rock music"}
+{Bryan Adams/Thought I'd Died and Gone to Heaven} {Rock & roll}
 {Buck Owens/Johnny B} {"Hard rock"}
 {Buck Owens/Under Your Spell Again} {"Country music"}
 {Buddy Holly/Oh Boy} {Rock and roll}
@@ -640,9 +667,11 @@ Bush/X-Girlfriend {"Pop music"}
 {CB Milton/It's a Love Thing} {"Country music"}
 {Calloway/I Wanna Be Rich} {"Contemporary R&amp;B"}
 Camaleonti/Applausi {"Pop music"}
+{Camel/Chord Change} {Progressive rock}
 {Camel/Rain Dances} {"Progressive rock"}
 {Candi Staton/Young Hearts Run Free} {"Disco"}
 {Canned Heat/Going Up the Country} {"Blues rock"}
+{Canned Heat/On the Road Again} Rock
 {Canned Heat/Rollin' and Tumblin'} {"Blues"}
 {Cannibal & The Headhunters/Land of 1000 Dances} {"Rhythm and blues"}
 {Captain Jack/Drill Instructor} {"Eurodance"}
@@ -719,6 +748,7 @@ Celentano/Svalutation {"Pop music"}
 {Celine Dion/Nothing Broken But My Heart} {"Pop music"}
 {Celine Dion/Only One Road} {"Pop music"}
 {Celine Dion/Pour que tu m'aimes encore} {"Pop music"}
+{Celine Dion/Power of Love} {Pop rock}
 {Celine Dion/Quand on n'a que l'amour} {"Chanson"}
 {Celine Dion/Regarde-moi} {"Pop music"}
 {Celine Dion/S'il suffisait d'aimer} {"Pop music"}
@@ -769,8 +799,17 @@ Celentano/Svalutation {"Pop music"}
 {Chicago/Wishing You Were Here} {"Soft rock"}
 {Chicago/You're the Inspiration} {"Soft rock"}
 {Chick Corea/500 Miles High} {"Jazz fusion"}
+{Chick Corea/Eternal Child} Jazz
+{Chick Corea/Hymn of the Heart} {New age Jazz}
+{Chick Corea/La Fiesta} Jazz
+{Chick Corea/Light Years} {Jazz fusion}
+{Chick Corea/Mirror, Mirror} Jazz
 {Chick Corea/No Mystery} {"Jazz fusion"}
+{Chick Corea/Smokescreen} {New Age, Jazz}
 {Chick Corea/Sometime Ago} Pop
+{Chick Corea/Spain} {Jazz fusion}
+{Chick Corea/Sundance (Chick Corea)} Jazz
+{Chick Corea/The One Step} Jazz
 {Chocolate/Everybody Salsa} {"Salsa music"}
 {Chopin Frederic/Berceuse} Unknown
 {Chopin Frederic/Larghetto} {"Wikipedia:Citation needed"}
@@ -781,16 +820,20 @@ Celentano/Svalutation {"Pop music"}
 {Chris Norman/Midnight Lady} {"Soft rock"}
 {Chris Rea/Auf immer und ewig} {"Rock music"}
 {Chris Rea/Fool (If You Think It's Over)} {"Soft rock"}
+{Chris Rea/Let's Dance} Rock
 {Chris Rea/Little Blonde Plaits} {"Rock music"}
+{Chris de Burgh/Blond Hair, Blue Jeans} {Alternative / Indie}
 {Chris de Burgh/Don't Pay the Ferryman} {"Hard rock"}
 {Christie Lou/Lightning Strikes Again} {"Heavy metal music"}
 {Christina Aguilera/Come On Over (All I Want Is You)} {"Bubblegum pop"}
 {Christina Aguilera/Genie In a Bottle} {"Teen pop"}
 {Christina Aguilera/Genie in a Bottle} {"Teen pop"}
+{Christoph Willibald Gluck/Ballet des ombres heureuses (Orfeo ed Euridice)} Opera
 {Christopher Cross/Arthur's Theme (Best That You Can Do)} {"Soft rock"}
 {Christopher Cross/Ride Like The Wind} {"Soft rock"}
 {Chuck Berry/Johnny B Goode} {"Rock and roll"}
 {Chuck Berry/No Particular Place To Go} {"Rock and roll"}
+{Chuck Berry/Rock & Roll Music} {Rock & Roll}
 {Chuck Berry/Roll Over Beethoven} {"Rock and roll"}
 {Chuck Berry/School Day} {"Rock and roll"}
 {Chuck Berry/Sweet Little Sixteen} {"Rock and roll"}
@@ -798,11 +841,12 @@ Chumbawamba/Tubthumping {"Dance-rock"}
 {Chyp-notic/I Can't Get Enough} Eurodance
 {Clarence _Frogman_ Henry/(I Don't Know Why) But I Do} {"Rhythm and blues"}
 {Classics/Wings of an Eagle} {"Pop rock"}
+{Claude Bolling/Suite for Cello & Jazz Piano Trio_ Concertante} Jazz
 {Claude Debussy/Reflets dans leau} Classical
 {Clayderman Richard/Strangers in the Night} {"Traditional pop"}
 {Cliff Richard/Lucky Lips} {"R&amp;B"}
-{Cliff Richard/Daddy's Home} Pop
 {Climax/Precious and Few} {"Soft rock"}
+Clout/Substitute {Pop rock}
 {Coasters/Yakety Yak} {"Rock and roll"}
 {Cocciante/Bella senz'anima} {"Pop music"}
 {Cocciante/Io canto} {"Pop rock"}
@@ -811,8 +855,10 @@ Cocciante/Sincerita {"Pop music"}
 {Cock Robin/The Promise You Made} {"Pop rock"}
 {Cocker/Up Where We Belong} {"Adult contemporary"}
 {Cole Porter/I've Got You Under My Skin} {"Vocal jazz"}
+{Collective Soul/Run} {Alternative rock}
 {Collective Soul/Smashing Young Man} {"Post-grunge"}
 {Collins Phil/A Groovy Kind of Love} {"Soul music"}
+{Collins Phil/Against All Odds} {Pop rock}
 {Collins Phil/Another Day in Paradise} {"Soft rock"}
 {Collins Phil/Don't Lose My Number} {"Dance-rock"}
 {Collins Phil/Easy Lover} {"Pop rock"}
@@ -852,6 +898,7 @@ Commodores/Easy Unknown
 {Creedence Clearwater Revival/Lookin' Out My Back Door} {"Southern rock"}
 {Creedence Clearwater Revival/Proud Mary} {"Roots rock"}
 {Creedence Clearwater Revival/Someday Never Comes} {"Roots rock"}
+{Creedence Clearwater Revival/Suzie Q} {Psychedelic rock}
 {Creedence Clearwater Revival/Sweet Hitch-Hiker} {"Swamp rock"}
 {Creedence Clearwater Revival/Travelin' Band} {"Rock and roll"}
 {Creedence Clearwater Revival/Up Around The Bend} {"Rock music"}
@@ -875,6 +922,7 @@ Crusaders/Streetlife {Jazz funk}
 {Crystals/He's a Rebel} {"Pop music"}
 {Culture Beat/Crying in the Rain} {"Country music"}
 {Culture Beat/Got to Get It} {"Eurodance"}
+{Culture Beat/Inside Out} {Electronic dance}
 {Culture Club/Church of the Poison Mind} {"New wave music"}
 {Culture Club/Do You Really Want to Hurt Me} {"New wave music"}
 {Culture Club/Karma Chameleon} {"Pop music"}
@@ -893,11 +941,11 @@ Dalla/Canzone Unknown
 {Dalla/Com'e profondo il mare} {"Avant-pop"}
 {Dalla/Don't Touch Me} {"Country music"}
 {Dalla/Non vergognarsi mai} Folk
-{Dallara/Romantica.1} Pop
 {Dan Fogelberg/Longer} {"Soft rock"}
 {Dan Fogelberg/Same Old Lang Syne} {"Soft rock"}
 {Dan Hartman/Relight My Fire} {"Disco"}
-{Daniele/Questa primavera} Pop/Rock
+Daniele/Alleria Pop
+{Daniele/Se mi vuoi} Pop
 {Daniele/Tutta 'nata storia} Unknown
 {Danny & The Juniors/At the Hop} {"Rock and roll"}
 {Darin Bobby/Dream Lover} {"Rock and roll"}
@@ -928,6 +976,7 @@ Dalla/Canzone Unknown
 {Dead Or Alive/You Spin Me Around} {"Hi-NRG"}
 {Debbie Gibson/Lost in Your Eyes} {"Pop music"}
 {Dee/Don't Go Breaking My Heart} {"House music"}
+{Dee/The Legend Of Xanadu} Pop
 {Deep Purple/Black Night} {"Hard rock"}
 {Deep Purple/Child in Time} {"Art rock"}
 {Deep Purple/Lazy} {Blues rock}
@@ -964,7 +1013,9 @@ Dalla/Canzone Unknown
 {Depeche Mode/Never Let Me Down Again} {"Synth-pop"}
 {Depeche Mode/People Are People} {"Synth-pop"}
 {Depeche Mode/Personal Jesus} {"Electronic rock"}
+{Depeche Mode/Photographic} Electronic
 {Depeche Mode/Policy of Truth} {"Alternative rock"}
+{Depeche Mode/Puppets} Electronic
 {Depeche Mode/Shake the Disease} {"Synth-pop"}
 {Derek and the Dominos/Layla} {"Rock music"}
 {Des'ree/Feel So High} {"Soul music"}
@@ -998,6 +1049,7 @@ Dalla/Canzone Unknown
 {Dire Straits/Planet of New Orleans} {"Roots rock"}
 {Dire Straits/Private Investigations} {"Progressive rock"}
 {Dire Straits/Sultans of Swing} {"Pub rock (United Kingdom)"}
+{Dire Straits/Walk Of Life} {Heartland rock}
 {Dire Straits/Your Latest Trick} {"Jazz rock"}
 {Dirotta su Cuba/E andata cosi} Funk
 {Divinyls/I Touch Myself} {"Soft rock"}
@@ -1011,22 +1063,24 @@ Dalla/Canzone Unknown
 {Domino Fats/I'm Walking} {"Rock and roll"}
 {Domino Fats/When the Saints Go Marchin' In} {"Rock and roll"}
 {Don Backy/L'immensita} {"Record label"}
-{Don Johnson/Tell It Like It Is.1} Pop
 {Don McLean/American Pie} {Folk rock}
 {Donna Summer/I Feel Love} {"Disco"}
-{Donny Osmond/Puppy Love} Pop
 {Donovan/Mellow Yellow} {"Pop music"}
 {Doris Day/Que Sera Sera} {"Popular music"}
 {Dorsey/Besame Mucho} {"Bolero"}
 {Dorsey/Boogie Woogie} {"Blues"}
 {Double You/We All Need Love} {"Eurodance"}
 {Double/The Captain of Her Heart} {"Jazz-rock"}
+{Drafi Deutscher/Shake Hands} {Schlager & Volksmusik}
 {Dream Theater/Caught In A Web} {"Progressive metal"}
 {Dream Theater/Pull Me Under} {"Progressive metal"}
 {Dream Theater/Take the Time} {"Progressive metal"}
 {Drifters/Under The Boardwalk} {"Soul music"}
+{Drupi/Sereno e} Pop
 {Drupi/Voglio una donna} Unknown
+{Duke Ellington/Don't Get Around Much Anymore} Jazz
 {Duke Ellington/It Don't Mean a Thing} {"Jazz"}
+{Duke Robillard/Rule the World} Blues
 {Duran Duran/Girls On Film} {"Synth-pop"}
 {Duran Duran/Girls on Film} {"Synth-pop"}
 {Duran Duran/New Moon on Monday} {"New wave music"}
@@ -1053,7 +1107,7 @@ Dalla/Canzone Unknown
 {Eagles/Lyin' Eyes} {"Country rock"}
 {Eagles/New Kid in Town} {"Yacht rock"}
 {Eagles/One of These Nights} {"Soft rock"}
-{Eagles/Peaceful Easy Feeling} {"Soft rock"}
+{Eagles/Peaceful Easy Feeling} {Soft rock}
 {Eagles/Please Come Home for Christmas} {"R&amp;B"}
 {Eagles/Pretty Maids All in a Row} Unknown
 {Eagles/Seven Bridges Road} {"Country rock"}
@@ -1090,6 +1144,7 @@ Ekseption/Air {Progressive rock}
 {Electric Light Orchestra/Rock 'n' Roll Is King} {"Rock and roll"}
 {Electric Light Orchestra/Roll Over Beethoven} {"Rock and roll"}
 {Elkie Brooks/Pearl's a Singer} {"Blues rock"}
+{Ellington/I'm Beginning to See the Light} Jazz
 {Ellington/In a Sentimental Mood} {"Jazz"}
 {Ellington/It Don't Mean a Thing} {"Jazz"}
 Ellington/Perdido {Jazz standard}
@@ -1101,7 +1156,6 @@ Ellington/Perdido {Jazz standard}
 {Elliot/Make Your Own Kind Of Music} {"Pop music"}
 {Elsa/Quelque chose dans mon coeur} {"Pop music"}
 {Elton John/A Word in Spanish} {"Pop music"}
-{Elton John/Blue Eyes} Pop
 {Elton John/Burn Down the Mission} {"Roots rock"}
 {Elton John/Candle in the Wind} Pop
 {Elton John/Crocodile Rock} {"Rock and roll"}
@@ -1131,7 +1185,6 @@ Ellington/Perdido {Jazz standard}
 {Elvis Presley/American Trilogy} {"Popular music"}
 {Elvis Presley/Are You Lonesome Tonight} {"Traditional pop"}
 {Elvis Presley/Be Bop A Lula} {"Rockabilly"}
-{Elvis Presley/Blue Christmas.1} {Rhythm and Blues}
 {Elvis Presley/Blue Suede Shoes} {"Rockabilly"}
 {Elvis Presley/Burning Love} {"Southern soul"}
 {Elvis Presley/Can't Help Falling in Love} {"Pop music"}
@@ -1151,6 +1204,7 @@ Ellington/Perdido {Jazz standard}
 {Elvis Presley/Just Tell Her Jim Said Hello} {"Rock and roll"}
 {Elvis Presley/Lawdy Miss Clawdy} {"Rhythm and blues"}
 {Elvis Presley/Let Me Be There} {"Country music"}
+{Elvis Presley/Love Me Tender} Rock
 {Elvis Presley/My Boy} {"Soft rock"}
 {Elvis Presley/My Way} {"Traditional Pop"}
 {Elvis Presley/Puppet on a String} {"Pop music"}
@@ -1189,12 +1243,13 @@ Ellington/Perdido {Jazz standard}
 {Enya/On Your Shore} {"Pop rock"}
 {Enya/Once You Had Gold} {"New-age music"}
 {Enya/Only Time} {"New-age music"}
-{Enya/Orinoco Flow (Sail Away)} {"New-age music"}
 {Enya/Orinoco Flow} {"New-age music"}
+{Enya/Orinoco Flow (Sail Away)} {"New-age music"}
 {Enya/Shepherd Moons} {"New-age music"}
 {Enya/The Memory of Trees} {"New-age music"}
 {Enya/The Sun in the Stream} {"New-age music"}
 {Equipe 84/29 settembre} {"Psychedelic rock"}
+{Equipe 84/Pomeriggio ore 6} Pop
 {Erasure/A Little Respect} {"Synth-pop"}
 {Erasure/Fingers & Thumbs (Cold Summer's Day)} {"Synthpop"}
 {Erasure/I Love Saturday} {"Synthpop"}
@@ -1224,6 +1279,7 @@ Ellington/Perdido {Jazz standard}
 {Eric Clapton/Wonderful Tonight} {"Soft rock"}
 {Eros Ramazzotti/Adesso tu} {"Pop music"}
 {Eros Ramazzotti/Cose della vita (Can't Stop Thinking of You)} {"Pop rock"}
+{Estefan Gloria/Anything for You} {Electronic pop}
 {Estefan Gloria/Can't Stay Away From You} {"Pop music"}
 {Estefan Gloria/Como Me Duele Perderte} {"Bachata (music)"}
 {Estefan Gloria/Don't Wanna Lose You} {"Pop music"}
@@ -1246,6 +1302,7 @@ Ellington/Perdido {Jazz standard}
 {Evans Bill/Israel} Jazz
 {Evans Bill/When I Fall in Love} {"Traditional pop music"}
 {Evans Bill/Young and Foolish} {"Songwriter"}
+{Eve 6/Inside Out} {Alternative rock}
 {Everclear/Everything to Everyone} {"Alternative rock"}
 {Everclear/Father of Mine} {"Alternative rock"}
 {Everclear/I Will Buy You a New Life} {"Alternative rock"}
@@ -1263,6 +1320,7 @@ Fabi/Capelli Pop
 {Fifth Dimension/Wedding Bell Blues} {"Soul music"}
 {Filter/Hey Man, Nice Shot} {"Industrial rock"}
 {Fine Young Cannibals/She Drives Me Crazy} {"Dance-rock"}
+{Fiorello/Puoi (Words)} Pop
 {Firefall/Just Remember I Love You} {"Soft rock"}
 {Firefall/You Are the Woman} {"Soft rock"}
 {First Class/Beach Baby} {"Bubblegum pop"}
@@ -1313,6 +1371,7 @@ Fabi/Capelli Pop
 {Frank Sinatra/Strangers in the Night} {"Traditional pop"}
 {Frank Sinatra/These Foolish Things} {"Rhythm and blues"}
 {Frankie Valli/Can't Take My Eyes Off of You} {"Soul music"}
+{Frankie Valli/December 1963 (Oh What a Night)} Rock
 {Frans Bauer/Het leven is te mooi} Pop
 {Freddie & The Dreamers/I'm Telling You Now} {"Beat music"}
 {Freddie Mercury/Mr} {Pop rock}
@@ -1323,6 +1382,8 @@ Fugees/Fugeela {"East Coast hip hop"}
 {Fugees/Killing Me Softly} {"Soul music"}
 {Fugees/No Woman, No Cry} {"Reggae"}
 {Fun Factory/Don't Go Away} {"Rock music"}
+{Fun Factory/I Wanna Be With You} {Electronic Dance}
+G Pop
 {Gala/Freed From Desire} {"Eurodance"}
 {Gallery/Nice to Be With You} {"Soft rock"}
 {Garbage/I Think I'm Paranoid} {"Industrial rock"}
@@ -1373,6 +1434,7 @@ Genesis/Horizon's {Progressive rock}
 {Genesis/Mad Man Moon} {"Progressive rock"}
 {Genesis/Man on the Corner} {"Soft rock"}
 {Genesis/Many Too Many} {Progressive rock}
+{Genesis/One for the Vine} {Progressive rock}
 Genesis/Paperlate {"Pop rock"}
 {Genesis/Second Home by the Sea} {"Progressive rock"}
 {Genesis/Supper's Ready} {"Progressive rock"}
@@ -1412,10 +1474,10 @@ Genesis/Paperlate {"Pop rock"}
 {Gerry Rafferty/Right Down The Line} {"Soft rock"}
 {Gershwin/A Foggy Day} Jazz
 {Gershwin/Let's Call the Whole Thing Off} {"Jazz"}
+{Gershwin/Rhapsody in Blue} Jazz
 {Gershwin/They Can't Take That Away From Me} {"Jazz"}
 {Gibson Brothers/Cuba} {"Disco"}
 {Gibson Brothers/Que Sera Mi Vida (If You Should Go)} {"Disco"}
-{Gilbert Becaud/Et maintenant} chanson
 {Gilbert O'Sullivan/Alone Again} {Soft rock}
 {Gilbert O'Sullivan/Nothing Rhymed} {"Soft rock"}
 {Gillespie Dizzy/Salt Peanuts} Jazz
@@ -1444,6 +1506,7 @@ Genesis/Paperlate {"Pop rock"}
 {Gloria Gaynor/Can't Take My Eyes Off You} {"Soul music"}
 {Gloria Gaynor/I Will Survive} {"Disco"}
 {Gloria Gaynor/Never Can Say Goodbye} {"Soul music"}
+{Go West/We Close Our Eyes} {Alternative / R&B}
 {Godsmack/Moon Baby} {Heavy metal}
 {Golden Earring/Radar Love} {"Hard rock"}
 {Goo Goo Dolls/Hate This Place} rock
@@ -1517,6 +1580,7 @@ Genesis/Paperlate {"Pop rock"}
 {Hall & Oates/Kiss On My List} {"Pop rock"}
 {Hall & Oates/Out of Touch} {"Dance-rock"}
 {Hall & Oates/Sara Smile} {"Soft rock"}
+{Hank Jones/Bluesette} Jazz
 {Hank Jones/In a Sentimental Mood} {"Jazz"}
 {Hank Jones/Satin Doll} {"Jazz standard"}
 {Hank Jones/They Can't Take That Away From Me} {"Jazz"}
@@ -1538,11 +1602,9 @@ Genesis/Paperlate {"Pop rock"}
 {Heart/Who Will You Run To} {"Rock music"}
 {Heatwave/Boogie Nights} {"Disco"}
 {Heatwave/The Groove Line} {"Disco"}
-{Heidi Bruhl/Wir wollen niemals auseinandergehn} {Schlager and Volksmusik}
 {Helen Reddy/Ain't No Way to Treat a Lady} {"Easy listening"}
 {Helen Reddy/Delta Dawn} {"Country music"}
 {Helen Reddy/I Am Woman} {"Pop music"}
-{Henry Butler/Baby, Let Me Hold Your Hand} song
 {Henry Mancini/Moon River} {"Traditional pop music"}
 {Henry Mancini/The Days of Wine and Roses} {"Post-punk"}
 {Herb Alpert/This Guy's in Love With You} {"Pop music"}
@@ -1593,6 +1655,7 @@ Genesis/Paperlate {"Pop rock"}
 {Huey Lewis/Hip to Be Square} {"Rock music"}
 {Huey Lewis/I Want a New Drug} {"New wave music"}
 {Huey Lewis/The Heart of Rock & Roll} {"Rock music"}
+{Humperdinck Engelbert/After The Lovin'} Pop
 {Humperdinck Engelbert/Can't Take My Eyes Off You} {"Soul music"}
 {Humperdinck Engelbert/The Last Waltz} {"Easy listening"}
 {Humperdinck Engelbert/To All The Girls I've Loved Before} {"Pop music"}
@@ -1697,6 +1760,7 @@ Genesis/Paperlate {"Pop rock"}
 {Jennifer Rush/The Power of Love} Pop
 {Jennifer Warnes/(I've Had) The Time of My Life} {"Dance-rock"}
 {Jeremy Jackson/You Can Run} {"New wave music"}
+{Jerome Kern/All the Things You Are} Jazz
 {Jerry Lee Lewis/Great Balls of Fire} {"Rock and roll"}
 {Jerry Lee Lewis/Rockin' My Life Away} {"Blues rock"}
 {Jerry Lee Lewis/Whole Lotta Shakin' Goin' On} {"Rhythm and blues"}
@@ -1749,6 +1813,7 @@ Genesis/Paperlate {"Pop rock"}
 {Joe Diffie/Pickup Man} {"Country music"}
 {Joe Dolce/Shaddap Your Face} {"Comedy pop"}
 {Joe Jackson/Is She Really Going Out With Him} {"New wave music"}
+{Joe Satriani/Always With Me, Always With You} Rock
 {Joe Satriani/Crushing Day} {"Instrumental rock"}
 {Joe Satriani/Summer Song} Unknown
 {Joe Satriani/Surfing With the Alien} {"Instrumental rock"}
@@ -1774,8 +1839,8 @@ Genesis/Paperlate {"Pop rock"}
 {John Elton/Crocodile Rock} {"Rock and roll"}
 {John Elton/Daniel} {Soft rock}
 {John Elton/Don't Go Breaking My Heart} {"House music"}
-{John Elton/Empty Garden (Hey Hey Johnny)} {"Record label"}
 {John Elton/Empty Garden} {"Record label"}
+{John Elton/Empty Garden (Hey Hey Johnny)} {"Record label"}
 {John Elton/Honky Cat} {"Pop music"}
 {John Elton/I Don't Wanna Go On With You Like That} {"Record label"}
 {John Elton/I Guess That's Why They Call It the Blues} {"Soft rock"}
@@ -1785,10 +1850,12 @@ Genesis/Paperlate {"Pop rock"}
 {John Elton/Madman Across the Water} {"Progressive rock"}
 {John Elton/Pinball Wizard} {"Hard rock"}
 {John Elton/Rocket Man} {"Soft rock"}
+{John Elton/Sacrifice} {Soft rock}
 {John Elton/Sad Songs (Say So Much)} {"Soft rock"}
 {John Elton/Sixty Years On} {"Soft rock"}
 {John Elton/Skyline Pigeon} {Folk rock}
 {John Elton/Someone Saved My Life Tonight} {"Progressive pop"}
+{John Elton/Something About the Way You Look Tonight} {Pop rock}
 {John Elton/Son of Your Father} {"Roots rock"}
 {John Elton/Song for Guy} {"Easy listening"}
 {John Elton/Sorry Seems To Be The Hardest Word} {"Pop music"}
@@ -1845,17 +1912,21 @@ Genesis/Paperlate {"Pop rock"}
 {Journey/Lovin' Touchin' Squeezin'} {"Blues rock"}
 {Journey/Oh Sherrie} {"Pop rock"}
 {Journey/Only the Young} Rock
+{Journey/Open Arms} {Soft rock}
 {Journey/Send Her My Love} {"Rock music"}
 {Journey/Separate Ways (Worlds Apart)} {"Hard rock"}
 {Journey/Wheel in the Sky} {"Hard rock"}
 {Journey/Who's Cryin' Now} {"Soft rock"}
 {Journey/Who's Crying Now} {"Soft rock"}
+{Jovanotti/Ciao mamma} {Hip hop}
 {Jovanotti/Gente della notte} {Hip hop}
 {Jovanotti/Non m'annoio} Pop
+{Jovanotti/Serenata Rap} {Hip hop}
 {Juan Luis Guerra/La Bilirrubina} {"Record label"}
 {Judas Priest/Breaking the Law} {"Heavy metal music"}
 {Julian Lennon/Too Late for Goodbyes} {"New wave music"}
 {Julio Iglesias/Begin the Beguine} {"Jazz music"}
+{K-Ci & JoJo/All My Life} {R & B / Soul}
 {KC and The Sunshine Band/(Shake, Shake, Shake) Shake Your Booty} {"Disco"}
 {KC and The Sunshine Band/Get Down Tonight} {"Disco"}
 {KC and The Sunshine Band/I'm Your Boogie Man} {"Disco"}
@@ -1915,9 +1986,6 @@ Kiss/Strutter {"Hard rock"}
 {Korn/Porno Creep} {"Nu metal"}
 {Kraftwerk/The Model} {"Synth-pop"}
 {Kraftwerk/The Robots} {"Electronic music"}
-{Kramer/Little Children} {Pop Rock}
-{Kramer/Little Children} {Pop Rock}
-
 {Kris Kristofferson/Help Me Make It Through the Night} {"Country music"}
 {Kylie Minogue/Especially for You} {"Pop music"}
 {Kylie Minogue/Give Me Just a Little More Time} {"Soul music"}
@@ -1925,6 +1993,7 @@ Kiss/Strutter {"Hard rock"}
 {Kylie Minogue/Tears on My Pillow} {"Doo-wop"}
 {LANZA/Be My Love} {"Traditional pop"}
 {LEN/Steal My Sunshine} {"Indie pop"}
+{LIGABUE/Buon compleanno, Elvis!} Rock
 {LIGABUE/Sogni di rock 'n' roll} Rock
 {LIGABUE/Ti sento} {"Synth-pop"}
 {LIGABUE/Uno dei tanti} {"Soul music"}
@@ -1947,7 +2016,8 @@ Kiss/Strutter {"Hard rock"}
 {LeAnn Rimes/How Do I Live} {"Pop music"}
 {LeAnn Rimes/One Way Ticket (Because I Can)} {"Country pop"}
 {LeAnn Rimes/Unchained Melody} {"Easy listening"}
-{Leali/A chi} pop {Led Zeppelin/Achilles Last Stand} {"Hard rock"}
+{Leali/A chi} pop
+{Led Zeppelin/Achilles Last Stand} {"Hard rock"}
 {Led Zeppelin/Babe I'm Gonna Leave You} {"Folk rock"}
 {Led Zeppelin/Black Country Woman} {"Hard rock"}
 {Led Zeppelin/Black Mountain Side} {"Folk music of England"}
@@ -2020,6 +2090,7 @@ Kiss/Strutter {"Hard rock"}
 {Leo Sayer/When I Need You} {"Soft rock"}
 {Leo Sayer/You Make Me Feel Like Dancing} {"Disco"}
 {Leon Russell/Lady Blue} Unknown
+{Les Humphries Singers/Mexico} {Pop rock}
 {Lesley Gore/It's My Party} {"Pop music"}
 {Lesley Gore/Judy's Turn to Cry} {"Pop music"}
 {Lesley Gore/You Don't Own Me} {"Doo-wop"}
@@ -2086,6 +2157,7 @@ Kiss/Strutter {"Hard rock"}
 {Loverboy/Working for the Weekend} {"Hard rock"}
 {Ludwig van Beethoven/Symphony No} Classical
 {Lulu/To Sir With Love} {"Traditional pop music"}
+{Lunapop/Un giorno migliore} Electronic
 {Luniz/I Got 5 On It} {"West Coast hip hop"}
 {Luther Ingram/If Loving You Is Wrong (I Don't Want to Be Right)} {"Soul music"}
 {Luther Vandross/Give Me The Reason} Unknown
@@ -2108,8 +2180,10 @@ Kiss/Strutter {"Hard rock"}
 {Madonna/Bedtime Story} Pop
 {Madonna/Candy Perfume Girl} {"Electronica"}
 {Madonna/Causing a Commotion} {"Dance-pop"}
+{Madonna/Crazy for You} Pop
 {Madonna/Dear Jessie} {"Baroque pop"}
 {Madonna/Deeper and Deeper} {"Dance-pop"}
+{Madonna/Die Another Day} Pop
 {Madonna/Don't Cry for Me Argentina} {"Pop music"}
 {Madonna/Dress You Up} {"Dance-pop"}
 {Madonna/I'll Remember} {"Pop music"}
@@ -2136,11 +2210,12 @@ Madonna/Music {"Ancient Egypt"}
 {Mamas/Dream A Little Dream Of Me} {"Vocal jazz"}
 {Manfred Mann/Blinded by the Light} {"Folk rock"}
 {Manfred Mann/Davy's on the Road Again} {"Rock music"}
-{Manfred Mann/Do Wah Diddy Diddy} {"R&amp;B"}
 {Manfred Mann/Do Wah Diddy} {"R&amp;B"}
+{Manfred Mann/Do Wah Diddy Diddy} {"R&amp;B"}
 {Mango/Bella d'estate} {"Pop music"}
 {Mango/Come l'acqua} {"Pop music"}
 Mango/Disincanto {"Pop rock"}
+{Mango/Nella mia citta} Pop
 {Marc Almond/Something's Gotten Hold of My Heart} {"Pop music"}
 {Marc Anthony/Hasta Ayer} {"Latin pop"}
 {Marc Anthony/No Me Ames} {"Latin pop"}
@@ -2151,6 +2226,7 @@ Mango/Disincanto {"Pop rock"}
 {Marcy Playground/Sex and Candy} {"Post-grunge"}
 {Maria McKee/Show Me Heaven} {"Soft rock"}
 {Maria Muldaur/Midnight at the Oasis} {"Soft rock"}
+{Mariah Carey/Against All Odds} {Easy listening}
 {Mariah Carey/All I Want for Christmas Is You} {"Christmas music"}
 {Mariah Carey/All I've Ever Wanted} {"Pop music"}
 {Mariah Carey/All in Your Mind} {"Pop music"}
@@ -2162,7 +2238,6 @@ Mango/Disincanto {"Pop rock"}
 {Mariah Carey/Do You Think Of Me} {"Dance-pop"}
 {Mariah Carey/Dream Lover} {"Rock and roll"}
 {Mariah Carey/Everything Fades Away} {"Pop music"}
-{Mariah Carey/Forever} Pop
 {Mariah Carey/Hero} {Rhythm and Blues}
 {Mariah Carey/I Don't Wanna Cry} {"Contemporary R&amp;B"}
 {Mariah Carey/I've Been Thinking About You} {"Dance-pop"}
@@ -2172,6 +2247,7 @@ Mango/Disincanto {"Pop rock"}
 {Mariah Carey/Looking In} {"Blues"}
 {Mariah Carey/Love Takes Time} {"Pop music"}
 {Mariah Carey/Miss You Most (At Christmas Time)} {"Christmas music"}
+{Mariah Carey/Music Box} {R & B /Soul}
 {Mariah Carey/My All} {"Latin pop"}
 {Mariah Carey/One Sweet Day} {"Contemporary R&amp;B"}
 {Mariah Carey/Rainbow (Interlude)} {"Pop music"}
@@ -2188,7 +2264,6 @@ Mango/Disincanto {"Pop rock"}
 {Marillion/He Knows You Know} {Neo-progressive rock}
 {Marillion/Heart of Lothian} {"Rock music"}
 Marillion/Kayleigh {Neo-progressive rock}
-{Marillion/Splintering Heart.mid} {Rock Funk}
 {Marilyn Manson/Antichrist Superstar} {"Industrial metal"}
 {Marilyn Manson/Coma White} {"Hard rock"}
 {Marilyn Manson/Dried Up, Tied and Dead to the World} Unknown
@@ -2210,6 +2285,8 @@ Marillion/Kayleigh {Neo-progressive rock}
 {Marusha/Somewhere Over the Rainbow} {"Pop music"}
 {Marx Richard/Right Here Waiting} {"Soft rock"}
 {Mary Wells/My Guy} {"Easy listening"}
+{Masini/Cenerentola innamorata} Pop
+{Masini/Dio non c'e} Pop
 Masini/Disperato {"Record label"}
 {Mason Williams/Classical Gas} {"Easy listening"}
 {Masterboy/Feel the Heat of the Night} {"Eurodance"}
@@ -2291,6 +2368,7 @@ Metallica/Motorbreath {"Thrash metal"}
 {Metallica/Ride the Lightning} {Heavy metal}
 Metallica/Ronnie {Heavy metal}
 {Metallica/Sad but True} {"Heavy metal music"}
+{Metallica/Seek & Destroy} Metal
 {Metallica/The Frayed Ends of Sanity} {"Thrash metal"}
 {Metallica/The God That Failed} {Heavy metal}
 {Metallica/The House Jack Built} {Heavy metal}
@@ -2345,7 +2423,6 @@ Metallica/Ronnie {Heavy metal}
 {Midnight Oil/Beds Are Burning} {Alternative rock}
 {Mike + The Mechanics/All I Need Is a Miracle} {"Pop rock"}
 {Mike + The Mechanics/Living Years} {"Rock music"}
-{Mike Oldfield/Conflict} {Pop Rock}
 {Mike Oldfield/Moonlight Shadow} {"Pop rock"}
 {Mike Oldfield/Ommadawn} {"Progressive rock"}
 {Mike Reno/Almost Paradise} {"Soft rock"}
@@ -2353,17 +2430,19 @@ Metallica/Ronnie {Heavy metal}
 {Miller/American Patrol} {"March (music)"}
 {Miller/Chattanooga Choo Choo} {"Big band"}
 {Miller/In the Mood} {"Big band"}
+{Miller/Little Brown Jug} {Big band}
 {Miller/Moonlight Serenade} {"Big band"}
 {Miller/When Sunny Gets Blue} {"Vocal pop"}
 {Milli Vanilli/Baby Don't Forget My Number} {"Dance-pop"}
 {Milli Vanilli/Girl You Know It's True} {"Dance-pop"}
 {Mina/Acqua e sale} {"Pop music"}
+{Mina/E Se Domani} Pop
 {Mina/Grande amore} {"Operatic pop"}
 {Mina/Grande grande grande} {"Pop/rock"}
+Mina/Insieme Pop
 {Mina/Io e te da soli} {"Pop music"}
 {Mina/La voce del silenzio} {"Pop music"}
 Mina/Nessuno {"Pop music"}
-{Mina/Non gioco piu} {Pop}
 {Mina/Non credere} {"Pop music"}
 {Mina/Parole parole} Unknown
 {Mina/Se telefonando} {"Pop music"}
@@ -2407,6 +2486,7 @@ Mina/Nessuno {"Pop music"}
 {Nat King Cole/When I Fall in Love} {"Traditional pop music"}
 {Nat King Cole/When Your Lover Has Gone} {"Jazz"}
 {Natalie Cole/L-O-V-E} {"Jazz"}
+{Natalie Cole/Miss You Like Crazy} {Funk / Soul}
 {Natalie Imbruglia/Left of the Middle} {"Alternative pop"}
 {Natalie Imbruglia/Pigeons and Crumbs} {"Alternative pop"}
 {Nazareth/Love Hurts} {"Country music"}
@@ -2527,6 +2607,7 @@ Oberkrainer/Trompeten-Echo {"Polka"}
 {Opus/Live Is Life} {"Reggae"}
 {Orleans/Still the One} {"Soft rock"}
 {Ornella Vanoni/Senza fine} {"Songwriter"}
+{Oscar Peterson/East of the Sun} Jazz
 {Oscar Peterson/Emily} Jazz
 {Oscar Peterson/I Only Have Eyes for You} {"Doo-wop"}
 {Oscar Peterson/I Want to Be Happy} Jazz
@@ -2631,7 +2712,6 @@ Oberkrainer/Trompeten-Echo {"Polka"}
 {Peter Gabriel/I Have the Touch} {"Synth-pop"}
 {Peter Gabriel/Shock the Monkey} {"Synth-pop"}
 {Peter Gabriel/Walk Through the Fire} {"Rock music"}
-{Peter Maffay/Du} {Pop rock}
 {Peter Schilling/Major Tom} {New wave}
 {Peter Tosh/Johnny B Goode} {"Rock and roll"}
 {Peter, Paul & Mary/500 Miles} {"Country music"}
@@ -2639,8 +2719,8 @@ Oberkrainer/Trompeten-Echo {"Polka"}
 {Peter, Paul & Mary/Leaving on a Jet Plane} {"Folk music"}
 {Petty/I Won't Back Down} {"Heartland rock"}
 {Petty/Into The Great Wide Open} {"Heartland rock"}
+{Petula Clark/I Don't Know How to Love Him} {"Folk music"}
 {Petula Clark/I Know a Place} {"Pop music"}
-{Petula Clark/This Is My Song} {Pop}
 {Pharao/I Show You Secrets} {"Eurodance"}
 {Pharao/There Is a Star} {"Eurodance"}
 {Phil Collins/A Groovy Kind of Love} {"Soul music"}
@@ -2667,14 +2747,12 @@ Oberkrainer/Trompeten-Echo {"Polka"}
 {Pink Floyd/The Great Gig in the Sky} {"Progressive rock"}
 {Pink Floyd/The Thin Ice} {"Progressive rock"}
 {Pink Floyd/Welcome to the Machine} {"Progressive rock"}
+{Pooh/A un minuto dall'amore} Pop
 {Pooh/Caro me stesso mio} Jazz
-{Pooh/Giorni infiniti.1} {Pop rock}
-{Pooh/Il cielo e blu sopra le nuvole.1} Pop
 {Pooh/La donna del mio amico} Unknown
 {Pooh/Mai dire mai} {"Pop music"}
 {Pooh/Puoi sentirmi ancora (Parte 1)} Pop
-{Pooh/Quaderno di donna.1} {Pop}
-{Pooh/Quaderno di donna} {Pop}
+{Pooh/Se balla da sola} Pop
 {Pooh/Uomini soli} {"Pop music"}
 {Porter Cole/You'd Be So Nice to Come Home To} Jazz
 {Powell Bud/I Get a Kick Out of You} Jazz
@@ -2761,7 +2839,6 @@ Queen/'39 {"Progressive rock"}
 {Quiet Riot/Cum On Feel the Noize} {"Glam rock"}
 {Quincy Jones/I'll Be Good To You} Unknown
 R {Alternative rock}
-{R.E.M_/Everybody Hurts.1} {Alternative Rock}
 {REDDING OTIS/I've Been Loving You Too Long} {"Soul music"}
 {REO Speedwagon/Can't Fight This Feeling} {"Soft rock"}
 {REO Speedwagon/Keep On Loving You} {soft rock}
@@ -2822,8 +2899,6 @@ R {Alternative rock}
 {Real McCoy/One More Time} Eurodance
 {Real Thing/You to Me Are Everything} {"Disco"}
 {Red Hot Chili Peppers/Deep Kick} {"Funk metal"}
-{Red Hot Chili Peppers/Higher Ground.1} Funk
-{Red Hot Chili Peppers/Higher Ground} Funk
 {Red Hot Chili Peppers/Knock Me Down} {"Funk metal"}
 {Red Hot Chili Peppers/Otherside} {"Alternative rock"}
 {Red Hot Chili Peppers/Road Trippin} {"Folk music"}
@@ -2842,7 +2917,6 @@ Red/Sensualite {"Pop music"}
 {Rene Froger/Why Goodbye} {"Country music"}
 {Rene Froger/Woman Woman} {"Alternative rock"}
 {Rene Klijn/Mr Blue} {"Pop music"}
-{Renzo Arbore/Reginella.mid} {Pop folk}
 {Restless Heart/When She Cries} {"Country music"}
 {Riccardo Cocciante/Bella senz'anima} {"Pop music"}
 {Rich , Buddy/Groovin' Hard} Jazz
@@ -2898,6 +2972,7 @@ Red/Sensualite {"Pop music"}
 {Rod Stewart/You Wear It Well} {"Folk rock"}
 {Rogers Kenny/All I Ever Need Is You} {"Pop music"}
 {Rogers Kenny/She Believes In Me} {"Country music"}
+{Rogers Kenny/Through the Years} Country
 {Romina Power Al Bano/Felicita} {"Pop music"}
 {Ronan Keating/When You Say Nothing At All} {"Country music"}
 {Rose Royce/Love Don't Live Here Anymore} {"Soul music"}
@@ -2909,8 +2984,8 @@ Red/Sensualite {"Pop music"}
 {Roxette/Almost Unreal} {"Pop rock"}
 {Roxette/Crash! Boom! Bang!} {"Pop rock"}
 {Roxette/Fading Like a Flower (Every Time You Leave)} {"Pop rock"}
-{Roxette/It Must Have Been Love (live studio)} Pop
 {Roxette/It Must Have Been Love} {"Soft rock"}
+{Roxette/It Must Have Been Love (live studio)} Pop
 {Roxette/Milk And Toast And Honey} {"Pop music"}
 Roxette/Paint Unknown
 {Roxette/Physical Fascination} {"Pop music"}
@@ -2976,7 +3051,6 @@ Rush/Dreamline {"Hard rock"}
 {Sailor Moon/Look at the Stars} Unknown
 {Salt-N-Pepa/Let's Talk About Sex} {"Hip house"}
 {Salt-N-Pepa/Whatta Man} {"Soul music"}
-{Sam Brown/Stop.mid} {Pop rock}
 {Sam & Dave/Ain't That a Lot of Love} {"Progressive House"}
 {Sam Cooke/(What a) Wonderful World} {"Rhythm and blues"}
 {Sam Cooke/Another Saturday Night} {"Rhythm and blues"}
@@ -3017,6 +3091,7 @@ Seal/Crazy Unknown
 {Sedaka Neil/Breaking Up Is Hard to Do} {"Brill Building (genre)"}
 {Sedaka Neil/Happy Birthday Sweet Sixteen} {"Pop music"}
 {Sedaka Neil/Stupid Cupid} {"Brill Building (genre)"}
+{Sergio Mendes/Never Gonna Let You Go} {Adult contemporary}
 Shaggy/Angel {Reggae fusion}
 Shaggy/Boombastic {"Dancehall"}
 {Shakatak/Easier Said Than Done} {"Pop music"}
@@ -3031,6 +3106,7 @@ Shaggy/Boombastic {"Dancehall"}
 {Shaun Cassidy/Da Doo Ron Ron} {"R&amp;B music"}
 {Shawn Colvin/Sunny Came Home} {"Folk rock"}
 {Shearing George/Happy Days Are Here Again} {"Pop music"}
+{Shearing George/I Can't Get Started} Jazz
 {Shearing George/Lullaby of Birdland} {"Jazz"}
 {Shearing George/September in the Rain} {"Traditional pop music"}
 {Shearing George/The Nearness of You} {"Jazz"}
@@ -3070,12 +3146,14 @@ Shaggy/Boombastic {"Dancehall"}
 {Simply Red/If You Don't Know Me By Now} {"Rhythm and blues"}
 {Simply Red/Money's Too Tight (to Mention)} {"Soul music"}
 {Simply Red/Something Got Me Started} {"Pop music"}
+{Sinatra/All the Things You Are} Pop
 {Sinatra/Blue Moon} Jazz
 {Sinatra/Fly Me to the Moon} {"Jazz"}
 {Sinatra/Goin' Out of My Head} {"Pop music"}
 {Sinatra/I Get A Kick Out Of You} Jazz
 {Sinatra/I've Got You Under My Skin} {"Vocal jazz"}
 {Sinatra/My Funny Valentine} {"Traditional pop"}
+{Sinatra/New York, New York (theme du film)} Jazz
 {Sinatra/Ol' Man River} {"Show tune"}
 {Sinatra/Strangers in the Night} {"Traditional pop"}
 {Sinatra/The Lady Is a Tramp} {"Showtune"}
@@ -3159,7 +3237,7 @@ Starship/Jane {"Alternative rock"}
 {Steely Dan/Pretzel Logic} {"Jazz rock"}
 {Steely Dan/Reelin' In the Years} {"Jazz rock"}
 {Steely Dan/Rikki Don't Lose That Number} {"Soft rock"}
-{Stephanie Mills/Never Knew Love Like This Before} {"Post-disco"}
+{Stephanie Mills/Never Knew Love Like This Before} {R & B /Soul}
 {Steppenwolf/Born To Be Wild} {"Hard rock"}
 {Steps Ahead/Pools} Unknown
 {Steve Miller Band/Living in the U S A} {"Rock music"}
@@ -3180,7 +3258,6 @@ Starship/Jane {"Alternative rock"}
 {Stevie Wonder/Sir Duke} {"Funk"}
 {Stevie Wonder/You Are the Sunshine of My Life} {"Progressive soul"}
 {Stewart Rod/Da Ya Think I'm Sexy} {"Eurodisco"}
-{Stewart Rod/Rhythm of My Heart} {Pop rock}
 {Stewart Rod/Some Guys Have All the Luck} {"R&amp;B"}
 Stiltskin/Inside {alternative rock}
 {Sting/Be Still My Beating Heart} {"Soft rock"}
@@ -3249,8 +3326,8 @@ Sublime/Poolshark {Ska punk}
 {Swingin' Medallions/Double Shot (Of My Baby's Love)} {"Rock and roll"}
 {Sydney Youngblood/Sit and Wait} {"Funk"}
 {Sylvester/You Make Me Feel (Mighty Real)} {"Disco"}
-{T'Pau/China In Your Hand} {"Pop music"}
 T {Glam rock}
+{T'Pau/China In Your Hand} {"Pop music"}
 TLC/Baby-Baby-Baby {"R&amp;B"}
 TLC/Creep Unknown
 {TLC/No Scrubs} {"Contemporary R&amp;B"}
@@ -3632,7 +3709,6 @@ TLC/Unpretty {"Pop rock"}
 {The Fabulous Thunderbirds/Tuff Enuff} {"Blues rock"}
 {The Five Satins/In the Still of the Nite} {"Doo-wop"}
 {The Fixx/One Thing Leads to Another} {"New wave music"}
-The Flying Pickets/Only You {Rock}
 {The Four Preps/26 Miles (Santa Catalina)} {"Pop music"}
 {The Four Seasons/Dawn (Go Away)} {"Rock music"}
 {The Four Seasons/I've Got You Under My Skin} {"Vocal jazz"}
@@ -3721,9 +3797,6 @@ The Flying Pickets/Only You {Rock}
 {The Partridge Family/I Think I Love You} {"Pop music"}
 {The Pasadenas/I'm Doing Fine Now} {"Soul music"}
 {The Platters/Great Pretender} {"Rhythm and blues"}
-{The Platters/Only You.2} {Pop}
-{The Platters/Only You.5} {Pop}
-{The Platters/Only You.7} {Pop}
 {The Platters/Save the Last Dance for Me} {"Pop music"}
 {The Platters/Smoke Gets in Your Eyes} {"Doo-wop"}
 {The Platters/Under the Boardwalk} {"Pop music"}
@@ -3790,7 +3863,6 @@ The Flying Pickets/Only You {Rock}
 {The Rooftop Singers/Walk Right In} {"Folk music"}
 {The Rubettes/Juke Box Jive} {"Glam rock"}
 {The Rubettes/Sugar Baby Love} {"Bubblegum pop"}
-{The Rutles/Hold My Hand} {Rock and Roll}
 {The Shadows/Dance On} {"Instrumental rock"}
 {The Shadows/Foot Tapper} {"Instrumental rock"}
 {The Shadows/Guitar Tango} {Instrumental rock}
@@ -3814,7 +3886,6 @@ The Flying Pickets/Only You {Rock}
 {The Smashing Pumpkins/Thru the Eyes of Ruby} {"Alternative rock"}
 {The Smashing Pumpkins/To Forgive} {"Alternative rock"}
 {The Smiths/How Soon Is Now} {"Alternative rock"}
-{The Spotnicks/Last Date} {Pop}
 {The Spencer Davis Group/Gimme Some Lovin'} {"Blue-eyed soul"}
 {The Spencer Davis Group/Keep On Running} {"Reggae"}
 {The Standells/Dirty Water} {"Garage rock"}
@@ -3834,7 +3905,6 @@ The Flying Pickets/Only You {Rock}
 {The Supremes/You Keep Me Hanging On} {"Rock music"}
 {The Swinging Blue Jeans/Hippy Hippy Shake} {"Rock and roll"}
 {The Sylvers/Boogie Fever} {"Disco"}
-{The Syndicate of Sound/Little Girl} {Garage rock}
 {The Temptations/Ain't Too Proud To Beg} {"Soul music"}
 {The Temptations/Ball of Confusion (That's What the World Is Today)} {"Psychedelic soul"}
 {The Temptations/Beauty Is Only Skin Deep} {"R&amp;B"}
@@ -4013,8 +4083,8 @@ Us3/Cantaloop {"Jazz rap"}
 {Van Halen/You Really Got Me} {"Garage rock"}
 {Van McCoy/The Hustle} {"Disco"}
 {Van Morrison/Brown Eyed Girl} {"Pop rock"}
-{Van Morrison/Have I Told You Lately That I Love You_} {Folk rock}
 {Van Morrison/Have I Told You Lately} {"Celtic music"}
+{Van Morrison/Have I Told You Lately That I Love You_} {Folk rock}
 {Van Morrison/Here Comes the Night} {"Pop rock"}
 {Van Morrison/Into the Mystic} {"Blues"}
 {Van Morrison/Moondance} {"Rhythm and blues"}
@@ -4030,6 +4100,7 @@ Us3/Cantaloop {"Jazz rap"}
 {Vengaboys/Boom Boom Boom} {"Eurodance"}
 {Vengaboys/We're Going to Ibiza} {"Euro reggae"}
 {Vera/At This Moment} {"Blue-eyed soul"}
+{Vicki Sue Robinson/Never Gonna Let You Go} {Funk / Soul}
 {Vicki Sue Robinson/Turn the Beat Around} {"Disco"}
 {Village People/Go West} {"Disco"}
 {Village People/In the Navy} {"Disco"}
@@ -4088,6 +4159,7 @@ Weezer/Getchoo {"Alternative rock"}
 {Whitney Houston/You Give Good Love} {"Contemporary R&amp;B"}
 {Wild Cherry/Play That Funky Music} {"Funk rock"}
 {Will to Power/I'm Not in Love} {"Soft rock"}
+{Willeke Alberti/Ome Jan} Pop
 {Williams Deniece/Let's Hear It For The Boy} {"Contemporary R\&B"}
 {Willie Nelson/Always on My Mind} {"Country music"}
 {Wilson Phillips/The Dream Is Still Alive} {"Pop music"}
@@ -4105,9 +4177,9 @@ Weezer/Getchoo {"Alternative rock"}
 {Wonder Stevie/Ebony and Ivory} {"Pop music"}
 {Wonder Stevie/For Once in My Life} {"Soul music"}
 {Wonder Stevie/Heaven Help Us All} {"Soul music"}
-{Wonder Stevie/Higher Ground.mid} {Pop}
 {Wonder Stevie/I Just Called to Say I Love You} {"Contemporary R&amp;B"}
 {Wonder Stevie/Isn't She Lovely} {"Soul music"}
+{Wonder Stevie/My Cherie Amour} Song
 {Wonder Stevie/Part-Time Lover} {"Pop music"}
 {Wonder Stevie/Ribbon in the Sky} {"Rhythm and blues"}
 {Wonder Stevie/Send One Your Love} {"Soul music"}
@@ -4123,7 +4195,6 @@ Weezer/Getchoo {"Alternative rock"}
 {Yes/I've Seen All Good People} {"Progressive rock"}
 {Yes/Long Distance Runaround} {"Progressive rock"}
 {Yes/Machine Messiah} {"Progressive rock"}
-{Yes/Machine Messiah.1} {Alternative Indie}
 {Yes/Mood for a Day} {Progressive rock}
 {Yes/Owner of a Lonely Heart} {"Dance-rock"}
 {Yes/Sound Chaser} {"Progressive rock"}
@@ -4170,5 +4241,4 @@ blink-182/M+M's {"Skate punk"}
 {blink-182/Please Take Me Home} {"Pop punk"}
 {blink-182/Story of a Lonely Guy} {"Pop punk"}
 {blink-182/What's My Age Again} {"Pop punk"}
-
 

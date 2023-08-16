@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.15 2023-08-13 13:05" 
+set midiexplorer_version "MidiExplorer version 4.18 2023-08-16 14:00" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -959,7 +959,6 @@ set font_family [font actual helvetica -family]
 set font [font create -family $font_family -size 11]
 
 global exec_out
-set exec_out "empty"
 
 package require Tk
 
@@ -1253,6 +1252,10 @@ to compute this database which will be
 stored in a text file called 
 MidiDescriptors.txt."
 
+
+$ww add command -label "notebook" -font $df -command notebook -accelerator "ctrl-n"
+
+$ww add command -label "genre database" -font $df -command genre_window -accelerator "ctrl-v"
 
 $ww add cascade -label "plots" -font $df -menu $ww.plots
 
@@ -11711,6 +11714,7 @@ proc update_genre_database {} {
 global midi
 global genre_db
 set csvfile [file join $midi(rootfolder) genre.tsv]
+set originalsize [file size $csvfile]
 file delete tmp.tsv
 file rename $csvfile tmp.tsv
 set contents [array names genre_db]
@@ -11719,20 +11723,26 @@ set outhandle [open $csvfile w]
 set i 0
 foreach tuneline $alphacontents {
   puts $outhandle "$tuneline\t$genre_db($tuneline)"
-  if {$i < 100} {
-     puts "$tuneline\t$genre_db($tuneline)"
-     }
-  incr i
+  #if {$i < 100} {
+  #   puts "$tuneline\t$genre_db($tuneline)"
+  #   }
+  #incr i
   }
+close $outhandle
+set newfilesize [file size $csvfile]
+puts "$csvfile has grown from $originalsize to $newfilesize"
 }
 
 
 proc load_genre_database {} {
 global genre_db
 global midi
+global exec_out
 if {[array exist genre_db]} return
 set genrefile [file join $midi(rootfolder) genre.tsv]
-if {![file exist $genrefile]} {initialize_genre_database}
+if {![file exist $genrefile]} {
+   append exec_out "Could not find genre.tsv in $midi(rootfolder)\ncreating template."
+   initialize_genre_database}
 set inhandle [open $genrefile]
 while {![eof $inhandle]} {
   gets $inhandle line
@@ -11740,6 +11750,7 @@ while {![eof $inhandle]} {
   set genre_db([lindex $data 0]) [lindex $data 1] 
   }
 close $inhandle
+append exec_out "\nLoaded genre.tsv from $midi(rootfolder)"
 } 
 
 proc search_genre_database {} {
@@ -12999,6 +13010,7 @@ proc make_playlist_manager {} {
   global lastplayfile_item
   global font df
   global selectedGenre
+  global exec_out
 
   set selectedGenre none
   if {![winfo exist .playmanage]} {
@@ -13034,11 +13046,13 @@ proc make_playlist_manager {} {
   set lastplayfile_item -1
   set playlistfiles ""
   set playlistfolder [file join $midi(rootfolder) playlists]
-  puts "playlistfolder = $playlistfolder"
+  #puts "playlistfolder = $playlistfolder"
   if {![file exist $playlistfolder]} {
+    append exec_out "\nCould not find $playlistfolder folder"
     set msg "The folder $playlistfolder was not found."
     tk_messageBox -message $msg -type ok
     } else {
+    append exec_out "\nLoading the contents of $playlistfolder folder"
     set playlistfiles [glob $playlistfolder/*.txt]
     set playlistfiles [lsort $playlistfiles]
     }
@@ -13051,8 +13065,9 @@ proc make_playlist_manager {} {
   if {[file exists "$playlistfolder/definitions.text"]} {
       load_genre_definitions $playlistfolder
       make_genre_info
+      append exec_out "\nfound $playlistfolder/definitions.text"
       } else {
-      puts "$playlistfolder/definitions.text was not found"
+      append exec_out  "\n$playlistfolder/definitions.text was not found"
       }
   }
 
