@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.18 2023-08-16 14:00" 
+set midiexplorer_version "MidiExplorer version 4.20 2023-08-22 09:50" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -4164,9 +4164,9 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
     if {$err == 0 || $ver < 1.38} { .info.txt insert insert $msg red
                     return $msg}
     set result [getVersionNumber $midi(path_midistats)]
-    set msg "You need midistats.exe version 0.68 or higher.\n"
+    set msg "You need midistats.exe version 0.71 or higher.\n"
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.68} { .info.txt insert insert $msg red
+    if {$err == 0 || $ver < 0.71} { .info.txt insert insert $msg red
                     return $msg}
     return pass
 }
@@ -14007,13 +14007,21 @@ if {[llength $limits] > 1} {
 
 proc keymap_help {} {
 set hlp_msg "The function shows how the key signature evolves\
-across a midi file on a color coded strip.\
+across a midi file on a color coded strip. The graph below the\
+strip plots the number of sharps (positive) or flats (negative)\
+for each color coded key signature. For most music, there are \
+only minor shifts when the key changes to the dominant, subdominant\
+or relative minor. \
+
+
 Histograms of the pitch classes are computed\
 for blocks of n beats where n is specified in the spacing\
 entry box. If the weighted entry box is checked, the histogram\
-is weighted by the duration of the notes. The key is determined\
-by matching the histogram with either the Krumhansl-Kessler (kk)\
-or Craig Sapp's simple coefficients (ss), for the different major and\
+is weighted by the duration of the notes.\
+
+The key is determined by matching the histogram with\
+either the Krumhansl-Kessler (kk) or Craig Sapp's\
+simple coefficients (ss), for the different major and\
 minor keys. The key with the highest correlation is plotted in\
 color coded form. If the mouse pointer enters into one of the\
 color coded boxes, the key associated with that box will\
@@ -14142,8 +14150,8 @@ set spacelist {3 4 6 8 12 16 18 24 32 36 48 64}
 #    pack $w.head.but -side left -anchor w
 #    pack $w.head -anchor w
 
-    canvas $w.c -width $midi(stripwindow) -height 50\
-         -scrollregion { 0 0 500.0 50}\
+    canvas $w.c -width $midi(stripwindow) -height 75\
+         -scrollregion { 0 0 500.0 75}\
          -xscrollcommand "$w.xsc set"
     scrollbar $w.xsc -orient horiz -command {.keystrip.c xview}
     pack $w.c
@@ -14232,14 +14240,29 @@ proc keymap {source} {
     global df
     global cleanData
     global briefconsole
+    global key2sf
 
     #puts "keymap $midi(keySpacing)"
+    set sflist {}
     set sharpflatnotes  {C C# D Eb E F F# G G# A Bb B}
 
     set keySpacing $midi(keySpacing)
 
     keystrip_window $source
     .keystrip.c delete all
+
+    set xlbx 2
+    set xrbx 498
+    set ytbx 30
+    set ybbx 70
+    set yscale [expr (70 - 30)/15.0]
+    .keystrip.c create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
+         -width 2 -fill grey90 
+     
+     for {set sf -6} {$sf < 7} {incr sf 2} {
+       set y0 [expr (6 -$sf) * $yscale  + 33]
+       .keystrip.c create line $xlbx $y0 $xrbx $y0 -fill gray70
+       }
 
     if {![file exist $midi(path_midi2abc)]} {
        set msg "cannot find $midi(path_midi2abc). Install midi2abc
@@ -14285,9 +14308,16 @@ set the path to a midi file."
            set jc [lindex $key 0]
            if {$jc < 0} continue
            set keysig [lindex $sharpflatnotes $jc][lindex $key 1]
-    #puts $keysig
+           #puts $keysig
+           set sf $key2sf($keysig)
+           lappend sflist $sf
+           set y0 [expr (6 -$sf) * $yscale  + 32]
            set x0 [expr $stripscale*$beatfrom]
            set x1 [expr $stripscale*$keySpacing + $x0]
+           set x3 [expr ($x0 + $x1)/2 -2] 
+           set y1 [expr $y0 + 2]
+           set x4 [expr $x3 + 2]
+           .keystrip.c create rect $x3 $y0 $x4 $y1 -fill black 
            if {[lindex $key 1] == "minor"} {
              .keystrip.c create rect $x0 25 $x1 1 -fill $majorColors($jc) -tag $keysig -stipple gray50
               } else {
@@ -14296,6 +14326,7 @@ set the path to a midi file."
         .keystrip.c bind $keysig <Enter> "keyDescriptor $keysig %W %x %y"
         bind .keystrip.c  <1> "show_histogram %W %x %y"
          }
+  puts "sflist = $sflist"
   update_console_page
   }
 
@@ -14325,6 +14356,33 @@ G#minor "G# minor 5 sharps"
 Aminor "A minor"
 Bbminor "Bb minor 5 flats"
 Bminor "B minor 2 sharps"
+}
+
+array set key2sf {
+Cmajor 0
+C#major -5 
+Dmajor 2
+Ebmajor -3
+Emajor  4
+Fmajor -1
+F#major 6
+Gmajor 1
+G#major -4
+Amajor 3
+Bbmajor -2
+Bmajor 5
+Cminor -3
+C#minor 4
+Dminor -1
+Ebminor -6
+Eminor 1 
+Fminor -4
+F#minor 3
+Gminor -2
+G#minor 5
+Aminor 0
+Bbminor -5
+Bminor 2
 }
 
 proc keyDescriptor {keysig w x y} {
@@ -14606,7 +14664,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 4.84\
             path_midi2abc 3.59\
             path_midicopy 1.38\
-	    path_midistats 0.68\
+	    path_midistats 0.71\
             path_abcm2ps 8.14.6}
 
 

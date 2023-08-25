@@ -1,6 +1,6 @@
 # extract_genre.tcl
 
-set inhandle [open "cgenre.tsv" "r"]
+set inhandle [open "genre.tsv" "r"]
 set contents [read $inhandle]
 close $inhandle
 set contents [split $contents \n]
