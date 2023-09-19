@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.20 2023-08-22 09:50" 
+set midiexplorer_version "MidiExplorer version 4.22 2023-09-13 17:25" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -85,6 +85,7 @@ set briefconsole 1
 #   Part 27.0 notebook
 #   Part 28.0 programcolor
 #   Part 29.0 genre_db support
+#   Part 30.0 miditable
 #
 
 set welcome "Welcome to $midiexplorer_version. This application\
@@ -2333,38 +2334,64 @@ proc list_keysigmod {} {
   }  
  
 
-proc get_trkinfo {channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns token} {
+
+proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy line} {
  global ppqn
  global pitchbendsplit
  upvar 1 $channel c
+ upvar 1 $prog p
  upvar 1 $nnotes n
  upvar 1 $nharmony h
  upvar 1 $pmean pavg
+ upvar 1 $pmin pitchmin
+ upvar 1 $pmax pitchmax
  upvar 1 $duration dur 
+ upvar 1 $durmin fnotedurmin
+ upvar 1 $durmax fnotedurmax
  upvar 1 $cntlparamCount cntlCount
  upvar 1 $pressureCount pressCount
  upvar 1 $pitchbendCount pbend
  upvar 1 $quietTime qtime
  upvar 1 $rhythmpatterns rpat
- set c [lindex $token 1]
- set n [lindex $token 3]
- set h [lindex $token 4]
- set qtime [lindex $token 9]
- set rpat [lindex $token 10]
- set pavg [lindex $token 5]
+ upvar 1 $ngaps ngap 
+ upvar 1 $pitchEntropy pentropy
+ set c [lindex $line 1]
+ set p [lindex $line 2]
+ set n [lindex $line 3]
+ set h [lindex $line 4]
+ set qtime [lindex $line 9]
+ set ngap [lindex $line 15]
+ set rpat [lindex $line 10]
+ set pavg [lindex $line 5]
  set pavg [expr $pavg/($n +$h)]
- set dur [lindex $token 6]
+ set dur [lindex $line 6]
  set dur [expr $dur / ($n + $h)]
  set dur [expr double($dur) / $ppqn]
  set dur [format %5.3f $dur]
- set cntlCount [lindex $token 7]
- set pressCount [lindex $token 8]
+ set cntlCount [lindex $line 7]
+ set pressCount [lindex $line 8]
+ set pitchmin [lindex $line 11]
+ set pitchmax [lindex $line 12]
+ if {$c != 10} {
+   #puts "line list = $line"
+   set fnotedurmin [expr [lindex $line 13] /double($ppqn)]
+   set fnotedurmax [expr [lindex $line 14] /double($ppqn)]
+   set fnotedurmin [format %6.3f $fnotedurmin]
+   set fnotedurmax [format %6.3f $fnotedurmax] 
+   } else {
+   set fnotedurmin 0
+   set fnotedurmax 0
+   set dur 0
+   } 
+ set pentropy [lindex $line 16]
+ if {[string length $pentropy] > 1} {set pentropy [format %4.2f $pentropy]}
  if {[info exist pitchbendsplit($c)]} {
        set pbend $pitchbendsplit($c)
    } else {
        set pbend 0
    }
 }
+
 
 
 proc gatherMidiSummary {} {
@@ -2465,9 +2492,10 @@ $w.tree delete [$w.tree children {}]
 set trknum 1
 
 set nlines 1
-foreach token $trkinfo(1) {
-  if {[lindex $token 0] == "trkinfo"} {
-    get_trkinfo channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns $token
+foreach line $trkinfo(1) {
+  if {[lindex $line 0] == "trkinfo"} {
+     get_trkinfo channel prog nnotes nharmony pmean pmin pmax duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy $line
+
     set activechan($channel) 1
     set totalnotes [expr $nnotes+$nharmony]
     set channel2program($channel) $xchannel2program($channel)
@@ -2511,9 +2539,10 @@ $w.tree delete [$w.tree children {}]
 
 
 for {set i 1} {$i <= $ntrks} {incr i} {
-  foreach token $trkinfo($i) {
-    if {[lindex $token 0] == "trkinfo"} {
-      get_trkinfo channel nnotes nharmony pmean duration pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns $token
+  foreach line $trkinfo($i) {
+    if {[lindex $line 0] == "trkinfo"} {
+       get_trkinfo channel prog nnotes nharmony pmean pmin pmax duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy $line
+
       set activechan($channel) 1
       set track2channel($i) $channel
       set totalnotes [expr $nnotes+$nharmony]
@@ -4164,9 +4193,9 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
     if {$err == 0 || $ver < 1.38} { .info.txt insert insert $msg red
                     return $msg}
     set result [getVersionNumber $midi(path_midistats)]
-    set msg "You need midistats.exe version 0.71 or higher.\n"
+    set msg "You need midistats.exe version 0.75 or higher.\n"
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.71} { .info.txt insert insert $msg red
+    if {$err == 0 || $ver < 0.75} { .info.txt insert insert $msg red
                     return $msg}
     return pass
 }
@@ -8829,7 +8858,7 @@ proc pianoroll_statistics {choice canvs} {
         switch $choice {
             pitch {set histogram($note) [expr $histogram($note)+1]}
             velocity {set histogram($vel) [expr $histogram($vel)+1]}
-            duration {set index [expr int((($end - $begin)*48)/$ppqn)]
+            duration {set index [expr int((($end - $begin)*32)/$ppqn)]
                 if {$index > 127} {set index 127}
                 set histogram($index) [expr $histogram($index)+1]
             }
@@ -9164,9 +9193,10 @@ proc plotmidi_duration_pdf {} {
     set maxhgraph 0.0
     set statc .durpdf.c
     for {set i 0} {$i < 128} {incr i} {
-        set index [format %4.2f [expr $i/48.0]]
+        set index [format %4.2f [expr $i/32.0]]
         lappend hgraph $index
         lappend hgraph $histogram($i)
+        #puts "i = $i index = $index histogram($i) = $histogram($i)"
         if {$histogram($i) > $maxhgraph} {set maxhgraph $histogram($i)}
     }
     set maxhgraph [expr $maxhgraph + 0.1]
@@ -9181,8 +9211,8 @@ proc plotmidi_duration_pdf {} {
     wm title .durpdf "probability versus note duration"
     $statc create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
             -width 2 -fill white
-    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx 0.00 2.7 0.0 $maxhgraph
-    Graph::draw_x_ticks $statc 0.0 3.0 0.5 1 0 %4.2f $colfg
+    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx 0.00 4.1 0.0 $maxhgraph
+    Graph::draw_x_ticks $statc 0.0 4.0 0.5 1 0 %3.1f $colfg
     Graph::draw_y_ticks $statc 0.0 $maxhgraph 0.05 2 %3.1f $colfg
     Graph::draw_impulses_from_list .durpdf.c $hgraph
     set ypos [expr $ytbx + 15]
@@ -14664,7 +14694,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 4.84\
             path_midi2abc 3.59\
             path_midicopy 1.38\
-	    path_midistats 0.71\
+	    path_midistats 0.75\
             path_abcm2ps 8.14.6}
 
 
@@ -15924,6 +15954,186 @@ set genreUpdated 1
 }
 
 
+#   Part 30.0 miditable
+
+proc table_header {} {
+global labelrow
+global df
+set labelrow 1
+set w .f
+label $w.chk -text "" -font $df
+label $w.chn -text "chn" -font $df
+label $w.prg -text "program" -font $df
+label $w.notes -text "notes" -font $df
+label $w.spread -text "spread" -font $df
+label $w.ngaps -text "ngaps" -font $df
+label $w.pav -text "pav" -bg pink -font $df
+label $w.pmn -text "pmin" -bg pink -font $df
+label $w.pmx -text "pmax" -bg pink -font $df
+label $w.pme -text "pEntropy" -bg pink -font $df
+label $w.dav -text "drav" -bg "light blue" -font $df
+label $w.dmn -text "dmin" -bg "light blue" -font $df
+label $w.dmx -text "dmax" -bg "light blue" -font $df
+label $w.rhy -text "rhy" -bg bisque -font $df
+label $w.pbn -text "pbn" -bg tan -font $df
+label $w.ctp -text "ctp" -bg tan -font $df
+label $w.prs -text "prs" -bg tan -font $df
+
+grid $w.chk $w.chn $w.prg $w.notes $w.spread $w.ngaps $w.pav $w.pmn $w.pmx $w.pme $w.dav $w.dmn $w.dmx $w.rhy $w.pbn $w.ctp $w.prs -row $labelrow
+
+tooltip::tooltip $w.chn "Midi channel number starting from 1"
+tooltip::tooltip $w.prg "Midi program"
+tooltip::tooltip $w.notes "Number of chords / Number of notes"
+tooltip::tooltip $w.spread "Fraction of file where the channel is active"
+tooltip::tooltip $w.ngaps "Number of gaps greater than 8 beats"
+tooltip::tooltip $w.pav "Average midi pitch (60 is middle C)"
+tooltip::tooltip $w.pmn "Minimum midi pitch"
+tooltip::tooltip $w.pmx "Maximum midi pitch"
+tooltip::tooltip $w.dav "Average note duration 1.0 = quarter note"
+tooltip::tooltip $w.dmn "Minimum note duration"
+tooltip::tooltip $w.dmx "Maximum note duration"
+tooltip::tooltip $w.rhy "Number of distinct rhythm patterns 4 beats long"
+tooltip::tooltip $w.pbn "Number of pitchbends"
+tooltip::tooltip $w.ctp "Number of control messages"
+tooltip::tooltip $w.prs "Number of pressure messages"
+incr labelrow
+}
+
+  
+
+proc make_table {midiInfo} {
+global ppqn
+global mlist
+global lastpulse
+global ntrks
+global midi
+global df
+global chnsel
+global ntrks
+global labelrow
+set labelcol 0
+set hyphen "-"
+set w .f
+#get_npulses_and_ntrks $midiInfo
+if {![winfo exists $w]} {
+#  frame $w
+#  grid $w 
+   toplevel $w
+  } else {
+  destroy $w
+  frame $w
+  grid $w
+  }
+label $w.00 -text $midi(midifilein)
+grid $w.00 -row 0 -columnspan 12
+table_header
+foreach token $midiInfo {
+  if {[lindex $token 0] == "ppqn"} {set ppqn [lindex $token 1]}
+  if {[lindex $token 0] == "trk"} {set trk [lindex $token 1]}
+  if {[lindex $token 0] == "trkinfo"} {
+    incr labelrow 
+    set labelcol 0
+    get_trkinfo channel prog nnotes nharmony pmean pmin pmax dur durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy $token
+
+   if {$ntrks == 1} {
+     checkbutton $w.c$labelrow -text $trk -variable chnsel($channel) -font $df
+     } else {
+     checkbutton $w.c$labelrow -text $trk -variable chnsel($trk) -font $df
+     }
+   grid $w.c$labelrow -row $labelrow -column $labelcol
+   #puts "checkbutton $w.c$labelrow"
+   incr labelcol
+
+   #channel
+   label $w.lab$labelrow$hyphen$labelcol -text $channel -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+
+   #program
+   if {$channel != 10} {
+     label $w.lab$labelrow$hyphen$labelcol -text [lindex $mlist $prog] -anchor w -font $df
+   } else {
+     label $w.lab$labelrow$hyphen$labelcol -text "percussion" -anchor w -font $df
+   }
+    
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -sticky news
+   incr labelcol
+
+   #nnotes nharmony
+   set tnotes [expr $nnotes + $nharmony]
+   set tnotes "$nnotes/$tnotes"
+   label $w.lab$labelrow$hyphen$labelcol -text $tnotes -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+
+   #spread
+   set spread [expr ($lastpulse - $quietTime)]
+   set spread [expr $spread/double($lastpulse)]
+   set spread [format %5.3f $spread]
+   label $w.lab$labelrow$hyphen$labelcol -text $spread -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+
+   #ngaps
+   label $w.lab$labelrow$hyphen$labelcol -text $ngaps -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+   
+   # pitch mean, minimum, maximum
+   label $w.lab$labelrow$hyphen$labelcol -text $pmean -bg pink -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+   
+   label $w.lab$labelrow$hyphen$labelcol -text $pmin -bg pink -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+      
+   label $w.lab$labelrow$hyphen$labelcol -text $pmax -bg pink -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+  
+   label $w.lab$labelrow$hyphen$labelcol -text $pitchEntropy -bg pink -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+  
+   # note duration, average, minimum, maximum
+   label $w.lab$labelrow$hyphen$labelcol -text $dur -bg "light blue" -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+
+   label $w.lab$labelrow$hyphen$labelcol -text $durmin -bg "light blue" -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+
+   label $w.lab$labelrow$hyphen$labelcol -text $durmax -bg "light blue" -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+
+   # number of rhythm patterns
+   label $w.lab$labelrow$hyphen$labelcol -text $rhythmpatterns -bg bisque -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+
+   # number of pitchbends
+   label $w.lab$labelrow$hyphen$labelcol -text $pitchbendCount -bg tan -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+
+   # number of control messages
+   label $w.lab$labelrow$hyphen$labelcol -text $cntlparamCount -bg tan -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+
+   # number of pressure messages
+   label $w.lab$labelrow$hyphen$labelcol -text $pressureCount -bg tan -font $df
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol
+   incr labelcol
+
+   }
+ }
+}
+
+
 
 
 #trace add execution compute_pianoroll leave "cmdstr"
@@ -15938,4 +16148,7 @@ if {$argc != 0} {
 	.info.txt delete 1.0 end
         .info.txt insert insert $msg 
         load_last_midi_file 
+        #set midi_info [get_midi_info_for]
+        #set midi_info [split $midi_info '\n]
+        #make_table $midi_info
         }

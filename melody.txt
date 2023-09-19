@@ -6,6 +6,10 @@ numbers. The first number is the channel number containing the
 melody. The second number is the General Midi program number
 starting from 0 (Acoustic Piano).
 
+In addition, I found more than 1500 midi files in which the
+melody track (channel) was labeled with a metatext command MELODY.
+These files were added to the end of the list.
+
 In some cases, I was unable to identify a melody in any of the
 channels. I used the code -1 -1 to denote this situation.
 In a few cases, the melody shifts around several instruments
@@ -23,16 +27,19 @@ Al Jolson/You Made Me Love You.mid	4 24
 Alberto Fortis/Figlio di niente.mid	4 62
 Andy Williams/Can't Get Used To Losing You.mid	-1 -1 vocal line missing
 Andy Williams/The Impossible Dream.mid	1 1
+B.B. King/Why I Sing the Blues.mid	4 73
 Backstreet Boys/As Long as You Love Me.2.mid	-1 -1  vocal line missing
 Backstreet Boys/As Long as You Love Me.1.mid	-1 -1  vocal line missing
 Blue Oyster Cult/Godzilla.mid	4 61
 Boothe, Ken/Everything I Own.mid	6 100
 Bob James/Orpheus.mid	4 73
 Boxcar/Achy Breaky Heart.mid	-1 -1
+Busta Rhymes/Put Your Hands Where My Eyes Could See.mid	-1 -1
 Byrd Charlie/The Girl From Ipanema.mid	1 21
 Captain Hollywood Project/Find Another Way (single mix).mid	15 67
 Captain Hollywood Project/Impossible.mid	8 85
 Carboni/Ci vuole un fisico bestiale.2.mid	12 11
+Charles & Eddie/Would I Lie to You.1.mid	1 68
 Charlie Rich/The Most Beautiful Girl.mid	1 22
 Cilla Black/Anyone Who Had a Heart.mid	4 69
 Cocciante/Celeste nostalgia.mid	4 21
@@ -56,10 +63,14 @@ Genesis/A Trick of the Tail.1.mid	9 88
 George Michael/Faith.1.mid	5 75
 Gibson Brothers/Cuba.1.mid	1 66
 Gibson Brothers/Cuba.mid	4 29
+Giorgio Moroder/Chase.1.mid	2 87
 Grease/Summer Saturdays.mid	-1 -1 shifting melody among channels
 Holly Buddy/It's So Easy.mid	4 26
 Holly Buddy/I'm Lookin' For Someone To Love.mid	4 26
+Huey Lewis/But It's Alright.mid	1 61
+Jam & Spoon/Right In The Night.mid	4 54
 James Last/Medley.mid	7 56
+Jody Reynolds/Endless Sleep.mid	4 82
 John Farnham/Playing to Win.mid	4 17
 John Fred/Judy in Disguise.mid	1 0
 Johnny Rivers/Midnight Special.mid	6 29
@@ -86,31 +97,1627 @@ Player/Baby Come Back.mid	9 74
 Pooh/...in concerto.mid	4 73
 Pooh/Air India.mid	4 12
 Powell Bud/I Get a Kick Out of You.mid	3 0
+Prince Ital Joe/Happy People.1.mid	1 68
 Ray Charles/Georgia.1.mid	4 65
 Rich , Buddy/Groovin' Hard.mid	-1 -1 melody spread out in many channels
 Rita Coolidge/(Your Love Has Lifted Me) Higher and Higher.mid	5 0
 Roberts/Stasera mi butto.mid	4 11
 Sade/Cherry Pie.mid	7 26
+Sawyer Brown/Hard to Say.mid	1 26 5 24  shifting melody
 Selena/Baila mi son.mid	4 52
 Shaggy/Angel.2.mid	4 70
 Sheryl Crow/All I Wanna Do.mid	4 75
+Solo/Non c'e piu niente da fare.mid	4 65
 Special EFX/Uptown East.mid	4 82
 Steve Winwood/Higher Love.2.mid	-1 -1
 Supermax/Love Machine, Part 1.mid	-1 -1 no melody
 Taco/Puttin'on the Ritz.mid	-1 -1 shifting melody
-The Wallflowers/Heroes.mid	6 25
 Thelma Houston/Don't Leave Me This Way.mid	4 65
+The Beach Boys/Barbara Ann.3.mid	5 83
+The Beau Brummels/Laugh Laugh.mid	1 65
+The Beautiful South/Don't Marry Her.mid	8 53
+The Chiffons/He's So Fine.mid	3 66
 The Cranberries/Animal Instinct.mid	3 90
 The Cyrkle/Red Rubber Ball.1.mid	6 20
 The Four Preps/26 Miles (Santa Catalina).mid	4 73
 The Offspring/All I Want.mid	3 21
 The Trammps/Disco Inferno.mid	1 7
 The Trammps/Zing Went the Strings of My Heart.mid	4 58
+The Wallflowers/Heroes.mid	6 25
 Timeless/Where Is the Love.mid	5 48
 Todd Rundgren/Can We Still Be Friends.1.mid	1 0
+Tozzi/Aria e cielo.mid	4 85
+Tozzi/Conchiglia di diamante.mid	4 72
+Tozzi/Donna amante mia.1.mid	4 87
+U2/One.2.mid	4 73
 Uriah Heep/Easy Livin'.mid	2 18
-Wings/Silly Love Songs.mid	16 65
+Vanilla Ice/Ice Ice Baby.1.mid	6 87
+War/The Cisco Kid.mid	-1 -1
+Warren Zevon/Werewolves of London.mid	3 53
+Wax/Building a Bridge to Your Heart.mid	1 99
 White Barry/You're The First, The Last, My Everything.1.mid	3 0
 White Barry/You're The First, The Last, My Everything.mid	4 18
-War/The Cisco Kid.mid	-1 -1
+Wings/Silly Love Songs.mid	16 65
+
+10cc/I'm Not In Love.2.mid	4 73
+1910 Fruitgum Company/Simon Says.mid	1 61
+2 Brothers on the 4th Floor/Let Me Be Free.mid	4 35
+2 Unlimited/Here I Go.mid	4 65
+2 Unlimited/Let the Beat Control Your Body.1.mid	4 35
+2 Unlimited/Maximum Overdrive.mid	4 35
+2 Unlimited/No Limit (extended).mid	4 26
+2 Unlimited/No One.mid	4 35
+2 Unlimited/The Real Thing.2.mid	4 87
+2 Unlimited/Twilight Zone.3.mid	4 63
+20 Fingers/Lick It.mid	4 62
+20 Fingers/Short Dick Man.mid	4 47
+4 Non Blondes/What's Up.3.mid	4 25
+883/Tieni il tempo.mid	4 73
+883/Una canzone d'amore.1.mid	4 73
+911/The Day We Find Love.mid	6 100
+ABBA/Dancing Queen.7.mid	4 24
+ABBA/Does Your Mother Know.2.mid	4 73
+ABBA/Fernando.6.mid	4 82
+ABBA/Knowing Me, Knowing You.1.mid	4 73
+ABBA/Lay All Your Love on Me.2.mid	4 24
+ABBA/Money, Money, Money.5.mid	4 73
+ABBA/Name of the Game.3.mid	4 0
+ABBA/Take a Chance on Me.2.mid	4 24
+ABBA/The Winner Takes It All.6.mid	4 24
+ABBA/Waterloo.2.mid	4 24
+AC DC/R.I.P. (Rock in Peace).mid	1 29
+ANKA PAUL/Diana (feat. Ricky Martin).2.mid	4 60
+ARMSTRONG LOUIS/C'est si bon.mid	4 11
+Ace of Base/Living in Danger.1.mid	4 75
+Ace of Base/Lucky Love.mid	4 24
+Ace of Base/Wheel of Fortune.2.mid	1 56
+Ace/How Long.mid	1 87
+Adam & Eve/Wenn die Sonne erwacht in den Bergen.mid	4 53
+Adiemus/Kayama.mid	4 63
+Adriano Celentano/Azzurro.1.mid	4 26
+Adriano Celentano/Una festa sui prati.mid	4 65
+Adventures of Stevie V_/Dirty Cash (Dime and Dollar mix).mid	1 56
+Aerosmith/Dude (Looks Like A Lady).2.mid	8 73
+Al Jarreau/We're in This Love Together.mid	4 26
+Al Martino/Volare.1.mid	4 35
+Al Stewart/The Year of the Cat.1.mid	4 35
+Alabama/Born Country.1.mid	4 65
+Alabama/I'm in a Hurry.1.mid	4 29
+Alabama/Jukebox in My Mind.1.mid	4 26
+Alain Barriere/Tu t'en vas.1.mid	4 57
+Alan Jackson/Home.mid	1 33
+Alan Jackson/Summertime Blues.1.mid	16 24
+Alan Jackson/Summertime Blues.mid	16 24
+Alan Jackson/Who's Cheatin' Who.mid	12 24
+Alberti/De glimlach van een kind.mid	4 35
+Alexander Peter/Hier ist ein Mensch.mid	1 56
+Alice/Una Notte Speciale.mid	4 75
+All-4-One/I Can Love You Like That.mid	4 63
+Alma Cogan/Tennessee Waltz.1.mid	1 0
+Alma Cogan/Tennessee Waltz.1.mid	7 25
+Alma Cogan/Tennessee Waltz.mid	4 68
+Amedeo Minghi/Cantare e d'amore.2.mid	4 73
+America/A Horse With No Name.1.mid	6 24
+America/Ventura Highway.mid	15 11
+Andre Brasseur/Early Bird Satellite.mid	1 18
+Andre Hazes/Droomland.mid	4 26
+Andre Hazes/Italiaanse medley.mid	4 26
+Andre Hazes/Leef je uit.mid	4 26
+Andre Hazes/Manke Nelis medley.mid	4 26
+Andre Hazes/Terug in de tijd.mid	4 35
+Andrew Gold/Lonely Boy.mid	4 35
+Angelo Branduardi/La pulce d'acqua.2.mid	4 58
+Ann Peebles/Come to Mama.mid	4 73
+Anne Murray/Snowbird.mid	1 44
+Anne Murray/Snowbird.mid	8 50
+Anne Murray/Snowbird.mid	1 44
+Anne Murray/Snowbird.mid	8 50
+Annie Lennox/No More _I Love You's_.1.mid	4 26
+Annie Lennox/Put a Little Love in Your Heart.1.mid	4 24
+Antonello Venditti/Bomba o non bomba.1.mid	4 73
+Antonello Venditti/Sara.mid	4 73
+Antonello Venditti/Sotto la pioggia.1.mid	4 82
+Apollo 100/Besame Mucho.mid	1 99
+Apollo 100/Besame Mucho.mid	3 17
+Arabesque/Take Me Don't Break Me.mid	1 65
+Aretha Franklin/(You Make Me Feel Like a) Natural Woman.1.mid	4 73
+Aretha Franklin/I Never Loved a Man (The Way I Love You).mid	4 57
+Army of Lovers/Israelism.mid	1 0
+B.B. King/Don't Answer the Door.mid	4 73
+B.B. King/Into The Night.mid	4 18
+B.B. King/Sweet Sixteen.mid	4 73
+B.B. King/The Thrill Is Gone.mid	4 24
+B.B. King/To Know You Is to Love You.mid	4 82
+B.B. King/Why I Sing the Blues.mid	4 73
+B.G. The Prince of Rap/The Colour of My Dreams (Dream-In'-House-mix).mid	4 18
+B.W. Stevenson/My Maria.mid	12 85
+BAGINSKY,GABY/Wer hat dir das Kussen beigebracht.mid	4 0
+BAP/Verdammt lang her.mid	1 65
+BERRY CHUCK/Roll Over Beethoven.mid	4 17
+BERRY CHUCK/Sweet Little Sixteen.mid	1 65
+BZN/Yeppa.mid	1 1
+BZN/Yeppa.mid	7 1
+Baby D/Let Me Be Your Fantasy.mid	4 65
+Babylon Zoo/Spaceman.mid	4 80
+Bachman-Turner Overdrive/Hey You.mid	4 73
+Bachman-Turner Overdrive/Let It Ride.mid	4 87
+Bachman-Turner Overdrive/Takin Care of Business.mid	4 73
+Bachman-Turner Overdrive/You Ain't Seen Nothin Yet.mid	4 73
+Bad Boys Blue/Lady in Black.mid	1 63
+Barbra Streisand/I've Never Been in Love Before.mid	4 88
+Barbra Streisand/Luck Be a Lady.mid	4 75
+Barbra Streisand/Stoney End.mid	4 65
+Barbra Streisand/The Way We Were.2.mid	9 22
+Barbra Streisand/The Way We Were.3.mid	4 73
+Barbra Streisand/Woman in Love.mid	4 21
+Barry Manilow/Can't Smile Without You.mid	4 26
+Barry Manilow/Could It Be Magic.mid	4 18
+Barry Manilow/Even Now.mid	4 24
+Barry Manilow/I Write the Songs.3.mid	4 24
+Barry Manilow/It's a Miracle.mid	4 63
+Barry Manilow/Looks Like We Made It.mid	4 73
+Barry Manilow/Mandy.2.mid	4 73
+Barry Manilow/This One's for You.mid	4 73
+Battisti/Non e Francesca.1.mid	4 73
+Baxter/Unchained Melody.mid	4 78
+Bee Gees/How Can You Mend a Broken Heart.mid	4 73
+Bee Gees/How Deep Is Your Love.6.mid	4 82
+Bee Gees/I Started a Joke.1.mid	4 22
+Bee Gees/Massachusettes.mid	4 73
+Bee Gees/New York Mining Disaster 1941.2.mid	4 82
+Bee Gees/Nights on Broadway.1.mid	4 62
+Bee Gees/Secret Love.mid	1 25
+Bee Gees/Stayin Alive.2.mid	4 82
+Bee Gees/To Love Somebody.2.mid	4 18
+Bee Gees/Too Much Heaven.3.mid	4 24
+Bee Gees/Tragedy.mid	4 53
+Belafonte Harry/Jamaica Farewell.mid	7 24
+Belinda Carlisle/Heaven Is A Place On Earth.mid	4 73
+Bell/Private Number.mid	4 18
+Bell/Tighten Up.mid	4 15
+Bellamy Brothers/Crossfire.mid	4 75
+Bellamy Brothers/I Need More of You.mid	3 1
+Bellamy Brothers/If I Said You Had a Beautiful Body (Would You Hold It Against Me).mid	4 75
+Bellamy Brothers/Let Your Love Flow.mid	4 26
+Bennett/(I Left My Heart) In San Francisco.mid	4 24
+Bennett/The Shadow of Your Smile.mid	4 26
+Berlin Irving/White Christmas.mid	4 11
+Bernd Cluver/Ein Madchen wie du.mid	4 65
+Bernhard Brink/Ich Glaub' Dir Jede Luge.1.mid	1 21
+Bernhard Brink/Ich Hab' Geglaubt, du Liebst Mich (Without You).mid	1 65
+Big Mountain/Baby I Love Your Way.2.mid	4 58
+Big Mr_/To Be With You.mid	4 4
+Bill Medley/(I've Had) The Time of My Life.mid	1 72
+Bill Medley/Brown Eyed Woman.mid	4 26
+Bill Withers/Ain't No Sunshine.2.mid	1 73
+Billy Joel/Big Shot.1.mid	1 39
+Billy Joel/Big Shot.mid	1 39
+Billy Joel/It's Still Rock 'n' Roll to Me.mid	8 56
+Billy Joel/It's Still Rock 'n' Roll to Me.mid	9 71
+Billy Joel/Leningrad.1.mid	1 4
+Billy Joel/Pressure.1.mid	1 73
+Billy Joel/The Stranger.2.mid	1 56
+Billy Joel/Uptown Girl.mid	4 102
+Billy Paul/Me & Mrs Jones.mid	1 1
+Bino/Mama Leone.mid	4 26
+Birkin/Je t'aime moi non plus.mid	4 53
+Black Fooss/Mer losse d'r Dom en Kolle.mid	1 71
+Blattschuss/Kreuzberger Nachte.mid	4 11
+Blondie/Call Me.2.mid	1 11
+Blondie/Heart of Glass.1.mid	1 11
+Blood, Sweat & Tears/Go Down Gamblin'.mid	1 22
+Blood, Sweat & Tears/Hi-De-Ho.mid	4 82
+Blue System/Magic Symphony.mid	1 58
+Blues Image/Ride Captain Ride.mid	7 73
+Blumchen/Herz an Herz.mid	4 102
+Blur/Charmless Man.2.mid	12 1
+Blur/Charmless Man.mid	12 53
+Bob Seger/Hollywood Nights.mid	13 11
+Bob Seger/Night Moves.mid	16 24
+Bobby Bare/Me and Bobby McGee.mid	4 40
+Bobby Bloom/Montego Bay.mid	4 75
+Bobby Brown/Two Can Play That Game.mid	4 35
+Bobby Rydell/Forget Him.mid	7 26
+Bobby Vee/Take Good Care of My Baby.1.mid	4 26
+Bobby Vinton/Blue Velvet.mid	3 66
+Bombalurina/Itsy Bits V Teeny Weeny Yellow Polka Dot Bikini.2.mid	4 75
+Bommbastic/Major Tom '94.mid	1 65
+Bon Jovi/Always.2.mid	4 33
+Bon Jovi/Bad Medicine.1.mid	4 25
+Bon Jovi/Blaze of Glory.1.mid	4 82
+Bon Jovi/Blaze of Glory.5.mid	9 11
+Bon Jovi/Blaze of Glory.mid	9 11
+Bon Jovi/Livin' On A Prayer.2.mid	4 60
+Bon Jovi/This Ain't a Love Song.1.mid	4 0
+Bon Jovi/You Give Love a Bad Name.3.mid	4 90
+Boney M_/Mary's Boy Child   Oh My Lord.mid	1 114
+Boney M_/Rivers Of Babylon.1.mid	4 66
+Bonnie Tyler/It's A Heartache.3.mid	1 7
+Bonnie Tyler/Total Eclipse of My Heart.1.mid	4 1
+Booming Support/Rode schoentjes.mid	4 80
+Borg Andy/Adios amor.1.mid	1 87
+Borg Andy/Arrivederci Claire.mid	1 100
+Borg Andy/Einmal und immer wieder.mid	4 11
+Borg Andy/Ich brauch dich jeden Tag.mid	1 1
+Borg Andy/Ich brauch ein bisschen Gluck.mid	4 62
+Borg Andy/Ich freue mich auf Dich.mid	4 77
+Borg Andy/Liebe total.mid	1 11
+Boris Gardiner/I'm Falling in Love.mid	1 11
+Boris Gardiner/Wrong End of the Rainbow.mid	1 65
+Boston/More Than A Feeling.3.mid	4 69
+Boyz II Men/I'll Make Love To You.mid	4 65
+Boyzone/Father & Son.1.mid	4 65
+Boyzone/Love Me For A Reason.3.mid	4 26
+Bread/Baby I'm A Want You.mid	4 75
+Bread/Everything I Own.3.mid	4 73
+Bread/If.1.mid	1 68
+Bread/If.5.mid	7 26
+Bread/Make It With You.2.mid	4 65
+Brooks & Dunn/Hard Workin' Man.1.mid	4 73
+Brooks & Dunn/Honky Tonk Truth.mid	12 24
+Brooks & Dunn/I'll Never Forgive My Heart.mid	4 24
+Brooks & Dunn/She Used to Be Mine.mid	4 26
+Brooks & Dunn/She's Not the Cheatin' Kind.3.mid	4 24
+Brooks & Dunn/That Ain't No Way to Go.mid	4 7
+Brooks & Dunn/We'll Burn That Bridge.mid	4 73
+Brooks & Dunn/Whiskey Under the Bridge.1.mid	12 24
+Brooks & Dunn/Whiskey Under the Bridge.mid	12 24
+Brooks Garth/American Honky-Tonk Bar Association.1.mid	4 3
+Brooks Garth/Standing Outside the Fire.mid	4 75
+Brooks Garth/The Beaches of Cheyenne.mid	12 24
+Brooks Garth/The Thunder Rolls.3.mid	16 3
+Brooks Garth/The Thunder Rolls.mid	6 3
+Brotherhood of Man/Save Your Kisses for Me.mid	4 71
+Brown Clarence Gatemouth/Never Ending Love for You.mid	1 62
+Brown James/I Got the Feelin.mid	0 
+Bruce Hornsby & The Range/Stander on the Mountain.mid	1 54
+Bruce Springsteen/Born in the U.S.A..3.mid	4 62
+Bruce Springsteen/Streets of Philadelphia.1.mid	4 35
+Brunner & Brunner/Immer wieder, immer mehr.mid	4 75
+Brunner & Brunner/Schenk' mir diese eine Nacht.mid	1 66
+Brunner & Brunner/Shananana (lass' uns leben).1.mid	4 0
+Brunner & Brunner/Weil dein Herz dich verrat.mid	1 65
+Bryan Adams/Can't Stop This Thing We Started.4.mid	1 64
+Bryan Adams/Have Ever You Really Loved a Woman_.2.mid	4 35
+Bryan Adams/Rock Steady.mid	4 65
+Bryan Adams/Summer of '69.2.mid	4 62
+Buffalo Springfield/Sit Down I Think I Love You.mid	4 60
+Buggles/Video Killed the Radio Star.mid	4 71
+Buzz Clifford/Baby Sittin' Boogie.mid	1 35
+C'est Tout/Ole In The USA.mid	4 35
+C'est Tout/Tutti Di No No.mid	4 26
+C.J. Lewis/Sweets for My Sweet.mid	4 65
+CB Milton/It's a Love Thing.mid	4 35
+CHRISTIE,TONY/Amarillo.1.mid	1 56
+CHRISTIE,TONY/Calypso and Rum.mid	4 59
+CHRISTIE,TONY/Sweet September.mid	1 73
+CORDALIS,COSTA/Shangri-La.mid	1 24
+Captain Hollywood Project/Flying High (single mix).mid	4 29
+Captain Jack/Drill Instructor.1.mid	4 66
+Carboni/Virtuale.mid	4 11
+Carl Teike/Alte Kameraden.mid	4 56
+Carmen Eric/Hungry Eyes.mid	1 82
+Carmen Eric/Hungry Eyes.mid	3 52
+Carmen Eric/Make Me Lose Control.mid	4 24
+Carole King/So Far Away.1.mid	4 82
+Carpenters/Breaking Up Is Hard to Do.mid	16 88
+Carpenters/For All We Know.1.mid	4 73
+Carpenters/Hurting Each Other.1.mid	4 75
+Carpenters/I Kept on Loving You.mid	4 24
+Carpenters/I Won't Last A Day Without You.1.mid	4 24
+Carpenters/It's Going to Take Sometime.mid	4 24
+Carpenters/Jambalaya (On the Bayou).mid	4 65
+Carpenters/Let Me Be the One.mid	4 73
+Carpenters/Rainy Days and Mondays.1.mid	4 26
+Carpenters/We've Only Just Began.mid	4 73
+Cash Johnny/Ballad Of A Teenage Queen.mid	4 21
+Cash Johnny/Folsom Prison Blues.mid	15 22
+Cash Johnny/Guess Things Happen That Way.mid	4 105
+Cash Johnny/I Walk The Line.1.mid	4 26
+Cash Johnny/Sunday Mornin' Comin' Down.mid	4 22
+Cats/Let's Dance.mid	1 25
+Cats/Vaya Con Dios.mid	1 17
+Caught in the Act/My Arms Keep Missing You.mid	4 62
+Celentano/Fumo negli occhi.1.mid	4 73
+Celine Dion/(If There Was) Any Other Way.2.mid	4 26
+Celine Dion/Because You Loved Me.mid	4 73
+Celine Dion/Power of Love.1.mid	4 73
+Celine Dion/Power of Love.3.mid	16 103
+Celine Dion/When I Need You.1.mid	16 11
+Celine Dion/When I Need You.mid	16 11
+Centory/The Spirit.mid	4 61
+Chaka Khan/This Is My Night.mid	4 80
+Champs/Tequila.3.mid	4 66
+Charles & Eddie/Would I Lie to You.2.mid	4 87
+Cheap Trick/Can't Stop Fallin' Into Love.mid	1 0
+Cheap Trick/Dream Police.mid	4 80
+Checker Chubby/Let's Twist Again.3.mid	1 0
+Cher/Bang Bang (My Baby Shot Me Down).mid	4 60
+Cher/Shoop Shoop Song.1.mid	1 53
+Cher/Shoop Shoop Song.mid	1 11
+Chicago/Colour My World.mid	1 24
+Chicago/If You Leave Me Now.4.mid	4 26
+Chocolate/Everybody Salsa.mid	1 11
+Chris Andrews/Pretty Belinda.mid	1 75
+Chris Montez/Let's Dance.mid	6 56
+Chris Norman/Midnight Lady.mid	1 57
+Chris Rea/Josephine.1.mid	1 73
+Chris Rea/Julia.mid	1 22
+Chris Rea/Two Roads.1.mid	8 18
+Chris de Burgh/Blond Hair, Blue Jeans.mid	4 82
+Chris de Burgh/Lady in Red.1.mid	4 24
+Chyp-notic/I Can't Get Enough.1.mid	1 72
+Cindy & Bert/Spaniens Gitarren.mid	4 40
+Clouseau/Daar gaat ze.1.mid	8 73
+Clouseau/Daar gaat ze.mid	8 26
+Clouseau/Laat me nu toch niet alleen.mid	4 27
+Clouseau/Zie me graag.mid	4 35
+Clout/Save Me.mid	4 65
+Collins Phil/A Groovy Kind of Love.3.mid	1 0
+Collins Phil/Another Day in Paradise.6.mid	4 26
+Collins Phil/Inside Out.mid	8 57
+Collins Phil/One More Night.3.mid	4 73
+Collins Phil/Something Happened on the Way to Heaven.mid	1 65
+Collins Phil/Two Hearts.1.mid	11 88
+Collins Phil/Two Hearts.mid	1 61
+Color Me Badd/I Wanna Sex You Up.mid	6 1
+Commodores/Night Shift.mid	4 35
+Cornelius Brothers/Treat Her Like a Lady.mid	4 87
+Corona/Baby Baby.mid	4 62
+Corry Konings/Ik wil altijd bij je zijn (feat. Koos Alberts).mid	4 26
+Corry Konings/Mooi was die tijd.mid	4 26
+Cosmix/Quietsche-Entchen (feat. Ernie).mid	4 5
+Creedence Clearwater Revival/Down on the Corner.mid	5 75
+Creedence Clearwater Revival/Hey Tonight.3.mid	1 24
+Creedence Clearwater Revival/Proud Mary.6.mid	1 61
+Crests/Sixteen Candles.mid	6 24
+Crosby, Stills, Nash & Young/Carry On.mid	16 77
+Crusaders/Streetlife.1.mid	4 65
+Crystal Waters/100% Pure Love.mid	4 82
+Crystals/Da Doo Ron Ron.2.mid	4 17
+Culture Beat/Crying in the Rain.mid	9 11
+DJ Paul Elstak/The Promised Land.mid	4 35
+DULFER, CANDY/Lili Was Here.mid	1 65
+Dalla Lucio/Anna e Marco.mid	3 5
+Daniel/Der Sommer, als Jenny sich verliebte.mid	1 75
+Daniele/Alleria.1.mid	4 73
+Danny & The Juniors/At the Hop.1.mid	1 65
+Danny & The Juniors/At the Hop.1.mid	9 64
+Danny & The Juniors/At the Hop.3.mid	4 65
+De Deurzakkers/Doe 'n stapje naar voren.mid	4 26
+De Deurzakkers/Moeder het is weer mis.mid	4 26
+De Deurzakkers/Wij vieren feest.1.mid	4 66
+De Dijk/Als Ze Er Niet Is.mid	4 27
+De Dijk/Slow Motion.mid	1 65
+De Electronica's/De vogeltjesdans.1.mid	1 21
+De Havenzangers/Ik zag het licht.mid	4 35
+De Havenzangers/Op Wembley gaan we scoren (Holland goes tsjakkaa!).mid	4 26
+Debbie Gibson/Foolish Beat.mid	9 73
+Dee/Don't Go Breaking My Heart.mid	4 65
+Dee/The Legend Of Xanadu.mid	1 73
+Deep Purple/Child in Time.mid	1 1
+Deep Purple/Child in Time.mid	3 7
+Deep Purple/Smoke On The Water.3.mid	1 22
+Depeche Mode/In Your Room.mid	4 0
+Depeche Mode/Master and Servant.2.mid	1 44
+Depeche Mode/Master and Servant.2.mid	2 44
+Depeche Mode/Walking in My Shoes.mid	4 73
+Des'ree/Feel So High.mid	4 65
+Diamond Jim/I Should Have Known Better.mid	4 75
+Die Arzte/Ein Song namens Schunder.mid	4 80
+Die Arzte/Friedenspanzer.1.mid	4 62
+Die Arzte/Schrei nach Liebe.mid	4 11
+Die Fantastischen Vier/Sie Ist Weg.mid	4 39
+Dion/A Teenager in Love.mid	1 26
+Dire Straits/Brothers in Arms.1.mid	1 65
+Dire Straits/Calling Elvis.2.mid	1 65
+Dire Straits/Money For Nothing (Full Length Version).mid	1 27
+Dire Straits/Romeo & Juliet.3.mid	4 71
+Dire Straits/Walk Of Life.5.mid	4 87
+Dire Straits/Your Latest Trick.1.mid	4 25
+Dolls United/Blechbuchse roll!.mid	4 53
+Domino Fats/Blue Monday.mid	4 18
+Domino Fats/Blueberry Hill.1.mid	5 67
+Domino Fats/Blueberry Hill.2.mid	0 
+Domino Fats/Blueberry Hill.5.mid	1 1
+Domino Fats/Darktown Strutters' Ball.mid	4 3
+Domino Fats/Hello Josephine.mid	1 58
+Domino Fats/I'm Gonna Be a Wheel Someday.mid	4 26
+Domino Fats/I'm Walking.mid	1 99
+Domino Fats/When the Saints Go Marchin' In.mid	4 18
+Domino Fats/Whole Lotta Loving.mid	4 58
+Don Johnson/Heartbeat.mid	1 26
+Donna Summer/Last Dance.mid	6 11
+Donna Summer/McArthur Park.mid	1 84
+Donna Summer/McArthur Park.mid	9 27
+Donovan/Mellow Yellow.1.mid	6 25
+Doris Day/Que Sera Sera.1.mid	1 21
+Double Vision/Knockin'.mid	4 30
+Double/The Captain of Her Heart.1.mid	4 11
+Dr. Alban/Away From Home (short).mid	4 66
+Dr. Hook/A Little Bit More.2.mid	4 35
+Dr. Hook/Sexy Eyes.mid	4 48
+Dr. John/Right Place Wrong Time.1.mid	4 82
+Dr. John/Such a Night.mid	4 60
+Drafi Deutscher/Herz an Herz Gefuhl.mid	1 53
+Drafi Deutscher/Marmor, Stein und Eisen bricht.mid	1 65
+Droids/The Force, Part I.mid	1 62
+Drukwerk/Je Loog Tegen Mij.mid	1 0
+Drupi/Piccola e fragile.2.mid	4 58
+Duke/I'm So in Love With You.mid	4 65
+Dune/Hardcore Vibes.mid	4 53
+Dune/I Can't Stop Raving.mid	4 24
+Duran Duran/Come Undone.mid	4 60
+Duran Duran/Girls on Film.1.mid	1 65
+Duran Duran/Notorious.mid	4 65
+Dusty Springfield/I Only Want to Be With You.mid	4 73
+Dusty Springfield/In Private.mid	1 65
+E-Rotic/Fred Come to Bed.mid	4 5
+E-Rotic/Sex on the Phone.1.mid	4 75
+E-Type/This Is the Way.mid	4 65
+Eagles/Best of My Love.mid	6 26
+Eagles/Desperado.1.mid	1 88
+Eagles/Desperado.1.mid	7 85
+Eagles/Desperado.1.mid	8 3
+Eagles/Desperado.3.mid	1 71
+Eagles/Desperado.5.mid	6 24
+Eagles/Heartache Tonight.mid	5 2
+Eagles/Lying Eyes.2.mid	1 26
+Eagles/Lying Eyes.mid	6 71
+Eagles/New Kid in Town.1.mid	9 71
+Eagles/New Kid in Town.2.mid	4 73
+Eagles/One of These Nights.1.mid	1 35
+Eagles/One of These Nights.mid	6 65
+Eagles/Please Come Home for Christmas.mid	4 65
+Eagles/The Best of My Love.mid	6 26
+Eagles/Witchy Woman.1.mid	2 65
+Earth, Wind & Fire/After The Love Has Gone.2.mid	4 24
+Earth, Wind & Fire/Boogie Wonderland.1.mid	4 24
+Earth, Wind & Fire/Fantasy.7.mid	4 24
+Earth, Wind & Fire/Let's Groove.2.mid	4 82
+Earth, Wind & Fire/September (bonus track).3.mid	4 24
+Earth, Wind & Fire/Shining Star.2.mid	4 26
+Earth, Wind & Fire/Sing A Song (bonus track).2.mid	4 24
+Earth, Wind & Fire/That's The Way Of The World.mid	4 24
+East 17/Hold My Body Tight.mid	4 29
+East 17/Let It Rain.mid	4 65
+East Side Beat/Ride Like the Wind.mid	4 26
+Ed Townsend/For Your Love.mid	4 73
+Eddy Duane/Rebel Rouser.mid	4 27
+Electric Light Orchestra/Don't Bring Me Down.1.mid	4 60
+Electric Light Orchestra/Rock 'n' Roll Is King.mid	4 75
+Electric Light Orchestra/Telephone Line.1.mid	4 82
+Elliot/Make Your Own Kind Of Music.mid	4 75
+Elvis Presley/(Let Me Be Your) Teddy Bear.5.mid	4 64
+Elvis Presley/All Shook Up.2.mid	4 82
+Elvis Presley/Blue Suede Shoes.2.mid	4 28
+Elvis Presley/Crying In The Chapel.mid	1 16
+Elvis Presley/Don't Be Cruel.6.mid	4 18
+Elvis Presley/Down in the Alley.mid	5 30
+Elvis Presley/Fools Fall In Love.mid	1 68
+Elvis Presley/Good Luck Charm.1.mid	7 25
+Elvis Presley/Hard Headed Woman.2.mid	4 57
+Elvis Presley/Hound Dog.mid	1 17
+Elvis Presley/I Just Can't Help Believing.2.mid	4 26
+Elvis Presley/I Want You I Need You I Love You.mid	4 18
+Elvis Presley/Jailhouse Rock.7.mid	4 65
+Elvis Presley/Kiss Me Quick.1.mid	1 23
+Elvis Presley/Love Me Tender.1.mid	4 73
+Elvis Presley/Return to Sender.1.mid	4 75
+Elvis Presley/Surrender.mid	4 75
+Elvis Presley/Suspicious Minds.4.mid	4 26
+Elvis Presley/Too Much.1.mid	4 58
+Elvis/Blue Hawaii.mid	1 0
+Emerson, Lake & Palmer/Peter Gunn Theme.mid	4 65
+Enigma/The Eyes of Truth.mid	4 52
+Equals/Baby Come Back.1.mid	4 65
+Erasure/Abba-Esque (Take a Chance On Me).mid	1 24
+Erasure/Always.mid	4 82
+Eric Clapton/I've Got a Rock 'n' Roll Heart.mid	1 26
+Ernie K-Doe/Mother -In-Law.mid	4 24
+Ernst Neger/Rucki Zucki.1.mid	4 11
+Eros Ramazzotti/Adesso tu.mid	1 88
+Eros Ramazzotti/Solo con te.mid	4 5
+Eros Ramazzotti/Un Altra Te.1.mid	4 71
+Estefan Gloria/Can't Stay Away From You.1.mid	1 4
+Estefan Gloria/Don't Wanna Lose You.1.mid	1 0
+Estefan Gloria/Get on Your Feet.1.mid	6 57
+Estefan Gloria/Hear My Voice.2.mid	4 35
+Esther Phillips/What A Difference A Day Makes.mid	13 56
+Eurythmics/Don't Ask Me Why.mid	4 0
+Eurythmics/Here Comes the Rain Again.2.mid	4 75
+Eurythmics/It's Alright (Baby's Coming Back).mid	4 77
+Eurythmics/Love Is a Stranger.1.mid	4 38
+Eurythmics/Missionary Man.mid	4 0
+Eurythmics/Sisters Are Doing It for Themselves.mid	4 75
+Eurythmics/Sweet Dreams.1.mid	4 73
+Eurythmics/There Must Be an Angel (Playing With My Heart).1.mid	4 75
+Eurythmics/Would I Lie To You_.1.mid	4 73
+Extreme/More Than Words.3.mid	1 65
+Extreme/More Than Words.3.mid	2 56
+Faith/Delicado.mid	1 24
+First Class/Beach Baby.mid	4 81
+Fleetwood Mac/Affairs of the Heart.1.mid	4 72
+Fleetwood Mac/Don't Stop.mid	4 66
+Fleetwood Mac/Dreams.2.mid	4 73
+Fleetwood Mac/Everywhere.mid	1 73
+Fleetwood Mac/Gold Dust Woman.mid	4 73
+Fleetwood Mac/Gypsy.mid	4 73
+Fleetwood Mac/Landslide.mid	4 73
+Fleetwood Mac/Rhiannon.4.mid	4 73
+Fleetwood Mac/Sara.2.mid	4 25
+Fleetwood Mac/Silver Springs.mid	4 27
+Fleetwood Mac/Sisters Of The Moon.1.mid	4 73
+Fluitsma/15 Miljoen Mensen.mid	4 26
+Focus/Hocus Pocus.2.mid	6 53
+Fool's Garden/Lemon Tree.1.mid	4 26
+Foster David/Winter Games.mid	1 0
+Four Tops/Loco in Acapulco.mid	1 65
+Francesco De Gregori/Belli capelli.mid	5 0
+Francis Connie/Everybody's Somebody's Fool.1.mid	1 24
+Francis Connie/Lipstick on Your Collar.mid	1 99
+Frank Galan/El Bandido.mid	4 65
+Frank Sinatra/Love and Marriage.mid	1 17
+Frankie Goes to Hollywood/Relax (Frankie Goes to Dreamscape).1.mid	4 81
+Frankie Goes to Hollywood/Relax (Frankie Goes to Dreamscape).mid	4 81
+Frankie Goes to Hollywood/The Power of Love.1.mid	4 75
+Frankie Valli/December 1963 (Oh What a Night).mid	4 65
+Franky Boy/Kontebonke.mid	4 26
+Frans Bauer/'n Dag uit duizend dromen.mid	4 65
+Frans Bauer/Als sterren aan de hemel staan.mid	4 48
+Frans Bauer/Het leven is te mooi.mid	4 65
+Frans Bauer/Waarom heb jij mij verlaten.mid	4 65
+Freak Power/Turn On, Turn In, Cop Out.mid	4 35
+Freddie Mercury/Living on My Own.mid	4 62
+Fun Factory/Close to You.mid	4 26
+G. G. Anderson/Engel von Valparaiso.mid	1 21
+G. G. Anderson/Gitarren klingen leise durch die Nacht.1.mid	1 0
+G. G. Anderson/Ich bin so treu wie Gold.mid	1 1
+G. G. Anderson/Lady Sunshine.mid	1 56
+G. G. Anderson/Madchen Madchen.mid	4 62
+G. G. Anderson/Sommernacht in Rom.mid	4 57
+G. G. Anderson/Sonnenschein im Blut.mid	1 56
+G. G. Anderson/Ti amo Maria.mid	1 100
+G. G. Anderson/Weisse Rosen schenk' ich dir.mid	1 87
+Garland/Over the Rainbow.mid	4 24
+Gary Glitter/Rock & Roll, Part 2.mid	4 65
+Gary Moore/Cold Day in Hell.mid	1 65
+Gary Moore/Parisienne Walkways.mid	4 65
+Gary Moore/Still Got the Blues.mid	1 65
+Gaye,Marvin/(Sexual) Healing.3.mid	4 73
+Gene Pitney/Every Breath I Take.mid	4 71
+Genesis/Hold On My Heart.1.mid	3 53
+Genesis/Hold On My Heart.mid	3 53
+Genesis/I Can't Dance.3.mid	1 29
+George Baker Selection/Morning Sky.1.mid	3 73
+George Baker Selection/Santa Lucia by Night.mid	1 65
+George Baker Selection/Una Paloma Blanca.1.mid	5 56
+George McCrae/Rock Your Baby.1.mid	4 66
+Georgie Fame/The Ballad of Bonnie & Clyde.mid	4 59
+Gerard Joling/Liefde op het eerste gezicht.mid	4 26
+Gerry & The Pacemakers/Ferry Cross the Mersey.mid	4 0
+Gerry & The Pacemakers/You'll Never Walk Alone.mid	4 35
+Gibson Brothers/Que sera mi vida (If You Should Go).mid	4 62
+Gilbert O'Sullivan/Get Down.2.mid	4 75
+Giorgia/C'e da fare.mid	4 74
+Giorgia/E c'e ancora mare.mid	4 74
+Giorgia/Strano il mio destino.mid	4 73
+Gipsy Kings/Baila Me.mid	1 25
+Gipsy Kings/Bamboleo.1.mid	4 24
+Gipsy Kings/Hits Medley.mid	1 24
+Glen Campbell/Dream Baby (How long Must I Dream).mid	4 24
+Glen Campbell/Dreams Of The Everyday Housewife.mid	4 0
+Glen Campbell/Rhinestone Cowboy.mid	4 71
+Glen Campbell/Try A Little Kindness.mid	4 26
+Glenn Frey/This Way to Happiness.mid	4 26
+Gloria Gaynor/Medley_ I Will Survive   Never Can Say Goodbye   Reach Out   I Am What I Am.mid	4 65
+Godspell/Day By Day.mid	1 71
+Good Shape/Take My Love.mid	4 102
+Gordon/Ik hou van jou.mid	4 26
+Gordon/Jong voor altijd.mid	4 65
+Gordon/Kon Ik Maar Even Bij Je Zijn.mid	1 5
+Gordon/We've Got the Power (Now Is the Time).mid	4 65
+Grand Funk Railroad/Bad Time.mid	9 71
+Grant & Forsyth/It's Gonna Be a Cold, Cold Christmas (Without You).mid	4 35
+Grant & Forsyth/White Christmas.mid	4 35
+Great White/Once Bitten Twice Shy.mid	4 63
+Green Day/Basket Case.1.mid	4 65
+Guess Who/American Woman.1.mid	4 73
+Guess Who/No Sugar Tonight.mid	4 75
+Guess Who/No Time.mid	4 73
+Guess Who/These Eyes.1.mid	4 73
+Guns N' Roses/Live & Let Die.1.mid	4 73
+Haddaway/Fly Away.2.mid	4 87
+Haddaway/Rock My Heart.mid	4 87
+Haley/(We're Gonna) Rock Around The Clock.1.mid	1 66
+Haley/See You Later Alligator.mid	4 61
+Haley/Shake, Rattle And Roll.1.mid	4 18
+Haley/Skinnie Minnie.mid	4 71
+Hall & Oates/Everytime You Go Away.mid	1 26
+Hall & Oates/So Close (Unplugged).mid	7 5
+Hans Albers/Auf der Reeperbahn nachts um halb eins.mid	4 71
+Hans Dulfer/Streetbeats.mid	4 65
+Harry Nilsson/Without You.3.mid	4 11
+Hasselhoff David/Amore Amore (Elisabeth).mid	1 56
+Hasselhoff David/Crazy for You.mid	1 61
+Hasselhoff David/Do the Limbo Dance.1.mid	1 57
+Hasselhoff David/Do the Limbo Dance.mid	4 75
+Hasselhoff David/Flying on the Wings of Tenderness.mid	1 24
+Hasselhoff David/Song of the Night.mid	1 65
+Heidi Bruhl/Wir wollen niemals auseinandergehn.mid	1 65
+Helen Reddy/I Am Woman.mid	4 73
+Henry Arland/Echo der Berge.1.mid	4 65
+Herman's Hermits/Henry the VIII.mid	4 105
+Herman's Hermits/Listen People.mid	4 26
+Heywood/Begin the Beguine.mid	1 57
+Holiday Billie/Stormy Blues.mid	16 11
+Holly Buddy/Fool's Paradise.mid	4 26
+Holly Buddy/Heartbeat.mid	4 88
+Holly Buddy/I'm Gonna Love You Too.mid	4 26
+Holly Buddy/I'm Lookin' For Someone To Love.mid	4 26
+Holly Buddy/I'm Lookin' For Someone To Love.mid	0 
+Holly Buddy/It's So Easy.mid	4 26
+Holly Buddy/Listen to Me.mid	4 73
+Holly Buddy/Lonesome Tears.mid	4 24
+Holly Buddy/Look at Me.mid	4 26
+Holly Buddy/Love's Made A Fool Of You.mid	4 26
+Holly Buddy/Moondreams.mid	4 26
+Holly Buddy/Peggy Sue.1.mid	4 26
+Holly Buddy/Rave On.mid	4 75
+Holly Buddy/Rock Me My Baby.mid	4 26
+Holly Buddy/Shake Rattle & Roll.mid	4 18
+Holly Buddy/Take Your Time.mid	4 28
+Holly Buddy/That'll Be The Day.mid	4 26
+Holly Buddy/True Love Ways.mid	4 26
+Holly Buddy/Well... All Right.mid	4 22
+Holly Buddy/Words Of Love.mid	4 22
+Holly Buddy/You've Got Love.mid	4 26
+Hot Chocolate/Every 1's a Winner.mid	1 90
+Hot Chocolate/No Doubt About It.mid	1 48
+Hot Chocolate/You Sexy Thing.2.mid	1 61
+Howard Carpendale/Deine Spuren im Sand.mid	4 26
+Howard Carpendale/Hello Again.2.mid	4 75
+Howard Carpendale/Mit viel viel Herz.mid	1 73
+Howard Carpendale/Nachts wenn alles schlaft.mid	1 65
+Howard Carpendale/One More Dance in Blue.mid	1 0
+Howard Carpendale/Ti Amo.mid	4 29
+Howard Carpendale/Willkommen auf der Titanic.mid	1 18
+Huey Lewis & The News/Couple Days Off.mid	6 0
+Huey Lewis & The News/The Power of Love.1.mid	1 62
+Humperdinck Engelbert/Alone In The Night.mid	1 26
+Humperdinck Engelbert/On the Wings of a Silverbird.mid	1 91
+Humperdinck Engelbert/Please Release Me (Let Me Go).mid	4 35
+Humperdinck Engelbert/Portofino.2.mid	1 25
+Humperdinck Engelbert/Radio Dancing.1.mid	1 62
+Humperdinck Engelbert/The Last Waltz.2.mid	4 35
+Humperdinck Engelbert/To All The Girls I've Loved Before.1.mid	1 26
+Huub Hangop/(Wat ben je) Lelijk van dichtbij.mid	4 65
+INXS/Bitter Tears.mid	1 24
+INXS/Disappear.mid	1 24
+INXS/Not Enough Time.mid	4 73
+Ice MC/Think About the Way 2K9.mid	4 80
+Ike & Tina Turner/Proud Mary.mid	7 24
+Images/Maitresse.mid	1 94
+Ingram James/Yah Mo B There.mid	4 26
+Inner Circle/Sweat (A La La La Song).1.mid	4 99
+Interactive/Forever Young.mid	4 26
+Isaac Hayes/Shaft.1.mid	4 26
+Jackson Michael/Billie Jean.2.mid	4 26
+Jackson Michael/Black or White.5.mid	4 82
+Jackson Michael/Human Nature.mid	1 73
+Jackson Michael/I Just Can't Stop Loving You.mid	4 26
+Jackson Michael/Remember the Time.mid	1 26
+Jackson Michael/Scream.1.mid	4 65
+Jackson Michael/Scream.mid	4 30
+Jackson Michael/The Girl Is Mine.2.mid	4 26
+Jackson Michael/The Way You Make Me Feel.1.mid	1 18
+Jackson Michael/Thriller.mid	4 17
+Jackson Michael/Wanna Be Starting Something.1.mid	1 18
+Jackson Michael/You Are Not Alone.1.mid	4 73
+James Brown/Sex Machine (Get Up I Feel Like Being A).mid	4 28
+James Colin/Just Came Back.mid	4 82
+James/Crimson & Clover.mid	6 54
+Jan & Dean/Surf City.mid	1 33
+Jan Hammer/Crocket's Theme.1.mid	3 91
+Jan Hammer/Crocket's Theme.1.mid	4 104
+Janet Jackson/When I Think Of You.1.mid	1 73
+Janet Jackson/Whoops Now.mid	4 75
+Janis Joplin/Me & Bobby McGee.2.mid	4 73
+Jennifer Rush/The Power of Love.1.mid	1 75
+Jennifer Warnes/(I've Had) The Time of My Life.mid	1 0
+Jeremy Jackson/You Can Run.mid	4 35
+Jerry Lee Lewis/Great Balls of Fire.mid	4 65
+Jesus Jones/Real Real Real.1.mid	4 81
+Jesus Jones/Right Here Right Now.mid	4 60
+Jethro Tull/Locomotive Breath.1.mid	1 73
+Jett/I Hate Myself for Loving You.mid	4 29
+Jim Croce/Time in a Bottle.mid	1 21
+Jim Croce/Time in a Bottle.mid	4 50
+Jim Croce/Time in a Bottle.mid	8 79
+Jimi Hendrix/Hey Joe.1.mid	4 65
+Jimmy Cliff/I Can See Clearly Now.mid	4 82
+Jimmy Cliff/Reggae Night.mid	4 26
+Jody Reynolds/Endless Sleep.mid	4 82
+Joe Cocker/Cry Me a River (live).mid	4 60
+Joe Cocker/Feelin' Alright.mid	4 18
+Joe Cocker/Have a Little Faith in Me.mid	4 75
+Joe Cocker/Let the Healing Begin.mid	4 62
+Joe Dassin/Dieser Sanger braucht nur ein Chanson.mid	1 66
+Joe Dolce/Shaddap Your Face.mid	4 26
+John Elton/A Word in Spanish.mid	4 24
+John Elton/Believe.3.mid	4 65
+John Elton/Bennie & The Jets.mid	4 26
+John Elton/Blue Eyes.1.mid	4 11
+John Elton/Border Song.mid	4 73
+John Elton/Burn Down the Mission.mid	4 26
+John Elton/Candle in the Wind.3.mid	4 24
+John Elton/Club at the End of the Street.mid	1 18
+John Elton/Crocodile Rock.1.mid	4 18
+John Elton/Daniel.2.mid	4 24
+John Elton/Empty Garden (Hey Hey Johnny).mid	4 11
+John Elton/Funeral for a Friend.1.mid	4 18
+John Elton/Goodby Yellow Brick Road.2.mid	4 26
+John Elton/Goodby Yellow Brick Road.4.mid	1 71
+John Elton/Honky Cat.mid	4 26
+John Elton/I Don't Wanna Go On With You Like That.3.mid	4 0
+John Elton/I Guess That's Why They Call It the Blues.2.mid	4 0
+John Elton/I'm Still Standing.1.mid	4 0
+John Elton/Island Girl.2.mid	4 0
+John Elton/Made in England.mid	4 82
+John Elton/Madman Across the Water.mid	4 82
+John Elton/Rocket Man.6.mid	4 73
+John Elton/Sacrifice.1.mid	4 1
+John Elton/Saturday Night's Allright.mid	4 73
+John Elton/Skyline Pigeon.mid	4 26
+John Elton/Son of Your Father.mid	4 63
+John Elton/Take Me to the Pilot.mid	4 26
+John Elton/Tiny Dancer.mid	4 22
+John Elton/You Gotta Love Someone.mid	1 61
+John Elton/Your Song.5.mid	4 26
+John Paul Young/Love is in the Air.2.mid	4 77
+Johnny & The Hurricanes/Red River Rock.1.mid	6 18
+Johnny Bristol/Hang on in There Baby.1.mid	4 56
+Johnny Cash/Folsom Prison Blues.mid	15 22
+Johnny Mathis/Misty.mid	1 0
+Johnny Mathis/Misty.mid	2 48
+Johnny Rivers/Secret Agent Man.2.mid	6 82
+Jon Secada/Angel.mid	6 0
+Joshua Kadison/Jessie.1.mid	4 24
+Jovanotti/Serenata Rap.3.mid	4 11
+Julio Iglesias/Quiereme mucho.mid	1 75
+Jurgen Drews/Das Drews Sommerhit Medley '99.mid	4 75
+Jurgen Drews/Warum immer ich.mid	4 82
+K7/Come Baby Come (radio edit).mid	4 1
+KC and The Sunshine Band/That's the Way I Like It.2.mid	4 65
+KING,RICKY/Verde.1.mid	1 24
+Kamoze Ini/Here Comes The Hotstepper.mid	4 87
+Kansas/Opus Insert.mid	13 63
+Kaoma/Melodie d'Amour.mid	1 20
+Katrina and the Waves/That's the Way.mid	4 90
+Katrina and the Waves/Walking On Sunshine.mid	4 26
+Keith/98-6.mid	4 82
+Kenny Loggins/Footloose.1.mid	4 56
+Kiki Dee/I've Got the Music in Me.mid	4 60
+Kim Appleby/Don't Worry.mid	1 88
+King Diana/Shy Guy.mid	4 75
+King Harvest/Dancing in the Moonlight.1.mid	4 73
+Klaus & Klaus/Viva la Mexico.mid	1 73
+Kool & The Gang/Fresh.mid	1 2
+Kool & The Gang/Fresh.mid	8 10
+Kool & The Gang/Funky Stuff.mid	4 62
+Kool & The Gang/Get Down On It.1.mid	1 73
+Kool & The Gang/Medley.mid	1 26
+Korgis/Everybody's Got to Learn Sometime.mid	4 71
+Kristina Bach/Caballero - Caballero.mid	1 73
+Kristina Bach/Erst ein Cappucino.mid	1 65
+Kristina Bach/Tango mit Fernando.mid	4 25
+Kristina Bach/Und die Erde steht still.mid	4 75
+Kylie Minogue/I Should Be So Lucky.mid	1 57
+Kylie Minogue/Locomotion.mid	1 73
+LANZA/Be My Love.mid	4 24
+La Bionda/One for You, One for Me.1.mid	1 65
+La Bouche/Be My Lover.1.mid	4 68
+La Bouche/Falling in Love (Radio Version).mid	4 73
+La Bouche/Sweet Dreams.mid	4 99
+Laid Back/Sunshine Reggae.1.mid	4 28
+Last/Ambos Polka.mid	1 21
+Last/An der Donau steht Marika.mid	1 21
+Last/Auf dem Leiterwagen.1.mid	1 21
+Last/Budweiser Polka.mid	1 21
+Last/Budweiser Polka.mid	7 61
+Last/Der Kanarienvogel.mid	1 21
+Last/Die Rose Vom Worthersee.mid	1 21
+Last/Frisch vom Fass.1.mid	1 21
+Last/Herz-Schmerz-Polka.mid	1 21
+Last/Liechtensteiner Polka.1.mid	1 71
+Last/Polka Polka.mid	1 21
+Last/Schwarze Amsel.1.mid	1 57
+Lavinia Jones/Sing It to You.mid	4 87
+LeAnn Rimes/One Way Ticket (Because I Can).mid	16 11
+Led Zeppelin/Dazed And Confused.1.mid	4 75
+Led Zeppelin/Good Times Bad Times.1.mid	4 80
+Led Zeppelin/How Many More Times.4.mid	4 83
+Led Zeppelin/Immigrant Song.4.mid	4 90
+Led Zeppelin/Living Loving Maid (She's Just a Woman).1.mid	4 81
+Led Zeppelin/Since I've Been Loving You.1.mid	4 25
+Led Zeppelin/Stairway To Heaven.10.mid	4 74
+Led Zeppelin/The Song Remains The Same.2.mid	4 5
+Led Zeppelin/Whole Lotta Love.1.mid	4 22
+Led Zeppelin/Your Time Is Gonna Come.3.mid	4 22
+Leo Sayer/More Than I Can Say.mid	4 65
+Les Humphries Singers/Mexico.mid	4 65
+Level 42/Forever Now.mid	4 26
+Level 42/Hot Water.mid	4 26
+Level 42/Lessons In Love.1.mid	4 0
+Level 42/Running in the Family.mid	1 73
+Level 42/Starchild.mid	4 26
+Lewis/Count Me In.mid	4 26
+Lewis/Everybody Loves a Clown.mid	4 26
+Lewis/Sealed With a Kiss.mid	4 26
+Lewis/This Diamond Ring.mid	6 1
+Limahl/Never Ending Story (2009 Remaster) (From the Film ''Never Ending Story'').mid	1 5
+Linda, Roos & Jessica/Alles of niets.mid	4 58
+Little Richard/Tutti Frutti.1.mid	1 18
+Little River Band/Forever Blue.mid	4 35
+Little Texas/God Bless Texas.mid	4 40
+Lobo/I'd Love You to Want Me.1.mid	1 56
+Lobo/I'd Love You to Want Me.mid	1 23
+Lobo/The Caribbean Disco Show.mid	4 75
+Londonbeat/A Better Love.mid	1 1
+Londonbeat/Build It With Love.mid	4 65
+Londonbeat/I've Been Thinking About You.1.mid	6 73
+Los Bravos/Black Is Black.3.mid	1 28
+Los Del Rio/Macarena.6.mid	4 26
+Lou Rawls/Lady Love.mid	4 65
+Louis Armstrong/(What a) Wonderful World.2.mid	1 68
+Louis Armstrong/What A Wonderful World.1.mid	1 68
+Louis Prima/Just a Gigolo.mid	1 18
+Love Unlimited Orchestra/I'm So Glad That I'm a Woman.mid	4 35
+Loverboy/Hot Girls in Love.1.mid	4 29
+Loverboy/The Kid Is Hot Tonight.mid	4 34
+Loverboy/This Could Be the Night.2.mid	4 75
+Loverboy/Working for the Weekend.1.mid	4 62
+Ludwig van Beethoven/Fur Elise.1.mid	4 0
+Lulu/To Sir With Love.mid	1 27
+Luther Vandross/Endless Love.mid	4 35
+Lynn Anderson/Blue Bayou.mid	4 73
+Lynyrd Skynyrd/I Know a Little.mid	1 26
+Lynyrd Skynyrd/Saturday Night Special.mid	10 0
+MN8/If You Only Let Me In.mid	4 65
+Madonna/Hanky Panky.2.mid	1 18
+Madonna/Hanky Panky.mid	11 64
+Madonna/I'll Remember.1.mid	4 53
+Madonna/Keep It Together.2.mid	2 10
+Madonna/La Isla Bonita.mid	1 75
+Madonna/Papa Don't Preach.2.mid	1 56
+Madonna/Secret.2.mid	4 99
+Madonna/True Blue.1.mid	1 73
+Magic Affair/Fire.mid	4 5
+Magic Affair/Give Me All Your Love.mid	4 38
+Mamas/California Dreamin'.mid	4 73
+Mamas/Monday Monday.mid	4 71
+Marc Cohn/Walking In Memphis.mid	4 80
+Marco Borsato/Ik leef niet meer voor jou.mid	4 26
+Marco Borsato/Je hoeft niet naar huis vannacht.mid	4 73
+Marco Borsato/Waarom nou jij.mid	4 35
+Mariah Carey/Anytime You Need a Friend.3.mid	4 11
+Mariah Carey/Fantasy.1.mid	4 73
+Mariah Carey/Silent Night.1.mid	4 18
+Marianne & Michael/Wann fangt denn endlich d' Musi an.1.mid	1 71
+Marilyn Monroe/Diamonds Are a Girl's Best Friends.mid	1 99
+Mark 'Oh/Droste, Horst Du Mich_.mid	4 53
+Mark 'Oh/Love Song (long version).mid	4 65
+Mark 'Oh/Tears Don't Lie (long version).1.mid	4 95
+Marusha/It Takes Me Away.mid	4 30
+Marusha/Somewhere Over the Rainbow.mid	4 52
+Marx Richard/Right Here Waiting.3.mid	1 99
+Masini/Protagonista.mid	15 110
+Masquerade/Guardian Angel.mid	4 26
+Masterboy/Land of Dreaming.mid	4 80
+Mathis/A Certain Smile from _A Certain Smile_.mid	4 59
+Matt Bianco/Half a Minute.1.mid	1 53
+Maxx/No More (I Can't Stand It).mid	4 62
+McCartney/Another Day.mid	4 64
+McCartney/Ballroom Dancing.mid	4 17
+McCartney/Band On The Run.1.mid	4 60
+McCartney/Band On The Run.mid	4 60
+McCartney/Bip Bop.mid	4 59
+McCartney/C Moon.mid	4 82
+McCartney/C'Mon People.mid	1 0
+McCartney/Coming Up.mid	4 114
+McCartney/Ebony and Ivory.mid	4 75
+McCartney/Figure of Eight.mid	4 18
+McCartney/Goodnight Tonight.mid	4 73
+McCartney/Heart of the Country.mid	4 105
+McCartney/Hi Hi Hi.mid	4 75
+McCartney/Hope of Deliverance.1.mid	1 26
+McCartney/How Many People.mid	4 82
+McCartney/Junior's Farm.mid	4 82
+McCartney/Let 'em In.mid	4 73
+McCartney/Let Me Roll It.mid	4 18
+McCartney/Letting Go.mid	4 87
+McCartney/Listen to What the Man Said.mid	4 26
+McCartney/Magneto and Titanium Man.mid	4 18
+McCartney/Monkberry Moon Delight.mid	4 80
+McCartney/Mull of Kintyre.1.mid	4 82
+McCartney/My Brave Face.mid	4 26
+McCartney/My Love.mid	4 63
+McCartney/Nineteen Hundred and Eighty Five.mid	4 63
+McCartney/No More Lonely Nights (Ballad reprise).mid	4 75
+McCartney/Picasso's Last Words (Drink to Me).mid	4 22
+McCartney/Pipes of Peace.1.mid	4 73
+McCartney/Put It There.mid	4 24
+McCartney/Rock Show.1.mid	4 18
+McCartney/Silly Love Songs.mid	4 72
+McCartney/Take It Away.mid	4 26
+McCartney/Temporary Secretary.mid	4 64
+McCartney/That Day Is Done.mid	4 22
+McCartney/Tug of War.mid	4 99
+McCartney/Uncle Albert   Admiral Halsey.mid	4 73
+McCartney/Venus and Mars.mid	4 73
+McCartney/Wanderlust.mid	4 24
+McCartney/We Got Married.mid	4 75
+McCartney/Wild Life.mid	4 75
+McCartney/With a Little Luck.mid	4 26
+Meat Loaf/I'd Lie for You (And That's the Truth).mid	4 5
+Megadeth/Symphony of Destruction.mid	4 18
+Metallica/Damage, Inc..mid	3 25
+Metallica/Disposable Heroes.mid	3 30
+Metallica/Leper Messiah.2.mid	4 84
+Metallica/The Thing That Should Not Be.1.mid	3 84
+Metallica/Welcome Home (Sanitarium).3.mid	5 84
+Michael Bolton/How Am I Supposed to Live Without You.4.mid	4 65
+Michael Bolton/Love Is a Wonderful Thing.mid	8 62
+Michael Bolton/Soul of My Soul.mid	4 26
+Michael George/Careless Whisper.mid	4 73
+Michael George/Don't Let The Sun Go Down On Me.1.mid	4 1
+Michael George/Faith.2.mid	4 73
+Michael George/Father Figure.mid	4 82
+Michael George/Jesus to a Child.3.mid	4 75
+Michael George/One More Try.3.mid	4 73
+Michael George/Praying for Time.mid	4 82
+Michael George/Wake Me Up Before You Go Go.mid	4 24
+Michael Learns to Rock/Wild Woman.mid	4 81
+Michele Zarrillo/L'elefante e la farfalla.mid	4 73
+Middle of the Road/Sacramento.mid	1 28
+Mike + The Mechanics/All I Need Is a Miracle.1.mid	4 85
+Mike + The Mechanics/Another Cup of Coffee.2.mid	4 81
+Mike + The Mechanics/Over My Schoulder.mid	4 62
+Milli Vanilli/Girl I'm Gonna Miss You.mid	7 73
+Mina/Chiedimi tutto.1.mid	4 73
+Mina/Chiedimi tutto.mid	4 73
+Mina/Torno venerdi.1.mid	4 73
+Mina/Torno venerdi.mid	4 73
+Mixed Emotions/Just for You.mid	1 24
+Mixed Emotions/You Want Love (Maria, Maria).mid	1 64
+Modern Talking/You Can Win If You Want.1.mid	1 60
+Monty Python/Always Look on the Bright Side of Life.1.mid	1 65
+Morricone Ennio/L'uomo Dell'armonica.mid	4 52
+Morricone Ennio/The Good, the Bad & The Ugly.mid	1 72
+Mr. President/Co Co Jamboo.mid	4 26
+Mr. President/I'll Follow The Sun.mid	4 62
+Mylene Farmer/Pourvu qu'elles soient douces.mid	1 93
+Nakatomi/Children of the Night.1.mid	4 66
+Nancy Sinatra/Something Stupid.mid	1 11
+Nashville Teens/Tobacco Road.mid	4 26
+Nat King Cole/I Understand.mid	4 26
+Natalie Cole/Miss You Like Crazy.mid	4 7
+Nazareth/Dream On.mid	4 35
+Neil Diamond/Beautiful Noise.2.mid	13 73
+Neil Diamond/Beautiful Noise.mid	1 24
+Neil Diamond/Longfellow Serenade.mid	5 88
+Neil Diamond/Love on the Rocks.2.mid	1 24
+Neil Diamond/Red Red Wine.mid	2 35
+Neil Diamond/Sweet Caroline.1.mid	1 27
+Neil Diamond/Sweet Caroline.4.mid	1 3
+Neil Young/Cinnamon Girl.1.mid	4 82
+New Kids on the Block/Step By Step.mid	1 21
+Nick Gilder/Hot Child in the City.1.mid	4 62
+Nick Kamen/I Promised Myself.mid	1 82
+Nick MacKenzie/Hello, Good Morning.mid	4 26
+Nicki French/Total Eclipse of the Heart.mid	4 65
+Nico Landers/Liefde in de nacht.mid	4 35
+Nightcrawlers/Push The Feeling On (MK Dub Revisted Edit).1.mid	4 65
+Nina Simone/My Baby Just Cares for Me.1.mid	4 56
+Nini Rosso/Il Silenzio.mid	1 56
+Nino De Angelo/Jenseits von Eden.mid	4 71
+Nuovi Angeli/Anna da dimenticare.mid	4 11
+Nuovi Angeli/Donna felicita.mid	4 26
+Oberkrainer/Es ist so schon ein Musikant zu sein.3.mid	1 21
+Ocean Billy/When the Going Gets Touch, the Touch Get Going.1.mid	9 26
+Odyssey/Move Your Body.mid	4 30
+Oldfield, Mike/Innocent.1.mid	1 18
+Olivia Newton-John/Banks of the Ohio.1.mid	1 24
+Olivia Newton-John/I Love You, I Honestly Love You.mid	4 73
+Olivia Newton-John/Let Me Be There.1.mid	4 75
+Opus/Live Is Life.1.mid	4 29
+Opus/Live Is Life.mid	1 57
+Orchestral Manoeuvres in the Dark/Call My Name.mid	1 25
+Orchestral Manoeuvres in the Dark/Sailing on Seven Seas.mid	1 65
+Ottawan/D I S C O.mid	1 20
+Ottawan/Hands Up.2.mid	4 56
+PRESTON BILLY/Will It Go Round in Circles.mid	4 7
+Pat Benatar/Love Is A Battlefield.1.mid	4 35
+Pat Benatar/We Belong.2.mid	4 82
+Pat Boone/Speedy Gonzales.mid	1 65
+Pater Moeskroen/Roodkapje.mid	1 93
+Patrick Swayze/She's Like the Wind.mid	7 0
+Paul Dukas/The Sorcerer's Apprentice.mid	4 68
+Paul de Leeuw/Ik wil niet dat je liegt.1.mid	4 18
+Paul de Leeuw/Je hoort bij mij.mid	4 65
+Paul de Leeuw/Kopa Koopavond.mid	4 80
+Paula Abdul/Blowing Kisses in the Wind.2.mid	4 73
+Paula Abdul/Forever Your Girl.1.mid	4 73
+Paula Abdul/Opposites Attract.mid	4 65
+Paula Abdul/The Promise of a New Day.mid	1 18
+Pausini laura/La Solitudine.mid	4 26
+Pausini laura/Strani Amori.mid	4 99
+Peaches & Herb/Reunited.1.mid	4 82
+Pearl Jam/Daughter.mid	16 48
+Percy Faith/Theme from _A Summer Place_.mid	1 2
+Percy Faith/Theme from _A Summer Place_.mid	6 25
+Perplexer/Acid Folk.mid	4 82
+Pet Shop Boys/Always on My Mind   In My House.mid	1 75
+Pet Shop Boys/Domino Dancing.mid	1 73
+Pet Shop Boys/Liberation.mid	4 73
+Peter Frampton/I'm In You.1.mid	4 88
+Peter Kent/It's a Real Good Feeling.mid	4 24
+Peter de Koning/Het Is Altijd Lente in de Ogen Van de Tandartsassistente.mid	4 26
+Peter, Paul & Mary/I Dig Rock 'n' Roll Music.mid	4 56
+Peter, Paul & Mary/Leaving on a Jet Plane.mid	8 73
+Pharao/There Is a Star.mid	4 30
+Pink Floyd/High Hopes.mid	4 22
+Pink Floyd/Wish You Were Here.4.mid	4 26
+Pooh/Tanta voglia di lei.1.mid	4 11
+Prince Ital Joe/Happy People.mid	4 11
+Prince Ital Joe/Life in the Streets (Street mix).mid	4 25
+Prince Ital Joe/United.1.mid	4 1
+Prince/1999.5.mid	16 73
+Prince/Cream.1.mid	4 63
+Prince/Get Off.1.mid	1 1
+Prince/Get Off.mid	1 65
+Prince/Let It Go.2.mid	4 25
+Prince/Raspberry Beret.3.mid	4 18
+Prince/Sign o' the Times.1.mid	5 24
+Prince/U Got the Look.mid	4 28
+Prince/When Doves Cry.2.mid	4 28
+Procol Harum/A Whiter Shade Of Pale.2.mid	4 60
+Procol Harum/Pandora's Box.mid	1 18
+Puckett/Young Girl.1.mid	4 60
+Queen/Another One Bites The Dust.6.mid	1 0
+Queen/Fat Bottomed Girls.mid	4 62
+Queen/Heaven for Everyone.1.mid	4 35
+Queen/I Want It All.1.mid	4 87
+Queen/Innuendo.1.mid	4 53
+Queen/Made in Heaven.mid	4 85
+Queen/We Will Rock You.5.mid	4 29
+Queen/You Don't Fool Me.2.mid	4 35
+Queensryche/Jet City Woman.2.mid	4 81
+Queensryche/Silent Lucidity.3.mid	4 75
+REDDING OTIS/(Sitin' on) The Dock of the Bay.2.mid	4 60
+REDDING OTIS/I've Been Loving You Too Long.mid	4 58
+RICHIE LIONEL/Do It to Me.mid	4 26
+RMB/Experience (Follow Me).mid	4 62
+Raffaella Carra/A far l'amore.mid	4 58
+Randy Crawford/One Day I'll Fly Away.4.mid	4 26
+Ray Charles/I Can't Stop Loving You.mid	1 65
+Real McCoy/Another Night.3.mid	4 65
+Real McCoy/It's on You.mid	1 61
+Real McCoy/Love & Devotion.mid	4 65
+Redbone/Come and Get Your Love.mid	4 73
+Rednex/Wish You Were Here.mid	1 73
+Reel 2 Real/I Like to Move It.mid	4 87
+Rembrandts/Just The Way It Is, Baby.mid	1 56
+Rene Froger/For a Date With You.mid	4 73
+Rene Froger/Here in My Heart.mid	4 27
+Rene Froger/I'm a Singer, This Is the Moment (medley).mid	4 35
+Rene Froger/In Dreams.mid	4 26
+Rene Froger/Nobody Else (single remix).mid	4 65
+Rene Froger/Nobody Else.mid	4 65
+Rene Froger/What a Woman Can Do.mid	4 35
+Rene Froger/Why Goodbye.mid	4 65
+Rene Froger/Wild Rhythm.mid	4 35
+Revere/Indian Reservation.mid	7 66
+Richard Cliff/Living Doll.1.mid	1 99
+Richard Cliff/Lucky Lips.mid	1 56
+Richard Cliff/Move It.mid	4 68
+Richard Cliff/We Don't Talk Anymore.1.mid	4 65
+Richard Sanderson/Reality.1.mid	4 75
+Rick Astley/Cry For Help.mid	6 0
+Rick Astley/Never Gonna Give You Up.mid	4 73
+Rick Astley/Together Forever.mid	1 22
+Ricky Nelson/Travelin' Man.mid	1 56
+Righeira/Vamos A La Playa.mid	4 11
+Right Said Fred/Don't Talk Just Kiss.2.mid	1 81
+Robert Leroy/Ik droom alleen maar van jou.mid	4 65
+Robert Palmer/Addicted to Love.3.mid	4 79
+Robert Palmer/Know By Now.mid	4 75
+Robert Palmer/Simply Irresistible.1.mid	4 22
+Robin Beck/First Time.mid	4 35
+Robin Cock/The Promise You Made.mid	4 66
+Rocco Granata/Marina.mid	4 21
+Rod Stewart/First Cut Is the Deepest.mid	4 65
+Rogers Kenny/The Gambler.1.mid	6 40
+Romina Power Al Bano/Felicita.1.mid	4 62
+Romina Power Al Bano/Sempre sempre.1.mid	1 65
+Ron/Vorrei incontrarti fra cent'anni (con la partecipazione di Tosca).1.mid	4 0
+Ross/Touch by Touch.mid	1 62
+Ross/You Can't Hurry Love.mid	2 32
+Roxette/It Must Have Been Love (live studio).1.mid	1 0
+Roxette/Listen to Your Heart.5.mid	4 24
+Roxette/Run to You.1.mid	4 26
+Roxette/The Big L..mid	1 90
+Roxette/The Big L..mid	3 90
+Roxy Music/Avalon.1.mid	4 35
+Roy Black/Capri Fischer.mid	1 100
+Roy Black/Das Madchen Carina.mid	4 0
+Roy Black/Frag' Maria.mid	1 65
+Roy Black/Ganz in weiss.2.mid	4 11
+Roy Black/Ich traume mich zu Dir.mid	1 65
+Roy Black/Wie ein Stern am Horizont.mid	1 65
+Roy Clark/Come Live With Me.mid	4 24
+Roy Orbison/California Blue.1.mid	7 24
+Roy Orbison/Oh Pretty Woman.1.mid	4 82
+Rudi Carrell/Wann wird's mal wieder richtig Sommer.mid	4 75
+Rufus Thomas/Walkin' the Dog.mid	4 17
+Rush/Closer to the Heart.2.mid	4 75
+Rush/Fly by Night.mid	4 80
+Rush/Limelight.mid	4 81
+Rush/New World Man.mid	4 73
+Rush/Red Sector A.mid	4 2
+Rush/Subdivisions.3.mid	4 82
+Rush/Time Stand Still.1.mid	4 75
+Rush/Tom Sawyer.1.mid	4 73
+Ryan Paris/La Dolce Vita.mid	4 87
+Sabrina/Boys.mid	1 87
+Sade/Smooth Operator.1.mid	4 11
+Sailor/Girls Girls Girls.1.mid	4 23
+Salt-N-Pepa/Let's Talk About Sex.1.mid	1 65
+Salt-N-Pepa/Whatta Man.mid	4 26
+Sam & Dave/Ain't That a Lot of Love.mid	4 75
+Sam & Dave/I Thank You.mid	4 18
+Sam & Dave/Soul Man.mid	4 18
+Sam Brown/Stop.mid	1 25
+Sandie Shaw/Those Were the Days.mid	4 68
+Santa Esmeralda/Don't Let Me Be Misunderstood.2.mid	1 0
+Scatman John/Scatman's World.mid	4 2
+Scatman John/Scatman.mid	4 65
+Schilling, Peter/Major Tom.1.mid	4 52
+Scooter/Back In The U.K..mid	4 24
+Scooter/Endless Summer.mid	4 53
+Scooter/Hyper Hyper.mid	4 82
+Scorpions/Hello Josephine.mid	2 32
+Scorpions/Johnny B. Goode.mid	4 5
+Scott McKenzie/Forrest Gump_ San Francisco (Be Sure to Wear Some Flowers in Your Hair).mid	4 73
+Seal/Kiss From a Rose.1.mid	4 71
+Sedaka Neil/Breaking Up Is Hard to Do.mid	4 82
+Sedaka Neil/Oh Carol.mid	1 61
+Sergio Franchi/Anema e core.mid	5 26
+Sergio Franchi/Mala femmena.mid	1 24
+Shakatak/The Christmas Song.mid	1 0
+Sharpe/Rama Lama Ding Dong.mid	4 26
+Shaun Cassidy/Da Doo Ron Ron.mid	1 65
+Showaddywaddy/Say Mama.mid	4 56
+Simon & Garfunkel/Bridge Over Troubled Water.1.mid	1 73
+Simon & Garfunkel/Bridge Over Troubled Water.3.mid	4 75
+Simon & Garfunkel/Bye Bye Love.mid	1 1
+Simon & Garfunkel/El Condor Pasa.1.mid	4 40
+Simon & Garfunkel/The Sound of Silence.2.mid	8 25
+Simple Minds/Alive & Kicking.1.mid	4 17
+Simple Minds/She's a River.mid	4 65
+Simply Red/Fairground.mid	4 65
+Sinatra/All the Things You Are.mid	4 0
+Sinatra/Anything Goes.mid	4 26
+Sinatra/Autumn Leaves.mid	4 24
+Sinatra/Bewitched.mid	4 24
+Sinatra/Blue Moon.mid	4 26
+Sinatra/Come Rain or Come Shine.mid	4 26
+Sinatra/For Every Man There's a Woman.mid	4 24
+Sinatra/Goin' Out of My Head.mid	4 24
+Sinatra/Guys and Dolls (reprise).mid	4 26
+Sinatra/I Believe in You.mid	4 26
+Sinatra/I Get A Kick Out Of You.1.mid	4 24
+Sinatra/I'm Glad There Is You.mid	4 24
+Sinatra/Just One Of Those Things.1.mid	4 26
+Sinatra/Luck Be a Lady.mid	4 26
+Sinatra/My Funny Valentine.1.mid	4 24
+Sinatra/My Shining Hour.mid	4 26
+Sinatra/My Way (live).1.mid	4 35
+Sinatra/New York, New York (theme du film).2.mid	4 82
+Sinatra/New York, New York (theme du film).mid	4 73
+Sinatra/Night and Day.mid	4 26
+Sinatra/Ol' Man River.mid	4 24
+Sinatra/One More for My Baby (And One More for the Road).mid	4 26
+Sinatra/Sentimental Journey.mid	4 24
+Sinatra/Strangers in the Night.mid	4 0
+Sinatra/That's Life.mid	4 26
+Sinatra/The Lady Is a Tramp.1.mid	4 26
+Sinatra/The Most Beautiful Girl in the World.mid	4 24
+Sinatra/The Way You Look Tonight.mid	4 24
+Sinatra/What Is This Thing Called Love_.1.mid	4 26
+Sinatra/Yes Sir, That's My Baby.mid	1 11
+Sinatra/You'll Never Walk Alone.mid	1 54
+Sinead O'Connor/Nothing.3.mid	1 99
+Sly & The Family Stone/Everyday People.mid	4 18
+Sly & The Family Stone/Family Affair.mid	4 24
+Sly & The Family Stone/I Want to Take You Higher.mid	4 62
+Smokie/Living Next Door To Alice.1.mid	4 73
+Smokie/Mexican Girl.1.mid	1 63
+Snap/The First the Last Eternity (Till the End).1.mid	4 5
+Snap/The First the Last Eternity (Till the End).mid	4 65
+Snap/Welcome to Tomorrow.1.mid	4 65
+Sonny & Cher/All I Ever Need Is You.1.mid	4 58
+Sonny & Cher/Little Man.mid	4 24
+Sonny & Cher/The Beat Goes On.mid	4 58
+Sophie B. Hawkins/As I Lay Me Down.1.mid	4 75
+Sophie B. Hawkins/Right Beside You.mid	4 85
+Sorrenti/Tu sei l'unica donna per me.mid	4 68
+Soulful Dynamics/Mademoiselle Ninette.1.mid	4 71
+Sparks/When Do I Get to Sing _My Way_.mid	4 53
+Sparks/When I Kiss You.mid	4 26
+Stan Getz/Desafinado.mid	4 65
+Stan Getz/The Girl From Ipanema (Garota de Ipanema).1.mid	4 73
+Stansfield Lisa/All Around the World.mid	4 0
+Stansfield Lisa/Change.1.mid	4 26
+Stansfield Lisa/I Will Be Waiting.mid	4 26
+Stansfield Lisa/Real Love.mid	4 26
+Stansfield Lisa/Soul Deep.mid	4 26
+Stansfield Lisa/Symptoms of Loneliness & Heartache.mid	4 26
+Stansfield Lisa/This Is the Right Time.mid	4 73
+Stansfield Lisa/You Can't Deny It.mid	4 1
+Starship/Nothing Gonna Stop Us Now.mid	4 65
+Status Quo/I Didn't Mean It.mid	4 87
+Status Quo/Rockin' All Over the World.1.mid	1 65
+Steam/Na Na Hey Hey (Kiss Him Goodbye).mid	8 62
+Steely Dan/Reeling in the Years.2.mid	4 18
+Stephanie Mills/Never Knew Love Like This Before.2.mid	1 63
+Stephen Bishop/It Might Be You (Theme From _Tootsie_).mid	4 22
+Steve Miller Band/Abracadabra.3.mid	4 73
+Steve Miller Band/Fly Like an Eagle.mid	4 73
+Steve Miller Band/Going to Mexico.mid	4 63
+Steve Miller Band/Going to the Country.mid	4 73
+Steve Miller Band/Jet Airliner.1.mid	4 82
+Steve Miller Band/Living in the U.S.A..mid	4 63
+Steve Miller Band/Rock 'n Me.mid	4 75
+Steve Miller Band/Space Cowboy.mid	4 18
+Steve Miller Band/Take the Money and Run.mid	4 72
+Steve Miller Band/The Joker.2.mid	4 23
+Stevens Shakin_/I Might.mid	1 61
+Stevens Shakin_/You Drive Me Crazy.mid	4 66
+Stevie B/Because I Love You (The Postman Song).mid	1 24
+Stevie B/I'll Be on Your Side.mid	1 26
+Stewart Rod/Rhythm of My Heart.mid	1 24
+Stewart Rod/Some Guys Have All the Luck.mid	4 73
+Stewart Rod/The Motown Song.mid	1 66
+Sting/Be Still My Beating Heart.mid	4 46
+Sting/English Man In New York.3.mid	4 75
+Sting/Fields of Gold.8.mid	4 75
+Sting/Fortress Around Your Heart.mid	4 75
+Sting/If You Love Somebody Set Them Free.1.mid	4 26
+Sting/Love Is the Seventh Wave.mid	4 75
+Sting/Moon Over Bourbon Street.1.mid	4 75
+Sting/Shape Of My Heart.2.mid	4 99
+Sting/The Soul Cages.2.mid	4 75
+Sting/This Cowboy Song.mid	4 82
+Sting/We'll Be Together.2.mid	4 1
+Styx/Babe.3.mid	4 75
+Styx/Blue Collar Man (Long Nights).1.mid	4 82
+Styx/Boat on the River.mid	4 40
+Styx/Come Sail Away.1.mid	4 60
+Styx/Don't Let It End.1.mid	4 26
+Styx/Fooling Yourself (The Angry Young Man).1.mid	4 63
+Styx/Mr. Roboto.1.mid	4 87
+Styx/Suite Madame Blue.1.mid	4 75
+Styx/The Best of Times.1.mid	4 82
+Styx/The Grand Illusion.2.mid	4 0
+Styx/Too Much Time On My Hands.2.mid	4 7
+Sugar Lee Hooper/De wandelclub.mid	4 35
+Sugar Lee Hooper/O, wat ben je mooi.mid	4 26
+Summer Donna/Hot Stuff.1.mid	1 87
+Summer Donna/I Remember Yesterday.mid	4 24
+Supertramp/Bloody Well Right.3.mid	4 18
+Supertramp/Breakfast in America.3.mid	4 105
+Supertramp/Crime of the Century.1.mid	4 73
+Supertramp/Dreamer.4.mid	4 45
+Supertramp/Even in the Quietest Moments.1.mid	4 23
+Supertramp/It's Raining Again.1.mid	4 26
+Supertramp/School.mid	4 21
+Supertramp/Take the Long Way Home.4.mid	4 26
+Supertramp/The Logical Song.1.mid	4 99
+Supertramp/The Logical Song.2.mid	4 99
+Supertramp/The Logical Song.5.mid	4 62
+Supertramp/The Logical Song.6.mid	4 99
+Supertramp/The Logical Song.7.mid	4 99
+Surface/The First Time.mid	1 24
+Survivor/Eye of the Tiger (From _Rocky II_).mid	1 56
+Sydney Youngblood/Sit and Wait.mid	1 23
+TURNER TINA/I Don't Wanna Lose You.1.mid	1 1
+TURNER TINA/Let's Stay Together.mid	4 35
+TURNER TINA/Notbush City Limits.mid	4 35
+TURNER TINA/The Best.1.mid	4 35
+TURNER TINA/We Don't Need Another Hero (Thunderdome).mid	4 62
+Taja Sevelle/Take Me for a Ride.mid	1 73
+Take That/Back For Good.mid	4 35
+Take That/Everything Changes.1.mid	4 87
+Take That/Never Forget.1.mid	4 68
+Take That/Sure.1.mid	4 26
+Talk of the Town/The Kwek Kwek Song.mid	4 109
+Talk of the Town/The La La Song.mid	4 52
+Taylor Dayne/Tell It to My Heart.1.mid	1 53
+Taylor James/Country Road.mid	4 24
+Taylor James/Don't Let Me Be Lonely Tonight.mid	4 88
+Taylor James/Fire & Rain.mid	4 99
+Taylor James/Handy Man.mid	4 75
+Taylor James/One Man Parade.mid	4 75
+Taylor James/Riding on a Railroad.mid	4 26
+Taylor James/Something in the Way She Moves.mid	4 24
+Taylor James/Steamroller.mid	4 99
+Taylor James/Sweet Baby James.mid	4 24
+Technohead/I Wanna Be a Hippy.mid	4 53
+Technotronic/Move This.1.mid	4 30
+Technotronic/Pump Up the Jam.mid	4 94
+The Alan Parsons Project/Lucifer.mid	4 25
+The Alan Parsons Project/Mammagamma.mid	5 73
+The Animals/Don't Bring Me Down.mid	4 29
+The Animals/San Franciscan Nights.mid	4 75
+The Animals/Sky Pilot.mid	4 24
+The Animals/We Gotta Get Out Of This Place.mid	4 19
+The Animals/When I Was Young.mid	4 71
+The Association/Never My Love.mid	4 73
+The Bangles/Eternal Flame.9.mid	4 75
+The Beach Boys/Barbara Ann.2.mid	4 52
+The Beach Boys/California Girls.mid	4 58
+The Beach Boys/Dance Dance Dance.mid	4 80
+The Beach Boys/Fun, Fun, Fun.mid	4 26
+The Beach Boys/God Only Knows.mid	4 56
+The Beach Boys/Good Vibrations.1.mid	4 87
+The Beach Boys/Help Me Rhonda.mid	4 26
+The Beach Boys/I Get Around.mid	4 34
+The Beach Boys/Little Deuce Coupe.1.mid	4 73
+The Beach Boys/Sloop John 'B'.1.mid	4 64
+The Beach Boys/Surfin USA.mid	4 63
+The Beach Boys/Wouldn't It Be Nice.mid	4 73
+The Beatles/A Hard Day's Night.5.mid	1 18
+The Beatles/A Hard Day's Night.6.mid	9 87
+The Beatles/All My Loving.4.mid	1 1
+The Beatles/And I Love Her.3.mid	6 84
+The Beatles/Can't Buy Me Love.3.mid	4 26
+The Beatles/Eight Days A Week.1.mid	9 26
+The Beatles/For No One.mid	1 1
+The Beatles/Free as a Bird.mid	4 56
+The Beatles/Here Comes the Sun.4.mid	1 25
+The Beatles/Hey Jude.1.mid	1 1
+The Beatles/Hey Jude.2.mid	4 78
+The Beatles/Hey Jude.7.mid	4 78
+The Beatles/Hey Jude.8.mid	9 48
+The Beatles/Hey Jude.9.mid	4 53
+The Beatles/I Feel Fine.3.mid	7 87
+The Beatles/If I Fell.1.mid	5 60
+The Beatles/If I Fell.1.mid	6 52
+The Beatles/Lady Madonna.1.mid	7 38
+The Beatles/Love Me Do.4.mid	6 2
+The Beatles/Michelle.4.mid	4 77
+The Beatles/Michelle.4.mid	9 88
+The Beatles/Nowhere Man.2.mid	6 5
+The Beatles/Ob-La-Di, Ob-La-Da.5.mid	1 35
+The Beatles/Paperback Writer.1.mid	6 26
+The Beatles/Paperback Writer.4.mid	6 73
+The Beatles/Penny Lane.mid	4 0
+The Beatles/Please Mister Postman.2.mid	3 54
+The Beatles/Something.2.mid	2 26
+The Beatles/The Long and Winding Road.4.mid	2 26
+The Beatles/The Long and Winding Road.6.mid	1 26
+The Beatles/Twist And Shout.3.mid	2 35
+The Beatles/Yellow Submarine.2.mid	4 5
+The Bluebells/Young At Heart.1.mid	4 26
+The Brothers Four/Frogg No. 2.mid	1 0
+The Brown James/I Got You (I Feel Good).mid	4 30
+The Byrds/Eight Miles High.1.mid	16 11
+The Byrds/Eight Miles High.mid	16 54
+The Byrds/Mr Tamborine Man.mid	16 100
+The Byrds/Mr. Tambourine Man.1.mid	1 25
+The Byrds/Turn! Turn! Turn!.2.mid	16 11
+The Chaplin Band/Let's Have a Party.mid	4 62
+The Chordettes/Lollipop.mid	4 82
+The Clash/London's Burning.mid	4 87
+The Doobie Brothers/China Grove.mid	4 64
+The Doobie Brothers/Need a Little Taste of Love.mid	4 62
+The Doobie Brothers/What A Fool Believes.2.mid	1 57
+The Drifters/Under The Boardwalk.mid	2 0
+The Everly Brothers/All I Have to Do Is Dream.2.mid	1 24
+The Everly Brothers/Bird Dog.mid	1 24
+The Everly Brothers/Bye Bye Love.2.mid	4 35
+The Everly Brothers/Cathy's Clown.1.mid	5 26
+The Everly Brothers/On the Wings of a Nightingale.mid	1 26
+The Everly Brothers/That'll Be the Day.mid	1 24
+The Everly Brothers/Wake Up Little Susie.mid	4 25
+The Five Stairsteps/O o h Child.mid	7 66
+The Four Aces/The Gang That Sang _Heart of My Heart_.mid	4 71
+The Four Preps/26 Miles (Santa Catalina).mid	4 73
+The Four Seasons/Big Girls Don't Cry.mid	1 24
+The Four Seasons/I've Got You Under My Skin.mid	4 75
+The Grass Roots/Sooner or Later.mid	4 26
+The Hollies/Carrie Ann.mid	4 82
+The Hollies/Dear Eloise.1.mid	4 82
+The Hollies/Jennifer Eccles.mid	4 0
+The Hollies/King Midas in Reverse.1.mid	4 0
+The Hollies/Long Cool Woman (In a Black Dress).mid	4 82
+The Hollies/On a Carousel.mid	4 73
+The Hollies/Pay You Back With Interest.mid	4 24
+The Hollies/Stop, Stop, Stop.mid	4 26
+The Hollies/The Air That I Breathe.1.mid	4 1
+The Human League/Tell Me When.mid	4 17
+The KLF/Justified and Ancient.mid	1 56
+The Kelly Family/First Time.mid	4 75
+The Kelly Family/Roses of Red.1.mid	4 75
+The Kinks/Chirpy Chirpy Cheep Cheep.mid	4 26
+The Manhattan Transfer/Chanson D'Amour.1.mid	4 65
+The Manhattan Transfer/Twilight Zone   Twilight Tone.mid	4 7
+The McGuire Sisters/Goodnight My Love.mid	4 58
+The Monkees/Pleasant Valley Sunday.mid	4 71
+The Moody Blues/The Night_ Nights in White Satin.1.mid	4 56
+The Offspring/Self Esteem.1.mid	4 29
+The Outfield/Closer to Me.mid	4 62
+The Outhere Brothers/Boom Boom Boom.mid	4 24
+The Outhere Brothers/Don't Stop (Wiggle Wiggle).mid	4 65
+The Platters/Great Pretender.3.mid	1 84
+The Platters/Great Pretender.4.mid	1 65
+The Platters/Great Pretender.mid	1 84
+The Platters/Only You.1.mid	1 84
+The Platters/Only You.6.mid	1 66
+The Platters/Smoke Gets in Your Eyes.1.mid	4 75
+The Pointer Sisters/I'm So Excited.mid	4 63
+The Pointer Sisters/Yes We Can Can.mid	4 63
+The Police/De Do Do Do De Da Da Da.3.mid	4 82
+The Police/Don't Stand So Close.1.mid	4 82
+The Police/Every Breath You Take.1.mid	4 73
+The Police/Every Little Thing She Does Is Magic.2.mid	4 63
+The Police/King of Pain.1.mid	4 75
+The Police/Message in a Bottle.2.mid	4 73
+The Police/Roxanne.6.mid	4 73
+The Police/Spirits in the Material World.1.mid	4 73
+The Police/Walking on The Moon.2.mid	4 73
+The Police/Wrapped Around Your Finger.3.mid	4 73
+The Pretenders/I'll Stand By You.2.mid	4 82
+The Righteous Brothers/Unchained Melody.6.mid	4 56
+The Righteous Brothers/You've Lost That Lovin' Feelin'.1.mid	4 35
+The Righteous Brothers/You've Lost That Lovin' Feelin'.3.mid	1 54
+The Rolling Stones/Angie.7.mid	4 24
+The Rolling Stones/I Can't Get No (Satisfaction).7.mid	4 75
+The Rolling Stones/The Last Time.1.mid	4 64
+The Rolling Stones/Time Is on My Side.mid	4 26
+The Ronettes/Be My Baby.mid	1 25
+The Rooftop Singers/Walk Right In.mid	1 25
+The Rooftop Singers/Walk Right In.mid	2 24
+The Rooftop Singers/Walk Right In.mid	13 25
+The Rubettes/Juke Box Jive.mid	4 71
+The Rubettes/Sugar Baby Love.mid	4 17
+The Searchers/Sweet for My Sweet.mid	1 28
+The Shadows/FBI.1.mid	4 27
+The Shadows/Foot Tapper.mid	4 28
+The Shadows/Guitar Tango.mid	4 24
+The Shadows/Kontiki.1.mid	4 27
+The Shadows/Riders in the Sky.1.mid	4 27
+The Shadows/Sleepwalk.1.mid	2 32
+The Shadows/Unchained Melody.mid	4 26
+The Shadows/Wonderful Land.1.mid	4 27
+The Shangri-Las/Remember (Walkin' in the Sand).mid	4 18
+The Soul Survivors/Expressway (To Your Heart).mid	4 24
+The Spotnicks/Amapola.1.mid	1 25
+The Stylistics/You Are Everything.1.mid	1 50
+The Stylistics/You Make Me Feel Brand New.mid	4 35
+The Trammps/Zing Went the Strings of My Heart.mid	4 58
+The Tremeloes/My Little Lady.mid	1 61
+The Troggs/Wild Thing.mid	4 27
+The Troggs/With a Girl Like You.mid	4 2
+The Walker Brothers/The Sun Ain't Gonna Shine Anymore.mid	4 77
+The Wallflowers/Heroes.mid	6 25
+The Weather Girls/It's Raining Men.1.mid	11 11
+The Yardbirds/Heart Full Of Soul.mid	4 82
+Three Dog Night/Let Me Serenade You.mid	4 62
+Three Dog Night/Mama Told Me (Not To Come).mid	4 82
+Three Dog Night/One.mid	4 26
+Three Dog Night/Try a Little Tenderness.mid	4 26
+Tim Immers/Liever Dan Lief.mid	4 35
+Tim Immers/Roze Bril.mid	4 26
+Time Bandits/I'm Specialized in You.mid	4 26
+Todd Rundgren/Sidewalk Cafe.mid	1 24
+Tom Astor/Hallo, guten Morgen Deutschland.mid	4 28
+Tom Astor/Hungrige Herzen.mid	4 73
+Tom Astor/Junger Adler.mid	4 11
+Tom Jones/Green Green Grass of Home.mid	4 65
+Tom Jones/Help Yourself.1.mid	4 65
+Tom Jones/If I Only Knew.mid	4 35
+Tom Jones/Love Me Tonight.1.mid	4 26
+Tom Jones/What's New Pussycat.mid	4 26
+Toni Braxton/Breathe Again.1.mid	4 26
+Tornados/Telstar.mid	4 17
+Torriani, Vico/La Pastorella.mid	4 65
+Toto/Africa.3.mid	4 75
+Toto/Georgy Porgy.2.mid	4 65
+Toto/I'll Be Over You.1.mid	4 35
+Toto/Pamela.1.mid	4 35
+Toto/Rosanna.3.mid	4 35
+Toto/Stop Loving You.1.mid	4 35
+Tower of Power/Soul With A Capital S.mid	4 26
+Tozzi Umberto/Ti amo.mid	4 21
+Traffic/40,000 Headmen.mid	4 63
+Traffic/Coloured Rain.mid	4 68
+Traffic/Dear Mr. Fantasy.mid	4 75
+Traffic/Feelin' All Right.mid	4 22
+Traffic/Hole in My Shoe.mid	4 6
+Traffic/Paper Sun.mid	4 20
+Traffic/Smiling Phases.mid	4 73
+Traffic/The Low Spark of High Heeled Boys.mid	4 63
+Traffic/Who Knows What Tomorrow May Bring.mid	4 82
+Turtles/It Ain't Me Baby.mid	6 25
+U2/Angel of Harlem.mid	4 73
+U2/Everlasting Love.1.mid	4 59
+U2/Hold Me, Thrill Me, Kiss Me, Kill Me.3.mid	4 35
+U2/I Still Haven't Found What I'm Looking For.mid	4 103
+U2/Mysterious Ways.2.mid	4 2
+U2/New Year's Day.mid	4 75
+U2/Pride.4.mid	4 63
+U2/Sunday Bloody Sunday.mid	4 90
+U2/Where the Streets Have No Name.4.mid	4 75
+U2/With or Without You.1.mid	4 26
+U96/Club Bizarre.mid	4 99
+U96/Love Religion.mid	4 65
+UB40/Groovin'.mid	1 25
+UB40/Homely Girl.1.mid	7 73
+UB40/Kingston Town.1.mid	4 75
+UB40/So Here I Am.mid	1 73
+Valens Ritchie/La Bamba.1.mid	4 58
+Van Halen/Jump.2.mid	4 65
+Van Morrison/Brown Eyed Girl.4.mid	9 73
+Vanessa Williams/Save The Best For Last.3.mid	4 26
+Vangelis/1492_ Conquest of Paradise.3.mid	4 52
+Ventures/Walk Don't Run.mid	1 24
+Wagner/Unter dem Doppeladler.mid	1 71
+War/The Cisco Kid.mid	1 87
 Wax/Building a Bridge to Your Heart.mid	1 99
+Wayne Jeff/The Eve of the War.1.mid	1 82
+Werner/So ein Mann.mid	4 105
+Wet Wet Wet/Good Night Girl.1.mid	4 70
+Wet Wet Wet/Julia Says.mid	4 75
+Wet Wet Wet/Love Is All Around.mid	4 26
+Whigfield/Saturday Night.mid	4 82
+Whigfield/Think of You.mid	4 65
+White Barry/You're The First, The Last, My Everything.1.mid	1 1
+Whitney Houston/All the Man That I Need.1.mid	4 24
+Whitney Houston/Exhale (Shoop Shoop).2.mid	4 73
+Whitney Houston/Greatest Love of All.5.mid	4 24
+Whitney Houston/I Have Nothing.mid	4 26
+Whitney Houston/I Wanna Dance With Somebody (Who Loves Me).4.mid	4 87
+Whitney Houston/I Will Always Love You.3.mid	4 73
+Whitney Houston/I'm Your Baby Tonight.1.mid	4 26
+Whitney Houston/Just the Lonely Talking Again.mid	4 26
+Whitney Houston/Love Will Save The Day.mid	12 87
+Whitney Houston/Lover for Life.mid	4 73
+Whitney Houston/Saving All My Love For You.mid	4 73
+Whitney Houston/So Emotional.1.mid	4 66
+Whitney Houston/Take Good Care of My Heart.mid	4 73
+Wilbert Harrison/Kansas City.mid	1 1
+Wild Cherry/Play That Funky Music.1.mid	4 66
+Will Glahe/Wiener Praterleben.mid	4 21
+Wilson Phillips/Release Me.1.mid	4 54
+Wolfgang Ambros/Zwickt's Mi.mid	1 62
+Wolter Kroes/Laat me los.mid	4 65
+Wonder Stevie/Isn't She Lovely.mid	4 60
+Wonder Stevie/Master Blaster.mid	1 65
+Wonder Stevie/My Cherie Amour.2.mid	1 0
+Xavier Cugat/Tico-Tico.mid	1 24
+Young Paul/Every Time You Go Away.mid	1 26
+Yvonne Elliman/If I Can't Have You.mid	1 65
+ZZ Top/Sharp Dressed Man.mid	1 17
+Zamfir Gheorghe/The Lonely Shepherd.mid	1 75
+Zero/Un po' d'azzurro.mid	4 1
+Zucchero/Alleluja.mid	4 0
+Zucchero/Pane e sale.mid	4 73
+Zucchero/Per colpa di chi.3.mid	4 1
+Zucchero/Rispetto.mid	4 73
+Zucchero/Senza Una Donna.1.mid	4 0
+Zucchero/Senza Una Donna.3.mid	5 24
+Zucchero/Senza Una Donna.4.mid	4 0
+Zucchero/Senza Una Donna.5.mid	4 0
+Zucchero/Voodoo voodoo.2.mid	4 1

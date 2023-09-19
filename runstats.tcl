@@ -250,6 +250,42 @@ foreach midi $midifileList {
   }
 }
 
+proc find_melody_labels {inFolderLength} {
+global midifileList
+set i 0
+foreach midi $midifileList {
+  incr i
+  set fname [string range $midi $inFolderLength end]
+  set cmd "exec ../midistats [list $midi]"
+  catch {eval $cmd} output
+  set output [split $output \n]
+  set melodyfound 0
+  foreach line $output {
+    if {[string first "trk" $line] >= 0} {
+      set trk [lindex $line 1]
+      }
+    if {[string first "metatext" $line] >= 0} {
+         set out [string range $line 10 end]
+         if {[string first "MELODY" $out] > 0} {
+            #puts $midi
+            #puts $trk
+            set melodyfound 1}
+         }
+    if {[string first "program" $line] >= 0} {
+      set channel [lindex $line 1]
+      set prog [lindex $line 2]
+      if {$melodyfound} {
+         set fname [string range $midi $inFolderLength end]
+         puts "$fname\t$channel $prog"
+         set melodyfound 0
+         }
+      }
+  }
+  if {$i > 17200} break
+  }
+puts "done"
+}
+
 proc replaceSpacesWithCommas {datavalues} {
 set output ""
 foreach value $datavalues {
@@ -264,4 +300,5 @@ return $output
 #make_programcolor $inFolderLength
 #make_pulseanalysis $inFolderLength
 #make_perc_structure $inFolderLength
-make_pitchanalysis $inFolderLength
+#make_pitchanalysis $inFolderLength
+find_melody_labels $inFolderLength
