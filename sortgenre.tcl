@@ -1,0 +1,48 @@
+proc load_genre_database {} {
+#global genre_db
+global sortedgenrelist
+global midi
+global exec_out
+if {[array exist genre_db]} return
+#set genrefile [file join $midi(rootfolder) genre.tsv]
+set genrefile genre.tsv
+
+#if {![file exist $genrefile]} {
+#   append exec_out "Could not find genre.tsv in $midi(rootfolder)\ncreating template."
+#   initialize_genre_database}
+
+set i 0
+set genrelist {}
+set inhandle [open $genrefile]
+while {![eof $inhandle]} {
+  gets $inhandle line
+  set data [split $line \t]
+
+  set f [lindex $data 0]
+  set g [lindex $data 1]
+  
+  #set gtrimmed [string map {\" {}} $g]
+  set gtrimmed [string trimleft $g \"]
+  set gtrimmed [string trimright $gtrimmed \"]
+
+  set newdata [list $f $gtrimmed]
+
+  lappend genrelist $newdata
+
+  incr i
+  }
+close $inhandle
+set sortedgenrelist [lsort -index 1 $genrelist]
+puts "last record number = $i"
+}
+
+
+load_genre_database
+
+set outhandle [open sortedgenre.txt w]
+foreach item $sortedgenrelist {
+  puts $outhandle $item
+  }
+close $outhandle
+
+
