@@ -41,7 +41,12 @@ load_genre_database
 
 set outhandle [open sortedgenre.txt w]
 foreach item $sortedgenrelist {
-  puts $outhandle $item
+  set has_slash [string first \/ [lindex $item 0]]
+  if {$has_slash < 0} {
+    puts "illegal artist [lindex $item 0]"
+    } else {
+    puts $outhandle "[lindex $item 0]\t[lindex $item 1]"
+    }
   }
 close $outhandle
 

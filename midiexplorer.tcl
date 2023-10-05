@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.22 2023-09-13 17:25" 
+set midiexplorer_version "MidiExplorer version 4.24 2023-10-03 13:10" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -1827,7 +1827,7 @@ if {[lindex $c 1] == "file"} {
 }
 
 proc SwitchBetweenInfoAndTinfo {} {
-.top add .info
+.top add .info -minsize 4 
 .top add .tinfo
 }
 
@@ -1835,31 +1835,36 @@ proc SwitchBetweenInfoAndTinfo {} {
 #   Part 5.0 Midi summary header
 
 # Make info window
-frame .info
-text .info.txt -wrap word -width 80 -height 5 -font $df
-.info.txt tag configure red -foreground red -font $df
 
 # Lay them out
 #grid .info.txt -sticky nsew
-pack .info.txt -fill both -expand 1 -side right
 
 # join .treebrowser and .info in the panedwindow called .top
+frame .info
+pack .info -anchor w 
+#.top add .info
 .top add .treebrowser 
 
 proc presentMidiInfo {} {
    global midi
    global ntrks
    global lasttrack
+   if {[winfo exist .info]} {
+     foreach w [winfo children .info] {
+       destroy $w
+       }
+   }
    grab_all_program_commands
    if {$ntrks == 0} return
-   if {$ntrks == 1} {
-     interpretMidiType0
-   } else {
+   #if {$ntrks == 1} {
+   #  interpretMidiType1
+   #} else {
      interpretMidiType1
-   }
+   #}
    set lasttrack $ntrks
 }
 
+# not used anymore 2023-10-02
 proc interpretMidiType0 {} {
 global trkinfo
 global midi
@@ -1982,33 +1987,36 @@ proc interpretMidiType1 {} {
 
   gatherMidiSummary 
   midiType1Table
+  if {![info exist timesig]} {set timesig 4/4}
 
   set genre [search_genre_database]
-  set miditxt(0) "$midi(midifilein)  $genre
- $ntrks tracks       $ppqn pulses/beat"
-  set addendum ""
+  label .info.input -text $midi(midifilein) 
+  label .info.tracks -text "$ntrks tracks" -font $df
+  label .info.ppqn -text "$ppqn pulses/beat" -font $df
+  label .info.genre -text "genre: $genre" -font $df
 
 #update_table_header
-if {$nkeysig < 1} {set keysig C}
-if {![info exist tempo]} {set tempo 120}
-append miditxt(0) "         tempo:$tempo beats/minute"
-append miditxt(0) "      $lastbeat beats in the file\n"
-append miditxt(0) "key signature: $keysig"
-if {$ntimesig > 0} {append miditxt(0) "     time signature: $timesig"}
-if {$ntimesig > 1} {append miditxt(0) "\nThere are $ntimesig time signatures in the file."}
-if {$nkeysig > 1} {append miditxt(0) "\nThere are $nkeysig key signatures in the file."}
+  if {$nkeysig < 1} {set keysig C}
+  if {![info exist tempo]} {set tempo 120}
+  label .info.tempo -text "$tempo beats/minute" -font $df
+  label .info.size -text "$lastbeat beats"  -font $df
+  label .info.keysig -text "key signature: $keysig" -font $df
+  label .info.timesig -text "time signature: $timesig" -font $df
+  label .info.ntimesig -text "$ntimesig time signatures" -font $df
+  label .info.nkeysig -text "$nkeysig key signatures" -font $df
+  label .info.error -text $midierror -fg red -font $df
 
-if {[string length $addendum] > 2} {append miditxt(0) $addendum}
-
-
- set txtbuf $miditxt(0)\n  
- .info.txt delete 1.0 end
   if {[string length $midierror]>0} {
-     .info.txt insert insert "$midierror\n" red -font $df
+     grid .info.error
      }
-  #print_programmod
-  .info.txt insert insert $txtbuf 
-
+  grid .info.input
+  grid .info.genre -sticky w
+  grid .info.tracks -sticky w
+  grid .info.ppqn -sticky w
+  grid .info.size -sticky w
+  grid .info.tempo -sticky w
+  grid .info.timesig -sticky w
+  grid .info.keysig -sticky w
 }
 
 proc tinfoSelect {} {
@@ -3698,7 +3706,6 @@ proc show_message_page {text wrapmode} {
         $p.t configure -state normal -font $df
         $p.t delete 1.0 end
         $p.t insert end $text
-        #   $p.t configure -state disabled -wrap $wrapmode
     } else {
         toplevel $p
         positionWindow $p
@@ -3707,7 +3714,6 @@ proc show_message_page {text wrapmode} {
         pack $p.ysbar -side right -fill y -in $p
         pack $p.t -in $p -fill both -expand true
         $p.t insert end $text
-        #   $p.t configure -state disabled
     }
     raise $p .
 }
@@ -4764,7 +4770,8 @@ proc beat_graph {source} {
     } else {.beatgraph.c delete all}
      
     # white or black characters
-    set colfg [lindex [.info.txt config -fg] 4]
+    set colfg [lindex [.info.input config -fg] 4]
+
 
     set delta_tick [expr int(($tbeat - $fbeat)/10.0)]
     if {$delta_tick < 1} {set delta_tick 1}
@@ -5574,7 +5581,7 @@ proc compute_chordgram {start stop} {
   set start5 [expr (1 + int($start)/5)*5.0]
 
    # white or black characters
-  set colfg [lindex [.info.txt config -fg] 4]
+   set colfg [lindex [.info.input config -fg] 4]
 
    set pixelsperbeat [expr ($xrbx - $xlbx) / double($stop - $start)]
    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx $start $stop 0.0 200.0 
@@ -5792,7 +5799,8 @@ proc compute_notegram {source} {
    set exec_out "compute_notegram:\n"
    set permut5th {0 7 2 9 4 11 6 1 8 3 10 5}
    # white or black characters
-   set colfg [lindex [.info.txt config -fg] 4]
+   set colfg [lindex [.info.input config -fg] 4]
+
    copyMidiToTmp $source
    set cleanData 0
    set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
@@ -9039,7 +9047,7 @@ proc plotmidi_pitch_pdf {} {
     set hgraph ""
     set maxhgraph 0.0
     set statc .pitchpdf.c
-    set colfg [lindex [.info.txt config -fg] 4]
+    set colfg [lindex [.info.input config -fg] 4]
     for {set i 0} {$i < 128} {incr i} {
         lappend hgraph $i
         lappend hgraph $histogram($i)
@@ -9080,7 +9088,7 @@ proc plotmidi_velocity_pdf {} {
         lappend hgraph $histogram($i)
         if {$histogram($i) > $maxhgraph} {set maxhgraph $histogram($i)}
     }
-    set colfg [lindex [.info.txt config -fg] 4]
+    set colfg [lindex [.info.input config -fg] 4]
     set maxhgraph [expr $maxhgraph + 0.1]
     if {[winfo exists .velocitypdf] == 0} {
         toplevel .velocitypdf
@@ -9117,7 +9125,8 @@ proc plotmidi_onset_pdf {} {
         lappend hgraph $histogram($i)
         if {$histogram($i) > $maxhgraph} {set maxhgraph $histogram($i)}
     }
-    set colfg [lindex [.info.txt config -fg] 4]
+    set colfg [lindex [.info.input config -fg] 4]
+    set colfg #000000
     set maxhgraph [expr $maxhgraph + 0.1]
     if {[winfo exists .onsetpdf] == 0} {
         toplevel .onsetpdf
@@ -9160,7 +9169,7 @@ proc plotmidi_offset_pdf {} {
         lappend hgraph $histogram($i)
         if {$histogram($i) > $maxhgraph} {set maxhgraph $histogram($i)}
     }
-    set colfg [lindex [.info.txt config -fg] 4]
+   set colfg [lindex [.info.input config -fg] 4]
     set maxhgraph [expr $maxhgraph + 0.1]
     if {[winfo exists .offsetpdf] == 0} {
         toplevel .offsetpdf
@@ -9200,7 +9209,7 @@ proc plotmidi_duration_pdf {} {
         if {$histogram($i) > $maxhgraph} {set maxhgraph $histogram($i)}
     }
     set maxhgraph [expr $maxhgraph + 0.1]
-    set colfg [lindex [.info.txt config -fg] 4]
+    set colfg [lindex [.info.input config -fg] 4]
     if {[winfo exists .durpdf] == 0} {
         toplevel .durpdf
         positionWindow .durpdf
@@ -9985,7 +9994,7 @@ proc plot_velocity_map {source} {
     set nrec [llength $pianoresult]
     set midilength [lindex $pianoresult [expr $nrec -6]]
 
-    set colfg [lindex [.info.txt config -fg] 4]
+   set colfg [lindex [.info.input config -fg] 4]
     #set limits [midi_limits .piano.can]
     #set start [expr double([lindex $limits 0])/$ppqn]
     #set stop  [expr double([lindex $limits 1])/$ppqn]
@@ -10432,10 +10441,9 @@ global desc
 global midi
 if {[array exist desc]} return
 set infile [file join $midi(rootfolder) MidiDescriptors.txt]
-.info.txt delete 1.0 end
-.info.txt insert insert "\nLooking for $infile\n"
+puts "Looking for $infile"
 if {![file exist $infile]} {
-  .info.txt insert insert "First create database\n\n" red
+   puts "First create database"
    return
    }
 set inhandle [open $infile r]
@@ -10443,9 +10451,11 @@ set index 0
 set version 0
 gets $inhandle line
 if {[lindex $line 0] == "database_version"} {
-  set version [lindex $line 1]}
+  set version [lindex $line 1]
+  }
 if {$version != 10} {
-  .info.txt insert insert "You should rerun create database to get version 10.\t" red}
+  puts "You should rerun create database to get version 10"
+  } 
 while {![eof $inhandle]} {
   gets $inhandle line
   if {[llength $line] == 2} {
@@ -10465,7 +10475,8 @@ while {![eof $inhandle]} {
      }
   }
 close $inhandle
-.info.txt insert insert "There are $index midi file descriptors\n\n"
+#.info.txt insert insert "There are $index midi file descriptors\n\n"
+puts "There are $index midi file descriptors"
 }
 
 proc search_window {} {
@@ -10802,40 +10813,38 @@ return "That is \n$drumnames"
 proc describe_filter {} {
 global searchstate
 global midi
-set w .info.txt
-$w delete 2.0 end
-$w insert insert "\nSearching for midi files which satisfy all of these conditions.\n"
+puts "\nSearching for midi files which satisfy all of these conditions.\n"
 if {$searchstate(cname)} {
-  $w insert insert "The file name contains the string '$midi(sname)'\n"
+  puts "The file name contains the string '$midi(sname)'\n"
   }
 if {$searchstate(ctempo)} {
-  $w insert insert "The tempo lies between [expr $midi(tempo) -10] and [expr $midi(tempo) + 10]  beats/minute.\n"
+  puts "The tempo lies between [expr $midi(tempo) -10] and [expr $midi(tempo) + 10]  beats/minute.\n"
   }
 if {$searchstate(checkprogs)} {
-  $w insert insert "The programs $midi(proglist) are all present. "
-  $w insert insert [expand_proglist $midi(proglist)]
+  puts "The programs $midi(proglist) are all present. "
+  puts[expand_proglist $midi(proglist)]
   }
 if {$searchstate(checkperc)} {
-  $w insert insert "The percussion codes $midi(drumlist) are all present. "
-  $w insert insert [expand_drumlist $midi(drumlist)]
+  puts "The percussion codes $midi(drumlist) are all present. "
+  puts [expand_drumlist $midi(drumlist)]
   }
 if {$searchstate(cbends)} {
-  $w insert insert "There are exist $midi(nbends) pitchbend commands present.\n"
+  puts "There are exist $midi(nbends) pitchbend commands present.\n"
   }
 if {$searchstate(cndrums)} {
-  $w insert insert "There are approximately $midi(ndrums) percussion instruments present.\n" 
+  puts "There are approximately $midi(ndrums) percussion instruments present.\n" 
   }
 if {$searchstate(cpcol)} {
-  $w insert insert "Matching the program color.\n" 
+  puts "Matching the program color.\n" 
   }
 if {$searchstate(cprog)} {
-  $w insert insert "Matching the program activity.\n" 
+  puts "Matching the program activity.\n" 
   }
 if {$searchstate(cpitch)} {
-  $w insert insert "Matching the pitch class distribution.\n" 
+  puts "Matching the pitch class distribution.\n" 
   }
 if {$searchstate(cpitche)} {
-  $w insert insert "The pitch class entropy lies between [expr $midi(pitche) -0.05] and [format %5.2f [expr $midi(pitche) + 0.05]].\n"}
+  puts "The pitch class entropy lies between [expr $midi(pitche) -0.05] and [format %5.2f [expr $midi(pitche) + 0.05]].\n"}
 }
 
 proc init_match_histogram {} {
@@ -11301,7 +11310,7 @@ for {set i 1} {$i < $descsize} {incr i} {
      }
   }
 set msg "$j files were found which satisfied these conditions.\n"
-.info.txt insert insert "$msg"
+puts "$msg"
 return $j
 }
 
@@ -11336,7 +11345,7 @@ grid .status.progress
 pack .status
 .status.progress start
 set nfiles [count_filtered_files]
-if {$descsize < 2} {.info.txt insert insert "midi descriptors are empty\n\n" red
+if {$descsize < 2} {puts "midi descriptors are empty\n\n"
               	   .searchbox.msg configure -text "First create database" -fg red} else {.searchbox.msg configure -text ""}
 
 set threshold [expr 50.0 /$nfiles]
@@ -11384,7 +11393,7 @@ for {set i 1} {$i < $descsize} {incr i} {
   }
  
 set msg "[llength [.treebrowser.tree children {}]] files were inserted in list.\nScan again to get a different selection.\n"
-.info.txt insert insert "$msg\n"
+puts "$msg\n"
 destroy .status.progress
 destroy .status
 if {[expr $searchstate(cpcol)+$searchstate(cpitch)]+$searchstate(cprog) == 1} plot_match_histogram
@@ -11783,6 +11792,23 @@ close $inhandle
 append exec_out "\nLoaded genre.tsv from $midi(rootfolder)"
 } 
 
+proc lakh_core_filename {midiname} {
+#assumes clean lakh midi filename convention
+set midiname [string range $midiname 0 end-4]
+set l [string length $midiname]
+set l [expr $l -1]
+set last [string index $midiname $l]
+set l1 [expr $l -1]
+set last1 [string index $midiname $l1]
+if {[string is integer $last1]} {
+ set midiname [string range $midiname 0 [expr $l1 -2] ]
+ } elseif {[string is integer $last]} {
+ set midiname [string range $midiname 0 [expr $l -2] ]
+ }
+return $midiname
+}
+
+
 proc search_genre_database {} {
 global genre_db
 global midi
@@ -11790,8 +11816,7 @@ set rootfolder $midi(rootfolder)
 set rootfolderbytes [string length $rootfolder]
 incr rootfolderbytes
 set midiname  [string range $midi(midifilein) $rootfolderbytes end]
-set midiname [split $midiname \.]
-set midiname [lindex $midiname 0]
+set midiname [lakh_core_filename $midiname]
 set genre ""
 if {[info exist genre_db($midiname)]} {
    set genre $genre_db($midiname)
@@ -12116,11 +12141,14 @@ set ntrk 1
 SwitchBetweenInfoAndTinfo 
 check_midi2abc_midistats_and_midicopy_versions 
 if {$midi(rootfolder) == ""} {
-  .info.txt insert insert $welcome
-  .info.txt configure -height 13
+  #.info.txt insert insert $welcome
+  #.info.txt configure -height 13
+  puts "welcome = $welcome"
   } else {
   set msg "Last midi file opened was $midi(midifilein)\nYou can load it using the menu item file/reload last midi file."
-  .info.txt insert insert $msg 
+  label .info.msg -text $msg
+  grid .info.msg
+  #puts "msg = $msg"
   }
 
 
@@ -15909,8 +15937,7 @@ set rootfolder $midi(rootfolder)
 set rootfolderbytes [string length $rootfolder]
 incr rootfolderbytes
 set midiname  [string range $midi(midifilein) $rootfolderbytes end]
-set midiname [split $midiname \.]
-set midiname [lindex $midiname 0]
+set midiname [lakh_core_filename $midiname]
 label $w.lab -text $midiname -font $df
 pack $w.lab
 entry $w.ent -textvariable genredata -width 20 -font $df
@@ -15929,8 +15956,7 @@ set rootfolder $midi(rootfolder)
 set rootfolderbytes [string length $rootfolder]
 incr rootfolderbytes
 set midiname  [string range $midi(midifilein) $rootfolderbytes end]
-set midiname [split $midiname \.]
-set midiname [lindex $midiname 0]
+set midiname [lakh_core_filename $midiname]
 .genrewindow.lab configure -text $midiname -font $df
 set genredata "" 
 .genrewindow.ok configure -text ""
@@ -15946,8 +15972,7 @@ set rootfolder $midi(rootfolder)
 set rootfolderbytes [string length $rootfolder]
 incr rootfolderbytes
 set midiname  [string range $midi(midifilein) $rootfolderbytes end]
-set midiname [split $midiname \.]
-set midiname [lindex $midiname 0]
+set midiname [lakh_core_filename $midiname]
 set genre_db($midiname) $genredata
 .genrewindow.ok configure -text "ok"
 set genreUpdated 1
@@ -15989,6 +16014,7 @@ tooltip::tooltip $w.ngaps "Number of gaps greater than 8 beats"
 tooltip::tooltip $w.pav "Average midi pitch (60 is middle C)"
 tooltip::tooltip $w.pmn "Minimum midi pitch"
 tooltip::tooltip $w.pmx "Maximum midi pitch"
+tooltip::tooltip $w.pme "Entropy of the pitch class distribution"
 tooltip::tooltip $w.dav "Average note duration 1.0 = quarter note"
 tooltip::tooltip $w.dmn "Minimum note duration"
 tooltip::tooltip $w.dmx "Maximum note duration"
@@ -16014,23 +16040,21 @@ global labelrow
 set labelcol 0
 set hyphen "-"
 set w .f
-#get_npulses_and_ntrks $midiInfo
 if {![winfo exists $w]} {
 #  frame $w
 #  grid $w 
    toplevel $w
   } else {
   destroy $w
-  frame $w
-  grid $w
+  toplevel $w
   }
 label $w.00 -text $midi(midifilein)
 grid $w.00 -row 0 -columnspan 12
 table_header
 foreach token $midiInfo {
-  if {[lindex $token 0] == "ppqn"} {set ppqn [lindex $token 1]}
-  if {[lindex $token 0] == "trk"} {set trk [lindex $token 1]}
-  if {[lindex $token 0] == "trkinfo"} {
+  if {[string first "ppqn" $token] >= 0} {set ppqn [lindex $token 1]}
+  if {[string first "trk" $token] >= 0} {set trk [lindex $token 1]}
+  if {[string first "trkinfo" $token] >= 0} {
     incr labelrow 
     set labelcol 0
     get_trkinfo channel prog nnotes nharmony pmean pmin pmax dur durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy $token
@@ -16133,6 +16157,11 @@ foreach token $midiInfo {
  }
 }
 
+bind all <Control-j> {
+        set midi_info [get_midi_info_for]
+        set midi_info [split $midi_info '\n]
+        make_table $midi_info
+                     }
 
 
 
