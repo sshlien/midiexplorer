@@ -4,7 +4,7 @@ global sortedgenrelist
 global midi
 global exec_out
 if {[array exist genre_db]} return
-set genrefile cleanedsortedgenre.txt
+set genrefile genre.tsv
 
 set i 0
 set genrelist {}
