@@ -266,7 +266,7 @@ foreach midi $midifileList {
       }
     if {[string first "metatext" $line] >= 0} {
          set out [string range $line 10 end]
-         if {[string first "vocal" $out] > 0} {
+         if {[string first "Melody" $out] > 0} {
             #puts $midi
             #puts $trk
             set melodyfound 1}

@@ -32,14 +32,39 @@ foreach {item0 item1} $countlist {
   set elem [list $item0 $item1] 
   lappend gcounts $elem
   }
-
 set gcounts [lsort -index 1 -integer $gcounts]
+return $gcounts
+}
+
+proc output_gcounts {gcounts} {
 foreach elem $gcounts {
   puts "[lindex $elem 0]\t[lindex $elem 1]"
   }
 }
 
-load_genre_database
+proc output_html_table {gcounts} {
+set i 0
+puts "<table>"
+foreach elem $gcounts {
+  set out "[lindex $elem 0] ([lindex $elem 1])"
+  if {[lindex $elem 0] == ""} continue
+if {[expr $i % 4] == 0} {
+  puts "  <tr>"
+  }
+puts "    <td> $out </td>"
+if {[expr $i % 4] == 3} {
+  puts "  </tr>"}
+incr i
+ }
+puts "  </tr>"
+puts "</table>"
+}
+
+
+
+set gcounts [load_genre_database]
+#output_gcounts $gcounts
+output_html_table $gcounts
 
 
 

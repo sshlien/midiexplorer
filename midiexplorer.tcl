@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.29 2023-10-17 19:20" 
+set midiexplorer_version "MidiExplorer version 4.29 2023-10-19 16:45" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -936,7 +936,7 @@ wm protocol . WM_DELETE_WINDOW {
 proc getVersionNumber {executable} {
     set found [file exist $executable]
     if {$found == 0} {
-	    appendInfoMessage "cannot find $executable\n"
+	    appendInfoError "cannot find $executable"
              }
     set cmd "exec [list $executable] -ver"
     catch {eval $cmd} result
@@ -965,7 +965,7 @@ package require Tk
 
 # .top contains both .treebrowser and .info
 positionWindow "."
-panedwindow .top -orient vertical -showhandle 1 -sashwidth 10 -sashrelief sunken -sashpad 4 
+panedwindow .top -orient vertical -showhandle 1 -sashwidth 10 -sashrelief sunken -sashpad 4 -height 600
 pack .top -expand 1 -fill both
 
 set systembackground [lindex [. configure -background] 3]
@@ -1284,7 +1284,7 @@ menu $ww -tearoff 0
        $ww add command -label "pitch class entropy distribution" -command pitchEntropyDistribution -font $df
 
 
-button $w.menuline.abc -text abc -font $df -command {create_abc_file none}
+button $w.menuline.abc -text abc -font $df -command {create_abc_file none} -state disabled
 tooltip::tooltip $w.menuline.abc "Convert the selected tracks (channels) or entire\nmidi file to abc notation and open an abc editor."
 
 #        find title 
@@ -1647,11 +1647,13 @@ proc rglob { basedir pattern } {
 
 proc populatedir {tree root} {
    global font rootnode
+   global midi
    $tree tag configure fnt -font $font
    $tree delete [$tree children {}]
    set rootnode [$tree insert {} end -text $root -values [list $root directory] -tag fnt]
    populateTree $tree $rootnode
-   load_genre_database
+   set genrefile $midi(rootfolder)/genre.tsv
+   if {[file exist $genrefile]} {load_genre_database}
    }
 
 
@@ -1838,7 +1840,10 @@ if {[lindex $c 1] == "file"} {
   set f [lindex $c 0]
   set f [file dirname $f]
   set filelist [rglob $f *.mid]
-  set filelist [concat $filelist [rglob $f *.MID]]
+# Linux is sensitive to the case of file names. Other operating systems
+# like windows are case insensitive.
+  if {$tcl_platform(platform) == "unix"} {
+     set filelist [concat $filelist [rglob $f *.MID]]}
   foreach f $filelist {
      set id [.treebrowser.tree insert {} $p -text $f -tag green -values [list $f "file"]]
      lappend idlist $id
@@ -1854,10 +1859,10 @@ if {[lindex $c 1] == "file"} {
 
 
 # join .treebrowser and .info in the panedwindow called .top
-frame .info
+frame .info 
 pack .info -anchor w 
 .top add .treebrowser 
-.top add .info
+.top add .info -stretch always
 
 proc presentInfoMessage {msg} {
 global df
@@ -1871,15 +1876,35 @@ label .info.msg -text $msg -font $df -justify left
 grid .info.msg
 }
 
-proc appendInfoMessage {txt} {
-global df
-if {![winfo exist .info.text]} {
+set msgseq 0
+
+proc clearInfoMessages {} {
+global msgseq
+set msgseq 0
+if {[winfo exist .info]} {
   foreach w [winfo children .info] {
      destroy $w
      }
-  text .info.text
-  grid .info.text}
-.info.text insert end $txt\n 
+  }
+}
+
+
+proc appendInfoMessage {msg} {
+global msgseq
+global df
+label .info.msg$msgseq -text $msg -font $df -justify left
+grid .info.msg$msgseq -row $msgseq -sticky w
+incr msgseq
+#puts ".info config = [.top panecget .info -stretch]"
+#puts ".info sash = [.top proxy coord ]"
+}
+
+proc appendInfoError {msg} {
+global msgseq
+global df
+label .info.msg$msgseq -text $msg -font $df -justify left -fg red
+grid .info.msg$msgseq -row $msgseq -sticky w
+incr msgseq
 }
 
 proc presentMidiInfo {} {
@@ -2074,6 +2099,7 @@ proc selected_midi {} {
    .treebrowser.menuline.play configure -state normal
    .treebrowser.menuline.rhythm configure -state normal
    .treebrowser.menuline.pitch configure -state normal
+   .treebrowser.menuline.abc configure -state normal
    set midi(midifilein) $f
    updateHistory [file dirname $f]
    clearMidiTracksAndChannels
@@ -2103,6 +2129,7 @@ proc load_last_midi_file {} {
  .treebrowser.menuline.play configure -state normal
  .treebrowser.menuline.rhythm configure -state normal
  .treebrowser.menuline.pitch configure -state normal
+ .treebrowser.menuline.abc configure -state normal
  set midi_info [get_midi_info_for]
  if {$midi_info == ""} return
  parse_midi_info $midi_info
@@ -4167,22 +4194,19 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
     set result [getVersionNumber $midi(path_midi2abc)]
     set err [scan $result "%f" ver]
     if {$err == 0 || $ver < 3.57} {
-         set msg "You need midi2abc.exe version 3.57.\n"
+         appendInfoError "You need midi2abc.exe version 3.57"
          }
     set result [getVersionNumber $midi(path_midicopy)]
     set err [scan $result "%f" ver]
     #puts $result
     if {$err == 0 || $ver < 1.38} {
-         append msg "You need midicopy.exe version 1.38 or higher.\n"
+         appendInfoError "You need midicopy.exe version 1.38 or higher."
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
     if {$err == 0 || $ver < 0.75} {
-         append msg "You need midistats.exe version 0.75 or higher.\n"
+         appendInfoError "You need midistats.exe version 0.75 or higher."
          }
-    if {[string length $msg] >10} {
-      presentInfoMessage $msg
-      }
     return pass
 }
 
@@ -10246,6 +10270,7 @@ proc mfcntlcmd {} {
 
 proc make_midi_database {} {
 global midi
+global tcl_platform
 set outfile [file join $midi(rootfolder) MidiDescriptors.txt]
 if {[file exist $outfile]} {
   set choice [tk_messageBox -type yesno -default no \
@@ -10260,7 +10285,10 @@ set sizelimit 20000
 presentInfoMessage "finding all midi files...\n"
 update
 set filelist [rglob $midi(rootfolder) *.mid ] 
-set filelist [concat $filelist [rglob $midi(rootfolder) *.MID]]
+# Linux is sensitive to case of file names. Other operating systems
+# like windows are case insensitive.
+if {$tcl_platform(platform) == "unix"} {
+   set filelist [concat $filelist [rglob $midi(rootfolder) *.MID]]}
 set nfiles [llength $filelist]
 set sizelimit [expr min($sizelimit,$nfiles)]
 appendInfoMessage "$nfiles midi files were found\n"
@@ -10280,7 +10308,7 @@ grid .status.progress .status.msg
 .status.progress start
 set starttime [clock seconds]
 #fconfigure stdin -blocking 0 -buffering none
-puts $outhandle "database_version 10"
+puts $outhandle "database_version 11"
 foreach midifile $filelist {
   incr i
   #if {![eof stdin]} break
@@ -10379,7 +10407,7 @@ puts $outhandle "midilength $midilength"
 puts $outhandle "pitchbend $pitchbends"
 #puts $outhandle "programs [list $programlist]"
 puts $outhandle "progs  $progs"
-puts $outhandle "progsact $progsact"
+puts $outhandle "cprogsact $cprogsact"
 puts $outhandle "programcmd $programcmd"
 puts $outhandle "drums $drums"
 puts $outhandle "drumhits $drumhits"
@@ -10434,9 +10462,10 @@ global desc
 global midi
 if {[array exist desc]} return
 set infile [file join $midi(rootfolder) MidiDescriptors.txt]
+clearInfoMessages
 appendInfoMessage "Looking for $infile"
 if {![file exist $infile]} {
-   appendInfoMessage "First create database"
+   appendInfoError "First create database"
    return
    }
 set inhandle [open $infile r]
@@ -10446,8 +10475,8 @@ gets $inhandle line
 if {[lindex $line 0] == "database_version"} {
   set version [lindex $line 1]
   }
-if {$version != 10} {
-  appendInfoMessage "You should rerun create database to get version 10"
+if {$version != 11} {
+  appendInfoError "You should rerun create database to get version 11"
   } 
 while {![eof $inhandle]} {
   gets $inhandle line
@@ -10468,7 +10497,6 @@ while {![eof $inhandle]} {
      }
   }
 close $inhandle
-#.info.txt insert insert "There are $index midi file descriptors\n\n"
 appendInfoMessage "There are $index midi file descriptors"
 }
 
@@ -10806,12 +10834,12 @@ return "That is \n$drumnames"
 proc describe_filter {} {
 global searchstate
 global midi
-appendInfoMessage "\nSearching for midi files which satisfy all of these conditions."
+appendInfoMessage "Searching for midi files which satisfy all of these conditions."
 if {$searchstate(cname)} {
   appendInfoMessage "The file name contains the string '$midi(sname)'\n"
   }
 if {$searchstate(ctempo)} {
-  appendInfoMessage "The tempo lies between [expr $midi(tempo) -10] and [expr $midi(tempo) + 10]  beats/minute.\n"
+  appendInfoMessage "The tempo lies between [expr $midi(tempo) -10] and [expr $midi(tempo) + 10]  beats/minute."
   }
 if {$searchstate(checkprogs)} {
   appendInfoMessage "The programs $midi(proglist) are all present. "
@@ -10822,22 +10850,22 @@ if {$searchstate(checkperc)} {
   appendInfoMessage [expand_drumlist $midi(drumlist)]
   }
 if {$searchstate(cbends)} {
-  appendInfoMessage "There are exist $midi(nbends) pitchbend commands present.\n"
+  appendInfoMessage "There are $midi(nbends) pitchbend commands present."
   }
 if {$searchstate(cndrums)} {
-  appendInfoMessage "There are approximately $midi(ndrums) percussion instruments present.\n" 
+  appendInfoMessage "There are approximately $midi(ndrums) percussion instruments present." 
   }
 if {$searchstate(cpcol)} {
-  appendInfoMessage "Matching the program color.\n" 
+  appendInfoMessage "Matching the program color." 
   }
 if {$searchstate(cprog)} {
-  appendInfoMessage "Matching the program activity.\n" 
+  appendInfoMessage "Matching the program activity." 
   }
 if {$searchstate(cpitch)} {
-  appendInfoMessage "Matching the pitch class distribution.\n" 
+  appendInfoMessage "Matching the pitch class distribution." 
   }
 if {$searchstate(cpitche)} {
-  appendInfoMessage "The pitch class entropy lies between [expr $midi(pitche) -0.05] and [format %5.2f [expr $midi(pitche) + 0.05]].\n"}
+  appendInfoMessage "The pitch class entropy lies between [expr $midi(pitche) -0.05] and [format %5.2f [expr $midi(pitche) + 0.05]]."}
 }
 
 proc init_match_histogram {} {
@@ -10991,7 +11019,7 @@ global rcriterion
 #puts "item = $item"
 if {[dict exist $desc($item) progs] == 0} {return 1.0}
 set prg [dict get $desc($item) progs]
-set prgact [dict get $desc($item) progsact]
+set prgact [dict get $desc($item) cprogsact]
 set p2 0.0
 set p3 0.0
 foreach p $prg pa $prgact {
@@ -11021,7 +11049,7 @@ global rcriterion
 #puts "item = $item"
 if {[dict exist $desc($item) progs] == 0} {return 1.0}
 set prg [dict get $desc($item) progs]
-set prgact [dict get $desc($item) progsact]
+set prgact [dict get $desc($item) cprogsact]
 set p2 0.0
 set p3 0.0
 #normalize prgact
@@ -11313,7 +11341,7 @@ global desc
 global searchstate
 global midi
 global rcriterion
-#global rootnode
+clearInfoMessages
 set rootfolder $midi(rootfolder)
 set rootfolderbytes [string length $rootfolder]
 set n [prepare_filter]
@@ -11709,6 +11737,7 @@ set cmd "exec [list $midi(browser)] $url &"
 catch {eval $cmd} result
 }
 
+# This function is not called any more.
 proc initialize_genre_database {} {
 global desc
 global midi
@@ -11757,26 +11786,6 @@ close $outhandle
 set newfilesize [file size $csvfile]
 puts "$csvfile has grown from $originalsize to $newfilesize"
 }
-
-# the code in this procedure has been replace
-#proc load_genre_database {} {
-#global genre_db
-#global midi
-#global exec_out
-#if {[array exist genre_db]} return
-#set genrefile [file join $midi(rootfolder) genre.tsv]
-#if {![file exist $genrefile]} {
-#   append exec_out "Could not find genre.tsv in $midi(rootfolder)\ncreating template."
-#   initialize_genre_database}
-#set inhandle [open $genrefile]
-#while {![eof $inhandle]} {
-#  gets $inhandle line
-#  set data [split $line \t]
-#  set genre_db([lindex $data 0]) [lindex $data 1] 
-#  }
-#close $inhandle
-#append exec_out "\nLoaded genre.tsv from $midi(rootfolder)"
-#} 
 
 proc lakh_core_filename {midiname} {
 #assumes clean lakh midi filename convention
@@ -12127,7 +12136,7 @@ check_midi2abc_midistats_and_midicopy_versions
 if {$midi(rootfolder) == ""} {
   appendInfoMessage  $welcome
   } else {
-  set msg "Last midi file opened was $midi(midifilein)\nYou can load it using the menu item file/reload last midi file or the short cut ctrl-m.\n\n\n\n"
+  set msg "Last midi file opened was $midi(midifilein)\nYou can load it using the menu item file/reload last midi file or the short cut ctrl-m."
   appendInfoMessage $msg
   }
 
@@ -13087,9 +13096,7 @@ proc make_playlist_manager {} {
   set playlistfolder [file join $midi(rootfolder) playlists]
   #puts "playlistfolder = $playlistfolder"
   if {![file exist $playlistfolder]} {
-    append exec_out "\nCould not find $playlistfolder folder"
-    set msg "The folder $playlistfolder was not found."
-    tk_messageBox -message $msg -type ok
+    appendInfoError "Could not find $playlistfolder folder"
     } else {
     append exec_out "\nLoading the contents of $playlistfolder folder"
     set playlistfiles [glob $playlistfolder/*.txt]
@@ -15968,8 +15975,9 @@ proc load_genre_database {} {
 global genre_db
 global midi
 set genrefile $midi(rootfolder)/genre.tsv
+puts "genrefile = $genrefile"
 if {![file exist $genrefile]} {
-   presentInfoMessage "cannot find $genrefile"
+   appendInfoError "cannot find $genrefile"
    return
    }
 set i 0
@@ -15980,7 +15988,7 @@ while {![eof $inhandle]} {
   set f [lindex $data 0]
   set g [lindex $data 1]
   set genre_db($f) $g 
-  if {$f == ""} {puts "blank line $i"}
+  #if {$f == ""} {puts "blank line $i"}
   incr i
   }
 close $inhandle
@@ -16123,9 +16131,6 @@ proc make_genre_manager {} {
 
   set selectedGenre none
   set genrefile $midi(rootfolder)/genre.tsv
-  if {![file exist $genrefile]} {
-     return
-     }
   if {![winfo exist .genremanager]} {
     load_genre_database
     count_genres
