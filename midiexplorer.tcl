@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.29 2023-10-19 16:45" 
+set midiexplorer_version "MidiExplorer version 4.31 2023-10-26 11:10" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -1987,7 +1987,7 @@ proc interpretMidiType1 {} {
 
   if {[info exist tempo]} {unset tempo}
   array unset miditxt 
-  array unset track2channel
+  #array unset track2channel
   array unset channel2program
   array unset track2program
   array unset programmod
@@ -2202,10 +2202,14 @@ global cprogs
 global cprogsact
 global pitchcl
 global channel_activity
+global track_activity
 global midierror
 global useflats
 global compactMidifile
+global lastpulse
+global lastbeat
 global midi
+global track2channel
 array unset trkinfo
 set midierror ""
 set ntrks 0
@@ -2227,6 +2231,9 @@ foreach line [split $midi_info '\n'] {
   switch $info_id {
     ntrks {set ntrks [lindex $line 1]}
     ppqn {set ppqn [lindex $line 1]}
+    npulses {set lastpulse [lindex $line 1]
+             set lastbeat [expr $lastpulse/$ppqn]
+             }
     tsignature {set tsignature [lindex $line 1]}
     trk {set t [lindex $line 1]
          set trkinfo($t) ""}
@@ -2237,6 +2244,7 @@ foreach line [split $midi_info '\n'] {
                set pitchcl [normalize_vectorlist $pitchcl]
               }
     chnact   {set channel_activity [lrange $line 1 end]}
+    trkact   {set track_activity [lrange $line 1 end]}
     progs {set cprogs [lrange $line 1 end]}
     progsact {set cprogsact [lrange $line 1 end]}
     Error: {set problem [lrange $line 1 end]
@@ -2244,7 +2252,10 @@ foreach line [split $midi_info '\n'] {
            }
     activetrack {set ntrks [lindex $line 1]
                  append midierror "only $ntrks valid tracks"}
-    default {if {[info exist t]} {lappend trkinfo($t) $line }
+    default {if {[info exist t] && ($info_id == "trkinfo" )} {
+                 lappend trkinfo($t) $line
+                 set track2channel($t) [lindex $line 1]
+                 }
             }
     }
  }
@@ -2542,9 +2553,10 @@ global activechan
 global track2channel
 global lastpulse
 
-array unset activechan
-array unset track2channel
 
+array unset activechan
+#array unset track2channel
+#puts "midiType1Table: unsetting track2channel"
 set w .tinfo
 if {![winfo exist $w]} {expose_tinfo}
 $w.tree delete [$w.tree children {}]
@@ -2590,14 +2602,12 @@ global trkinfo
 global xchannel2program
 for {set i 0} {$i < 17} {incr i}  {set xchannel2program($i) 0}
 for {set i 1} {$i <= $ntrks} {incr i} {
-  foreach token $trkinfo($i) {
-     if {[lindex $token 0] == "program"} {
-       set c [lindex $token 1]
-       set p [lindex $token 2]
-       set xchannel2program($c) $p
-       }
+  set token [lindex $trkinfo($i) 0]
+  set c [lindex $token 1]
+  set p [lindex $token 2]
+#  puts "c = $c p = $p"
+  set xchannel2program($c) $p
   }
-}
 #for {set i 0} {$i < 17} {incr i} {
 #  puts "chan $i prog $xchannel2program($i)"
 #  }
@@ -4204,8 +4214,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.75} {
-         appendInfoError "You need midistats.exe version 0.75 or higher."
+    if {$err == 0 || $ver < 0.77} {
+         appendInfoError "You need midistats.exe version 0.77 or higher."
          }
     return pass
 }
@@ -6167,6 +6177,7 @@ proc show_prog_structure {} {
   global ntrks
   global activechan
   global channel_activity
+  global track_activity
   global chanprog
   global xchannel2program
   global track2program
@@ -6193,26 +6204,24 @@ proc show_prog_structure {} {
      }
 
 
+  #puts "channel_activity = $channel_activity"
+  #puts "track_activity = $track_activity"
+  #puts "track2channel = [array get track2channel]"
   set nbut 0
   .midistructure.can delete all
   .midistructure.canx delete all
   for {set i 2} {$i < 32} {incr i} {pack forget .midistructure.leftbuttons.$i}
   for {set i 1} {$i < 17} {incr i} {pack forget .midistructure.leftbuttons.c$i}
-  #puts "activechan = [array get activechan]"
+  #puts "channel_activity = $channel_activity"
   #puts "track2channel = [array get track2channel]"
   if {$midi(midishow_sep) == "track"} {
-    for {set i 2} {$i < 32} {incr i} {
-       if {[info exist track2channel($i)]} {
-	       set c $track2channel($i)
-       } else {#puts "track2channel($i) does not exist"
-	       break
-	       }
-       if {[lindex $channel_activity $i] > 0} {
+    for {set i 0} {$i <= $ntrks} {incr i} {
+       if {[lindex $track_activity $i] > 0} {
          set i1 [expr $i + 1]
          pack .midistructure.leftbuttons.$i1 -side top
-         # ct2band maps track/channel to button band
          incr nbut
          set ct2band($i) $nbut
+         #puts "ct2band($i) = $nbut"
          } 
        }
   } else {
@@ -6231,8 +6240,6 @@ proc show_prog_structure {} {
     }
   }
   .midistructure.can create rect -1 -1 -1 -1 -tags mark -fill yellow -stipple gray25
-  #plot_programcolor
-  #plot_program_activity
 
 
   set yspacing [winfo reqheight .midistructure.leftbuttons.2]
@@ -7096,7 +7103,9 @@ set trkchn ""
 set option ""
 #puts "midi(midishow_sep) = $midi(midishow_sep)"
 if {$midi(midishow_sep) == "track"} {
-  for {set i 0} {$i <= $lasttrack} {incr i} {
+  set n $lasttrack
+  if {$n > 39} {set n 39}
+  for {set i 0} {$i <= $n} {incr i} {
      if {$miditracks($i)} {append trkchn "$i,"}
      }
   if {[string length $trkchn] > 0} {
@@ -14710,7 +14719,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 4.84\
             path_midi2abc 3.59\
             path_midicopy 1.38\
-	    path_midistats 0.75\
+	    path_midistats 0.77\
             path_abcm2ps 8.14.6}
 
 
@@ -15975,7 +15984,7 @@ proc load_genre_database {} {
 global genre_db
 global midi
 set genrefile $midi(rootfolder)/genre.tsv
-puts "genrefile = $genrefile"
+#puts "genrefile = $genrefile"
 if {![file exist $genrefile]} {
    appendInfoError "cannot find $genrefile"
    return
