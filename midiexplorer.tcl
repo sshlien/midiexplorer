@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.31 2023-10-26 11:10" 
+set midiexplorer_version "MidiExplorer version 4.32 2023-10-27 13:35" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -1917,7 +1917,7 @@ proc presentMidiInfo {} {
        destroy $w
        }
    }
-   grab_all_program_commands
+   #grab_all_program_commands
    if {$ntrks == 0} return
    interpretMidiType1
    set lasttrack $ntrks
@@ -2197,6 +2197,7 @@ proc parse_midi_info {midi_info} {
 global ntrks
 global trkinfo
 global ppqn
+global progr
 global cprogcolor
 global cprogs
 global cprogsact
@@ -2210,9 +2211,12 @@ global lastpulse
 global lastbeat
 global midi
 global track2channel
+global xchannel2program
+array unset xchannel2program
 array unset trkinfo
 set midierror ""
 set ntrks 0
+array unset progr
 set rootfolder $midi(rootfolder)
 set rootfolderbytes [string length $rootfolder]
 incr rootfolderbytes
@@ -2245,6 +2249,10 @@ foreach line [split $midi_info '\n'] {
               }
     chnact   {set channel_activity [lrange $line 1 end]}
     trkact   {set track_activity [lrange $line 1 end]}
+    program {set c [lindex $line 1]
+             set p [lindex $line 2]
+             set xchannel2program($c) $p
+             }
     progs {set cprogs [lrange $line 1 end]}
     progsact {set cprogsact [lrange $line 1 end]}
     Error: {set problem [lrange $line 1 end]
@@ -2254,6 +2262,7 @@ foreach line [split $midi_info '\n'] {
                  append midierror "only $ntrks valid tracks"}
     default {if {[info exist t] && ($info_id == "trkinfo" )} {
                  lappend trkinfo($t) $line
+                 #puts "line = $line"
                  set track2channel($t) [lindex $line 1]
                  }
             }
@@ -2264,8 +2273,6 @@ foreach line [split $midi_info '\n'] {
  set useflats 0
  if {$flats > $sharps} {set useflats 1}
  set cprogsact [normalizeActivity $cprogsact]
- #puts "cprogs = $cprogs"
- #puts "cprogsact = $cprogsact"
  return 0
 }
 
@@ -2574,11 +2581,15 @@ for {set i 1} {$i <= $ntrks} {incr i} {
       set chan_spread [expr ($lastpulse - $quietTime)]
       set chan_spread [expr $chan_spread/double($lastpulse)]
       set chan_spread [format %5.3f $chan_spread]
-      set channel2program($channel) $xchannel2program($channel)
+      if {![info exist xchannel2program($channel)]} {
+          set channel2program($channel) 0
+          } else {
+          set channel2program($channel) $xchannel2program($channel)
+          }
       if {$channel == 10} {
         set prog "drum channel"
       } else {
-        set prog $xchannel2program($channel)
+        set prog $channel2program($channel)
         set prog [lindex $mlist $prog]
       }
       set outline "$i $channel [list $prog ]"
@@ -2592,26 +2603,24 @@ for {set i 1} {$i <= $ntrks} {incr i} {
 
 
 
-proc grab_all_program_commands {} {
+####### not used any more
+#proc grab_all_program_commands {} {
 # Some type 1 midi files define all the program
 # assignments in a separate track (eg last track).
 # As a precaution we look for the program commands
 # separately rather than rely on trkinfo
-global ntrks
-global trkinfo
-global xchannel2program
-for {set i 0} {$i < 17} {incr i}  {set xchannel2program($i) 0}
-for {set i 1} {$i <= $ntrks} {incr i} {
-  set token [lindex $trkinfo($i) 0]
-  set c [lindex $token 1]
-  set p [lindex $token 2]
-#  puts "c = $c p = $p"
-  set xchannel2program($c) $p
-  }
+#global xchannel2program
+#global progr
+#for {set i 0} {$i < 17} {incr i} {set xchannel2program($i) 0}
+#set i 0
+#foreach p $cprogs {
+#  set xchannel2program($i) $p
+#  incr i
+#  }
 #for {set i 0} {$i < 17} {incr i} {
 #  puts "chan $i prog $xchannel2program($i)"
 #  }
-}
+#}
 
 
 
