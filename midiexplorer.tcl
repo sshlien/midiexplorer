@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.32 2023-10-27 13:35" 
+set midiexplorer_version "MidiExplorer version 4.33 2023-10-30 19:25" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -50,7 +50,7 @@ set briefconsole 1
 #   Part 6.0 Midi file selection support
 #        selected_midi,  readMidiFileHeader,
 #        get_midi_info_for, parse_midi_info, get_trkinfo,
-#        midi_type0_table, midiType1Table
+#        midiType1Table
 #   Part 7.0 Program selector and support
 #   Part 8.0 Piano Roll window
 #         beat graph
@@ -1500,15 +1500,16 @@ if {[winfo exist .midistructure]} {
   midi_structure_window 
   }
 set w .tinfo
-foreach col {trk chn program notes spread pavg duration rpat bends controls} {
+foreach col {trk chn program vol notes spread pavg duration rpat bends controls} {
   $w.tree column $col -width [expr [font measure $df $col] + 10]
  }
 $w.tree column program -width [font measure $df "WWWWWWWWWWWWWW"]
 $w.tree column notes -width [font measure $df "WWWWWWWW"]
-pack forget .tinfo.tree .tinfo.vsb
-pack forget .tinfo
-pack .tinfo.tree .tinfo.vsb -side left -expand 1 -fill both 
-pack .tinfo
+$w.tree column vol -width [font measure $df "WWW"]
+#pack forget .tinfo.tree .tinfo.vsb
+#pack forget .tinfo
+#pack .tinfo.tree .tinfo.vsb -side left -expand 1 -fill both 
+#pack .tinfo
 tk_messageBox -message "Restart midiexplorer to fix font problems or resize mainwindow."
 }
 
@@ -1789,15 +1790,16 @@ set w .tinfo
 toplevel .tinfo
 positionWindow .tinfo
 set fontheight [font metrics $df -linespace]
-ttk::treeview $w.tree -columns {trk chn program notes spread pavg duration rpat bends controls} -show headings -yscroll "$w.vsb set" -height $fontheight
+ttk::treeview $w.tree -columns {trk chn program vol  notes spread pavg duration rpat bends controls} -show headings -yscroll "$w.vsb set" -height $fontheight
 ttk::scrollbar $w.vsb -orient vertical -command ".tinfo.tree yview"
-foreach col {trk chn program notes spread pavg duration rpat bends controls} {
+foreach col {trk chn program vol notes spread pavg duration rpat bends controls} {
   $w.tree heading $col -text $col
   $w.tree heading $col -command [list TinfoSortBy $col 0]
   $w.tree column $col -width [expr [font measure $df $col] + 10]
   }
 $w.tree column program -width [font measure $df "WWWWWWWWWWWWWW"]
 $w.tree column notes -width [font measure $df "WWWWWWWW"]
+$w.tree column vol -width [font measure $df "WWW"]
 $w.tree tag configure fnt -font $df
 pack $w.tree $w.vsb -side left -expand 1 -fill both 
 bind $w.tree <<TreeviewSelect>> {tinfoSelect}
@@ -1919,7 +1921,7 @@ proc presentMidiInfo {} {
    }
    #grab_all_program_commands
    if {$ntrks == 0} return
-   interpretMidiType1
+   interpretMidi
    set lasttrack $ntrks
 }
 
@@ -1964,7 +1966,7 @@ if {$midi(midishow_sep) == "chan"} {
 
 clearMidiTracksAndChannels
 
-proc interpretMidiType1 {} {
+proc interpretMidi {} {
   global ntrks
   global trkinfo
   global mlist
@@ -1983,6 +1985,8 @@ proc interpretMidiType1 {} {
   global nkeysig
   global timesig
   global ntimesig
+  global hasLyrics
+  global notQuantized
   global df
 
   if {[info exist tempo]} {unset tempo}
@@ -2009,8 +2013,10 @@ proc interpretMidiType1 {} {
   label .info.size -text "$lastbeat beats"  -font $df
   label .info.keysig -text "key signature: $keysig" -font $df
   label .info.timesig -text "time signature: $timesig" -font $df
-  label .info.ntimesig -text "$ntimesig time signatures" -font $df
-  label .info.nkeysig -text "$nkeysig key signatures" -font $df
+  label .info.ntimesig -text "$ntimesig time signatures" -font $df -fg darkblue
+  label .info.nkeysig -text "$nkeysig key signatures" -font $df -fg darkblue
+  label .info.lyrics -text "Has lyrics" -fg darkblue -font $df
+  label .info.notQuantized -text "Not quantized" -fg darkblue -font $df
   label .info.error -text $midierror -fg red -font $df
 
   if {[string length $midierror]>0} {
@@ -2020,6 +2026,15 @@ proc interpretMidiType1 {} {
   grid .info.genre -sticky w  
   grid .info.tracks .info.ppqn .info.size -sticky w
   grid .info.tempo .info.timesig .info.keysig -sticky w
+  set gridcmd "grid "
+  if {$ntimesig > 0} {append gridcmd ".info.ntimesig "}
+  if {$nkeysig > 0} {append gridcmd ".info.nkeysig "}
+  if {$notQuantized > 0} {append gridcmd ".info.notQuantized "}
+  if {$hasLyrics > 0} {append gridcmd ".info.lyrics "}
+  if {[string length $gridcmd] > 6} {
+    append gridcmd "-sticky w"
+    eval $gridcmd
+    }
 }
 
 
@@ -2197,7 +2212,7 @@ proc parse_midi_info {midi_info} {
 global ntrks
 global trkinfo
 global ppqn
-global progr
+#global progr
 global cprogcolor
 global cprogs
 global cprogsact
@@ -2212,11 +2227,16 @@ global lastbeat
 global midi
 global track2channel
 global xchannel2program
+global hasLyrics
+global notQuantized
+global chanvol
 array unset xchannel2program
 array unset trkinfo
 set midierror ""
 set ntrks 0
-array unset progr
+set hasLyrics 0
+set notQuantized 0
+#array unset progr
 set rootfolder $midi(rootfolder)
 set rootfolderbytes [string length $rootfolder]
 incr rootfolderbytes
@@ -2255,11 +2275,14 @@ foreach line [split $midi_info '\n'] {
              }
     progs {set cprogs [lrange $line 1 end]}
     progsact {set cprogsact [lrange $line 1 end]}
+    chanvol {set chanvol [lrange $line 1 end]}
     Error: {set problem [lrange $line 1 end]
             set midierror  "defective file : $problem\t"
            }
     activetrack {set ntrks [lindex $line 1]
                  append midierror "only $ntrks valid tracks"}
+    Lyrics {set hasLyrics 1}
+    unquantized {set notQuantized 1}
     default {if {[info exist t] && ($info_id == "trkinfo" )} {
                  lappend trkinfo($t) $line
                  #puts "line = $line"
@@ -2504,50 +2527,6 @@ set mididuration [format %6.1f $mididuration]
 
 
 
-proc midi_type0_table {} {
-global trkinfo
-global mlist
-global midi
-global channel2program
-global xchannel2program
-global channel_activity
-global activechan
-global lastpulse
-
-array unset activechan
-
-set w .tinfo
-$w.tree delete [$w.tree children {}]
-set trknum 1
-
-set nlines 1
-foreach line $trkinfo(1) {
-  if {[lindex $line 0] == "trkinfo"} {
-     get_trkinfo channel prog nnotes nharmony pmean pmin pmax duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy $line
-
-    set activechan($channel) 1
-    set totalnotes [expr $nnotes+$nharmony]
-    set channel2program($channel) $xchannel2program($channel)
-    set chan_action [lindex $channel_activity [expr $channel -1]]
-    set chan_spread [expr ($lastpulse - $quietTime)]
-    set chan_spread [expr $chan_spread/double($lastpulse)]
-    set chan_spread [format %5.3f $chan_spread]
-    if {$channel == 10} {
-      set prog [list drum channel]
-    } else {
-      set prog $xchannel2program($channel)
-      set prog [lindex $mlist $prog]
-    }
-    set outline "$trknum $channel [list $prog ]"
-    append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $rhythmpatterns $pitchbendCount $cntlparamCount"
-    #append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
-    set id [$w.tree insert {} end -values $outline -tag fnt]
-    incr nlines
-    }
-  }
-  $w.tree configure -height $nlines
-}
-
 proc midiType1Table {} {
 global trkinfo
 global mlist
@@ -2559,6 +2538,7 @@ global ntrks
 global activechan
 global track2channel
 global lastpulse
+global chanvol
 
 
 array unset activechan
@@ -2576,6 +2556,8 @@ for {set i 1} {$i <= $ntrks} {incr i} {
 
       set activechan($channel) 1
       set track2channel($i) $channel
+      set vol [lindex $chanvol $i]
+      if {$vol == 0} {set vol 100}
       set totalnotes [expr $nnotes+$nharmony]
       set chan_action [lindex $channel_activity [expr $channel -1]]
       set chan_spread [expr ($lastpulse - $quietTime)]
@@ -2592,7 +2574,8 @@ for {set i 1} {$i <= $ntrks} {incr i} {
         set prog $channel2program($channel)
         set prog [lindex $mlist $prog]
       }
-      set outline "$i $channel [list $prog ]"
+      set outline "$i $channel [list $prog ] $vol"
+      #set outline "$i $channel [list $prog ]"
       append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $rhythmpatterns $pitchbendCount $cntlparamCount"
       #append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
       set id [$w.tree insert {} end -values $outline -tag fnt]
@@ -4223,8 +4206,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.77} {
-         appendInfoError "You need midistats.exe version 0.77 or higher."
+    if {$err == 0 || $ver < 0.78} {
+         appendInfoError "You need midistats.exe version 0.78 or higher."
          }
     return pass
 }
@@ -7106,6 +7089,9 @@ global tbeat
 global exec_out
 set limits [getCanvasLimits $source]
 #puts "copyMidiToTmp $source: limits = $limits"
+#puts "miditracks [array get miditracks]"
+#puts "midichannels [array get midichannels]"
+
 set fbeat [lindex $limits 0]
 set tbeat  [lindex $limits 1]
 set trkchn ""
@@ -14728,7 +14714,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 4.84\
             path_midi2abc 3.59\
             path_midicopy 1.38\
-	    path_midistats 0.77\
+	    path_midistats 0.78\
             path_abcm2ps 8.14.6}
 
 
