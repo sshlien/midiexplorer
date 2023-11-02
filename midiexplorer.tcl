@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.33 2023-10-30 19:25" 
+set midiexplorer_version "MidiExplorer version 4.33 2023-11-02 12:40" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -1996,8 +1996,6 @@ proc interpretMidi {} {
   array unset track2program
   array unset programmod
 
-  gatherMidiSummary 
-  #midiType1Table
   if {![info exist timesig]} {set timesig 4/4}
 
   set genre [search_genre_database]
@@ -2027,7 +2025,7 @@ proc interpretMidi {} {
   grid .info.tracks .info.ppqn .info.size -sticky w
   grid .info.tempo .info.timesig .info.keysig -sticky w
   set gridcmd "grid "
-  if {$ntimesig > 0} {append gridcmd ".info.ntimesig "}
+  if {$ntimesig > 1} {append gridcmd ".info.ntimesig "}
   if {$nkeysig > 0} {append gridcmd ".info.nkeysig "}
   if {$notQuantized > 0} {append gridcmd ".info.notQuantized "}
   if {$hasLyrics > 0} {append gridcmd ".info.lyrics "}
@@ -2229,6 +2227,8 @@ global track2channel
 global xchannel2program
 global hasLyrics
 global notQuantized
+global nkeysig
+global ntimesig
 global chanvol
 array unset xchannel2program
 array unset trkinfo
@@ -2236,6 +2236,8 @@ set midierror ""
 set ntrks 0
 set hasLyrics 0
 set notQuantized 0
+set nkeysig 0
+set ntimesig 0
 #array unset progr
 set rootfolder $midi(rootfolder)
 set rootfolderbytes [string length $rootfolder]
@@ -2276,6 +2278,8 @@ foreach line [split $midi_info '\n'] {
     progs {set cprogs [lrange $line 1 end]}
     progsact {set cprogsact [lrange $line 1 end]}
     chanvol {set chanvol [lrange $line 1 end]}
+    #keysig {incr nkeysig}
+    timesig {incr ntimesig}
     Error: {set problem [lrange $line 1 end]
             set midierror  "defective file : $problem\t"
            }
@@ -2361,6 +2365,7 @@ proc list_tempomod {} {
   popMessage $msg
   }  
   
+# not used
 proc list_timesigmod {} {
   global timesigmod
   set msg ""
@@ -2373,6 +2378,7 @@ proc list_timesigmod {} {
   popMessage $msg
   }  
 
+# not used
 proc list_keysigmod {} {
   global keysigmod
   set msg ""
@@ -2389,7 +2395,7 @@ proc list_keysigmod {} {
 
 proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy line} {
  global ppqn
- global pitchbendsplit
+ #global pitchbendsplit
  upvar 1 $channel c
  upvar 1 $prog p
  upvar 1 $nnotes n
@@ -2445,7 +2451,7 @@ proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax duration durmin 
 }
 
 
-
+# This function does not work and is not used
 proc gatherMidiSummary {} {
 global trkinfo
 global ppqn
@@ -2459,9 +2465,7 @@ global pitchbends
 global tempocmds
 global mididuration
 global keysig
-global nkeysig
 global timesig
-global ntimesig
 global nprogramchange
 global pitchbendsplit
 global tempomod
@@ -2469,10 +2473,11 @@ global timesigmod
 global keysigmod
 global midiTempo
 
-set nkeysig 0
-set ntimesig 0
+puts "gatherMidiSummary:"
 set nprogramchange 0
 set tempocmds 1
+return
+
 set addendum ""
 if {[info exist pitchbendsplit]} {unset pitchbendsplit} 
 set tempomod {}
@@ -2514,6 +2519,7 @@ for {set i 1} {$i <= $ntrks} {incr i} {
         set timesig [lindex $token 1]
         lappend timesigmod [lrange $token 1 end]
         incr ntimesig
+        puts "ntimesig now $ntimesig"
      } elseif {[lindex $token 0] == "keysig"} {
         set keysig [lindex $token 1]
         incr nkeysig
@@ -2531,6 +2537,8 @@ proc midiType1Table {} {
 global trkinfo
 global mlist
 global midi
+global miditracks
+global midichannels
 global channel2program
 global xchannel2program
 global channel_activity
@@ -2540,10 +2548,10 @@ global track2channel
 global lastpulse
 global chanvol
 
+#puts "miditracks [array get miditracks]"
+#puts "midichannels [array get midichannels]"
 
 array unset activechan
-#array unset track2channel
-#puts "midiType1Table: unsetting track2channel"
 set w .tinfo
 if {![winfo exist $w]} {expose_tinfo}
 $w.tree delete [$w.tree children {}]
@@ -2556,7 +2564,7 @@ for {set i 1} {$i <= $ntrks} {incr i} {
 
       set activechan($channel) 1
       set track2channel($i) $channel
-      set vol [lindex $chanvol $i]
+      set vol [lindex $chanvol [expr $channel -1]]
       if {$vol == 0} {set vol 100}
       set totalnotes [expr $nnotes+$nharmony]
       set chan_action [lindex $channel_activity [expr $channel -1]]
@@ -2579,31 +2587,24 @@ for {set i 1} {$i <= $ntrks} {incr i} {
       append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $rhythmpatterns $pitchbendCount $cntlparamCount"
       #append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
       set id [$w.tree insert {} end -values $outline -tag fnt]
-      }
+# Focus on selected channels or tracks
+      if {$midi(midishow_sep) == "track"} {
+           if {$miditracks($i) == 1} {
+              $w.tree selection add $id
+              } 
+           } else {
+           if {$midichannels($channel) == 1} {
+              $w.tree selection add $id
+              } 
+ #end of midishow_sep
+       }
+ # end of trkinfo
+      } 
+ # end of line
    }
- }
+ } 
 }
 
-
-
-####### not used any more
-#proc grab_all_program_commands {} {
-# Some type 1 midi files define all the program
-# assignments in a separate track (eg last track).
-# As a precaution we look for the program commands
-# separately rather than rely on trkinfo
-#global xchannel2program
-#global progr
-#for {set i 0} {$i < 17} {incr i} {set xchannel2program($i) 0}
-#set i 0
-#foreach p $cprogs {
-#  set xchannel2program($i) $p
-#  incr i
-#  }
-#for {set i 0} {$i < 17} {incr i} {
-#  puts "chan $i prog $xchannel2program($i)"
-#  }
-#}
 
 
 
@@ -16197,6 +16198,7 @@ set w .ftable
 label $w.chk -text "" -font $df
 label $w.chn -text "chn" -font $df
 label $w.prg -text "program" -font $df
+label $w.vol -text "vol " -font $df
 label $w.notes -text "notes" -font $df
 label $w.spread -text "spread" -font $df
 label $w.ngaps -text "ngaps" -font $df
@@ -16212,10 +16214,11 @@ label $w.pbn -text "pbn" -bg tan -font $df
 label $w.ctp -text "ctp" -bg tan -font $df
 label $w.prs -text "prs" -bg tan -font $df
 
-grid $w.chk $w.chn $w.prg $w.notes $w.spread $w.ngaps $w.pav $w.pmn $w.pmx $w.pme $w.dav $w.dmn $w.dmx $w.rhy $w.pbn $w.ctp $w.prs -row $labelrow
+grid $w.chk $w.chn $w.prg $w.vol $w.notes $w.spread $w.ngaps $w.pav $w.pmn $w.pmx $w.pme $w.dav $w.dmn $w.dmx $w.rhy $w.pbn $w.ctp $w.prs -row $labelrow
 
 tooltip::tooltip $w.chn "Midi channel number starting from 1"
 tooltip::tooltip $w.prg "Midi program"
+tooltip::tooltip $w.vol "Control volume"
 tooltip::tooltip $w.notes "Number of chords / Number of notes"
 tooltip::tooltip $w.spread "Fraction of file where the channel is active"
 tooltip::tooltip $w.ngaps "Number of gaps greater than 8 beats"
@@ -16244,12 +16247,11 @@ global midi
 global df
 global chnsel
 global labelrow
+global chanvol
 set labelcol 0
 set hyphen "-"
 set w .ftable
 if {![winfo exists $w]} {
-#  frame $w
-#  grid $w 
    toplevel $w
   } else {
   destroy $w
@@ -16271,7 +16273,7 @@ foreach token $midiInfo {
    if {$ntrks == 1} {
      checkbutton $w.c$labelrow -text $trk -variable midichannels($channel) -font $df -pady 0
      } else {
-     checkbutton $w.c$labelrow -text $trk -variable miditracks($trk) -font $df -pady 0
+     checkbutton $w.c$labelrow -text $trk -variable miditracks($trk) -font $df -pady 0 -command  "ftable_checkbutton $trk"
      }
    grid $w.c$labelrow -row $labelrow -column $labelcol -ipady 0 -pady 0
    incr labelcol
@@ -16288,6 +16290,13 @@ foreach token $midiInfo {
      label $w.lab$labelrow$hyphen$labelcol -text "percussion" -anchor w -font $df -pady 0
    }
     
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -sticky news -ipady 0 -pady 0
+   incr labelcol
+
+  #volume
+   set vol  [lindex $chanvol [expr $channel -1]]
+   if {$vol == 0} {set vol 100}
+   label $w.lab$labelrow$hyphen$labelcol -text $vol -font $df
    grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -sticky news -ipady 0 -pady 0
    incr labelcol
 
@@ -16370,6 +16379,14 @@ bind all <Control-j> {
         set midi_info [split $midi_info '\n]
         make_table $midi_info
                      }
+
+proc ftable_checkbutton {i} {
+global track2channel
+global midichannels
+set channel $track2channel($i)
+set midichannels($channel) [expr 1 - $midichannels($channel)]
+}
+
 
 
 
