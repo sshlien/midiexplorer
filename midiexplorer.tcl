@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.33 2023-11-02 12:40" 
+set midiexplorer_version "MidiExplorer version 4.34 2023-11-10 16:40" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -1913,6 +1913,7 @@ proc presentMidiInfo {} {
    global midi
    global ntrks
    global lasttrack
+   global midierror
    after 300
    if {[winfo exist .info]} {
      foreach w [winfo children .info] {
@@ -1920,7 +1921,10 @@ proc presentMidiInfo {} {
        }
    }
    #grab_all_program_commands
-   if {$ntrks == 0} return
+   if {[string length $midierror] > 0} {
+         appendInfoError $midierror 
+         return
+         }
    interpretMidi
    set lasttrack $ntrks
 }
@@ -1930,7 +1934,8 @@ proc clearMidiTracksAndChannels {} {
 global miditracks
 global midichannels
 global midispeed
-for {set i 0} {$i < 40} {incr i} {
+# Gaye Marvin/Mercy Mercy Me (The Ecology).mid has 130 tracks
+for {set i 0} {$i < 131} {incr i} {
   set miditracks($i) 0 
   }
 for {set i 0} {$i < 17} {incr i} {
@@ -1987,7 +1992,10 @@ proc interpretMidi {} {
   global ntimesig
   global hasLyrics
   global notQuantized
+  global hasTriplets
   global df
+  global midierror
+
 
   if {[info exist tempo]} {unset tempo}
   array unset miditxt 
@@ -2015,6 +2023,7 @@ proc interpretMidi {} {
   label .info.nkeysig -text "$nkeysig key signatures" -font $df -fg darkblue
   label .info.lyrics -text "Has lyrics" -fg darkblue -font $df
   label .info.notQuantized -text "Not quantized" -fg darkblue -font $df
+  label .info.triplets -text "Has triplets" -fg darkblue -font $df
   label .info.error -text $midierror -fg red -font $df
 
   if {[string length $midierror]>0} {
@@ -2029,6 +2038,7 @@ proc interpretMidi {} {
   if {$nkeysig > 0} {append gridcmd ".info.nkeysig "}
   if {$notQuantized > 0} {append gridcmd ".info.notQuantized "}
   if {$hasLyrics > 0} {append gridcmd ".info.lyrics "}
+  if {$hasTriplets > 0} {append gridcmd ".info.triplets "}
   if {[string length $gridcmd] > 6} {
     append gridcmd "-sticky w"
     eval $gridcmd
@@ -2194,7 +2204,7 @@ proc get_midi_info_for {} {
  set fileexist [file exist $midi(midifilein)]
  if {$fileexist} {
    set exec_options "[list $midi(midifilein) ]"
-   set cmd "exec [list $midi(path_midistats)] $exec_options"
+   set cmd "exec [list $midi(path_midistats)]  $exec_options"
    catch {eval $cmd} midi_info
    set exec_out $cmd\n$midi_info
    update_console_page
@@ -2227,6 +2237,7 @@ global track2channel
 global xchannel2program
 global hasLyrics
 global notQuantized
+global hasTriplets
 global nkeysig
 global ntimesig
 global chanvol
@@ -2235,6 +2246,7 @@ array unset trkinfo
 set midierror ""
 set ntrks 0
 set hasLyrics 0
+set hasTriplets 0
 set notQuantized 0
 set nkeysig 0
 set ntimesig 0
@@ -2257,9 +2269,13 @@ foreach line [split $midi_info '\n'] {
   switch $info_id {
     ntrks {set ntrks [lindex $line 1]}
     ppqn {set ppqn [lindex $line 1]}
-    npulses {set lastpulse [lindex $line 1]
-             set lastbeat [expr $lastpulse/$ppqn]
-             }
+    npulses {if {![info exist ppqn]} {
+               set midierror "Mthd not found in the midi file"
+               break
+               }
+            set lastpulse [lindex $line 1]
+            set lastbeat [expr $lastpulse/$ppqn]
+            }
     tsignature {set tsignature [lindex $line 1]}
     trk {set t [lindex $line 1]
          set trkinfo($t) ""}
@@ -2287,6 +2303,7 @@ foreach line [split $midi_info '\n'] {
                  append midierror "only $ntrks valid tracks"}
     Lyrics {set hasLyrics 1}
     unquantized {set notQuantized 1}
+    triplets {set hasTriplets 1}
     default {if {[info exist t] && ($info_id == "trkinfo" )} {
                  lappend trkinfo($t) $line
                  #puts "line = $line"
@@ -2295,6 +2312,7 @@ foreach line [split $midi_info '\n'] {
             }
     }
  }
+ if {[string length $midierror] > 0} {return -1}
  set flats [expr [lindex $pitchcl 3] + [lindex $pitchcl 10]]
  set sharps [expr [lindex $pitchcl 1] + [lindex $pitchcl 6]]
  set useflats 0
@@ -2967,7 +2985,7 @@ set nrec [llength $pianoresult]
 set midilength [lindex $pianoresult [expr $nrec -1]]
 if {![string is integer $midilength]} {
    if {![winfo exist .info.error]} {
-	label .info.error -text  "cannot process this file" red -fg red -font $df
+	label .info.error -text  "cannot process this file" -fg red -font $df
         }
 	return
 #except for midi2abc -mftext, all other functions will fail.
@@ -4202,13 +4220,13 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
     set result [getVersionNumber $midi(path_midicopy)]
     set err [scan $result "%f" ver]
     #puts $result
-    if {$err == 0 || $ver < 1.38} {
-         appendInfoError "You need midicopy.exe version 1.38 or higher."
+    if {$err == 0 || $ver < 1.39} {
+         appendInfoError "You need midicopy.exe version 1.39 or higher."
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.78} {
-         appendInfoError "You need midistats.exe version 0.78 or higher."
+    if {$err == 0 || $ver < 0.79} {
+         appendInfoError "You need midistats.exe version 0.79 or higher."
          }
     return pass
 }
@@ -14714,8 +14732,8 @@ proc show_data_page {text wrapmode clean} {
 
 set abcmidilist {path_abc2midi 4.84\
             path_midi2abc 3.59\
-            path_midicopy 1.38\
-	    path_midistats 0.78\
+            path_midicopy 1.39\
+	    path_midistats 0.79\
             path_abcm2ps 8.14.6}
 
 

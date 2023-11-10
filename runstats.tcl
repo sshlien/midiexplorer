@@ -8,7 +8,7 @@
 # This distingishes the complexity of the rhythms. (i.e.
 # presence of eighth notes or triplets)
 #
-# corestats returns the ppqn, number of beats, and number
+# corestats returns the number of tracks, ppqn, number of beats, and number
 # of note onsets for each file. This information is useful
 # to ensure that enough space is available to analyze this
 # data.
@@ -53,17 +53,21 @@ set midifileList [lsort $midifileList]
 proc make_core {inFolderLength} {
 global midifileList
 set i 0
-set outfile "core.tsv"
+set outfile "MidiCoreStats.tsv"
 set outhandle [open $outfile  w]
 puts "outhandle = $outhandle"
+puts $outhandle "file\bad\tntrks\tppqn\tlastEvent\tlastBeat"
 foreach midi $midifileList {
 set cmd "exec ../midistats [list $midi] -corestats"
 set fname [string range $midi $inFolderLength end]
 catch {eval $cmd} output
-if {[string first "exited" $output] > 0} {
-  puts "$fname $output"
+if {[string first "exited" $output] >= 0 ||\
+    [string first "bad time" $output] >= 0 ||
+    [string first "Error" $output] >= 0} {
+  set output "\NaN\tNaN\t\NaN\tNaN"
+  puts $outhandle "$fname\t1\t$output"
   } else {
-  puts $outhandle $fname\t$output
+  puts $outhandle $fname\t0\t$output
   incr i
   #if {$i > 200} break
   }
@@ -266,7 +270,7 @@ foreach midi $midifileList {
       }
     if {[string first "metatext" $line] >= 0} {
          set out [string range $line 10 end]
-         if {[string first "Melodie" $out] > 0} {
+         if {[string first "Melody" $out] > 0} {
             #puts $midi
             #puts $trk
             set melodyfound 1}
@@ -296,9 +300,58 @@ set output [string range $output 0 end-1]
 return $output
 }
 
+proc get_melody_parameters_for {filename channel} {
+set fullfilename [file join "../../clean_midi/" $filename]
+#puts "fullfilename = $fullfilename"
+set cmd "exec ../midistats [list $fullfilename]" 
+catch {eval $cmd} output
+set output [split $output '\n]
+#puts $output
+foreach line $output {
+  set line [split $line " "]
+  set type [lindex $line 0]
+  if {$type == "trkinfo"} {
+    set c [lindex $line 1]
+    if {$c == $channel} {
+     #puts $line
+     set prg [lindex $line 2]
+     set notes [lindex $line 3]
+     set chordnotes [lindex $line 4]
+     set allnotes [expr $notes + $chordnotes]
+     set pavg [expr round ([lindex $line 5] / double($allnotes))]
+     set rpat [lindex $line 10]
+     puts \"$filename\",$prg,$allnotes,$chordnotes,$pavg,$rpat
+     }
+   }
+ }
+}
+
+
+proc extract_melody_parameters {} {
+set melodyhandle [open "/home/seymour/abc/midiexplorer/melody.txt" r]
+set i 0
+puts "file,program,notes,chordalnotes,avgpitch,rpat"
+while {[gets $melodyhandle line] >= 0} {
+  set linedata [split $line \t]
+  set filename [lindex $linedata 0]
+  set channel [lindex [lindex $linedata 1] 0]
+  #puts "file = $filename channel = $channel"
+  get_melody_parameters_for $filename  $channel 
+  incr i
+  if {$i > 3300} break
+  }
+close $melodyhandle
+}
+
+
+
+
+
 #make_programcolorCdf $inFolderLength
 #make_programcolor $inFolderLength
 #make_pulseanalysis $inFolderLength
 #make_perc_structure $inFolderLength
+make_core $inFolderLength
 #make_pitchanalysis $inFolderLength
-find_melody_labels $inFolderLength
+#find_melody_labels $inFolderLength
+#extract_melody_parameters

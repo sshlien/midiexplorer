@@ -13,7 +13,7 @@
 20 Fingers/Lick It.mid	4 62
 20 Fingers/Short Dick Man.mid	4 47
 4 Non Blondes/What's Up.3.mid	4 25
-883/Come mai (feat. Fiorello).1.mid	2 35
+883/Come mai (feat. Fiorello).1.mid	4 11
 883/Tieni il tempo.mid	4 73
 883/Una canzone d'amore.1.mid	4 73
 911/The Day We Find Love.mid	6 100
@@ -56,7 +56,7 @@ ABBA/My Love My Life.mid	1 73
 ABBA/Name of the Game.3.mid	4 0
 ABBA/Name of the Game.4.mid	4 0
 ABBA/Nina Pretty Ballerina.mid	1 73
-ABBA/One Of Us.mid	2 33
+ABBA/One Of Us.mid	7 62
 ABBA/Rock Me.mid	1 85
 ABBA/Super Trouper.1.mid	4 82
 ABBA/Super Trouper.4.mid	2 88
@@ -573,8 +573,8 @@ Bryan Adams/I Finally Found Someone.2.mid	5 58
 Bryan Adams/I Finally Found Someone.2.mid	6 0
 Bryan Adams/I Finally Found Someone.2.mid	7 5
 Bryan Adams/I Finally Found Someone.2.mid	8 0
-Bryan Adams/Please Forgive Me.2.mid	2 33
-Bryan Adams/Please Forgive Me.mid	2 33
+Bryan Adams/Please Forgive Me.2.mid	4 11 
+Bryan Adams/Please Forgive Me.mid	4 11
 Bryan Adams/Rock Steady.mid	4 65
 Bryan Adams/Summer of '69.2.mid	4 62
 Bryan Adams/Summer of '69.5.mid	4 66
@@ -1023,7 +1023,7 @@ Elvis Presley/Heartbreak Hotel.2.mid	9 73
 Elvis Presley/Hound Dog.mid	1 17
 Elvis Presley/I Just Can't Help Believing.2.mid	4 26
 Elvis Presley/I Want You I Need You I Love You.mid	4 18
-Elvis Presley/It's Now or Never.mid	2 33
+Elvis Presley/It's Now or Never.mid	7 73
 Elvis Presley/Jailhouse Rock.7.mid	4 65
 Elvis Presley/Just Tell Her Jim Said Hello.mid	5 26
 Elvis Presley/Just Tell Her Jim Said Hello.mid	6 0
@@ -1203,7 +1203,6 @@ Gary Moore/Cold Day in Hell.mid	1 65
 Gary Moore/Parisienne Walkways.mid	4 65
 Gary Moore/Still Got the Blues.mid	1 65
 Gaye,Marvin/(Sexual) Healing.3.mid	4 73
-Gaye,Marvin/Mercy Mercy Me (The Ecology).mid	10 0
 Gene Pitney/Every Breath I Take.mid	4 71
 Genesis/A Trick of the Tail.1.mid	9 88
 Genesis/Broadway Melody of 1974.mid	0 
@@ -1219,13 +1218,12 @@ Genesis/Invisible Touch.1.mid	0
 Genesis/Invisible Touch.6.mid	0 
 Genesis/Invisible Touch.7.mid	0 
 Genesis/Invisible Touch.8.mid	4 63
-Genesis/Jesus He Knows Me.1.mid	2 33
-Genesis/Jesus He Knows Me.4.mid	2 33
-Genesis/Jesus He Knows Me.mid	2 33
+Genesis/Jesus He Knows Me.1.mid	7 62
+Genesis/Jesus He Knows Me.4.mid	7 62
+Genesis/Jesus He Knows Me.mid	7 62
 Genesis/Lilywhite Lilith.mid	1 87
 Genesis/Lilywhite Lilith.mid	0 
 Genesis/No Son of Mine.4.mid	1 65
-Genesis/No Son of Mine.4.mid	11 39
 Genesis/Tell Me Why.2.mid	1 0
 Genesis/That's All.1.mid	1 90
 Genesis/Throwing It All Away.mid	1 88
@@ -1560,8 +1558,8 @@ Journey/Faithfully.2.mid	1 48
 Journey/Faithfully.3.mid	1 48
 Journey/Open Arms.1.mid	2 91
 Journey/Open Arms.5.mid	2 91
-Jovanotti/Ragazzo fortunato.2.mid	10 0
-Jovanotti/Ragazzo fortunato.3.mid	10 0
+Jovanotti/Ragazzo fortunato.2.mid	4 11
+Jovanotti/Ragazzo fortunato.3.mid	4 11
 Jovanotti/Serenata Rap.3.mid	4 11
 Judy Collins/Amazing Grace.mid	4 22
 Judy Collins/Amazing Grace.mid	5 5
@@ -1677,7 +1675,7 @@ Leo Sayer/More Than I Can Say.mid	4 65
 Leo Sayer/Unchained Melody.mid	1 0
 Leo Sayer/You Make Me Feel Like Dancing.mid	1 26
 Les Humphries Singers/Mexico.mid	4 65
-Lesley Gore/It's My Party.mid	2 35
+Lesley Gore/It's My Party.mid	4 59
 Level 42/Forever Now.mid	4 26
 Level 42/Hot Water.mid	4 26
 Level 42/Lessons In Love.1.mid	4 0
@@ -1740,7 +1738,7 @@ Luther Ingram/If Loving You Is Wrong (I Don't Want to Be Right).mid	2 1
 Luther Vandross/Endless Love.mid	4 35
 Lynn Anderson/Blue Bayou.mid	4 73
 Lynyrd Skynyrd/I Know a Little.mid	1 26
-Lynyrd Skynyrd/Saturday Night Special.mid	10 0
+Lynyrd Skynyrd/Saturday Night Special.mid	16 0
 Lynyrd Skynyrd/Sweet Home Alabama.1.mid	1 5
 M2M/Don't Say You Love Me.mid	9 79
 MN8/If You Only Let Me In.mid	4 65
@@ -1888,8 +1886,8 @@ Meat Loaf/I'd Lie for You (And That's the Truth).mid	4 5
 Megadeth/Symphony of Destruction.mid	4 18
 Melanie/Feels So Good (Blacksmith R&B Rub) (feat. Know _uestion).mid	13 75
 Melissa Etheridge/Come To My Window.1.mid	-1 -1 no clear melody
-Men at Work/Down Under.1.mid	2 35
-Men at Work/Down Under.mid	2 35
+Men at Work/Down Under.1.mid	4 22
+Men at Work/Down Under.mid	4 22
 Men at Work/Who Can It Be Now.1.mid	1 18
 Men at Work/Who Can It Be Now.mid	1 22
 Metallica/Battery.1.mid	9 80
@@ -1929,7 +1927,7 @@ Middle of the Road/Sacramento.mid	1 28
 Mike + The Mechanics/All I Need Is a Miracle.1.mid	4 85
 Mike + The Mechanics/Another Cup of Coffee.2.mid	4 81
 Mike + The Mechanics/Over My Schoulder.mid	4 62
-Mike + The Mechanics/Silent Running.mid	2 38
+Mike + The Mechanics/Silent Running.mid	4 68
 Milli Vanilli/Girl I'm Gonna Miss You.mid	7 73
 Mina/Ancora ancora ancora.mid	4 22
 Mina/Bugiardo e incosciente.mid	4 5
@@ -1974,9 +1972,10 @@ Neil Diamond/Love on the Rocks.2.mid	1 24
 Neil Diamond/Play Me.1.mid	1 3
 Neil Diamond/Play Me.mid	1 24
 Neil Diamond/Play Me.mid	2 25
-Neil Diamond/Red Red Wine.mid	2 35
+Neil Diamond/Red Red Wine.mid	5 60
 Neil Diamond/September Morn.mid	4 11
-Neil Diamond/Shilo.mid	1 33
+Neil Diamond/Shilo.mid	11 81
+Neil Diamond/Shilo.mid	12 73
 Neil Diamond/Song Sung Blue.2.mid	7 24
 Neil Diamond/Song Sung Blue.2.mid	4 0
 Neil Diamond/Sunday Sun.mid	1 54
@@ -2007,7 +2006,7 @@ Nirvana/Heart-Shaped Box.8.mid	4 52
 Nomadi/Canzone per un'amica.1.mid	4 22
 Nomadi/Canzone per un'amica.mid	4 22
 Nomadi/Io vagabondo.3.mid	4 54
-Nomadi/Io vagabondo.4.mid	2 35
+Nomadi/Io vagabondo.4.mid	4 62
 Nuovi Angeli/Anna da dimenticare.mid	4 11
 Nuovi Angeli/Donna felicita.mid	4 26
 Oasis/All Around the World.1.mid	4 62
@@ -2213,7 +2212,7 @@ Real McCoy/It's on You.mid	1 61
 Real McCoy/Love & Devotion.mid	4 65
 Redbone/Come and Get Your Love.mid	4 73
 Rednex/Cotton Eyed Joe.1.mid	4 3
-Rednex/Cotton Eyed Joe.mid	2 35
+Rednex/Cotton Eyed Joe.mid	4 83
 Rednex/The Ultimate Rednex Mega Mix, Part 3_ Cotton Eye Joe.mid	4 3
 Rednex/Wish You Were Here.mid	1 73
 Reel 2 Real/I Like to Move It.mid	4 87
@@ -2281,7 +2280,7 @@ Ron/Vorrei incontrarti fra cent'anni (con la partecipazione di Tosca).1.mid	4 0
 Ronny Jordan/So What.mid	5 24
 Roots Syndicate/Mockin' Bird Hill.mid	1 1
 Ross/Touch by Touch.mid	1 62
-Ross/You Can't Hurry Love.mid	2 32
+Ross/You Can't Hurry Love.mid	3 66
 Rossi Vasco/Gli spari sopra (Celebrate).mid	4 53
 Rossi Vasco/Ridere di te.1.mid	4 53
 Roxette/Crash! Boom! Bang!.1.mid	4 75
@@ -2305,9 +2304,9 @@ Roxette/Run to You.1.mid	4 26
 Roxette/Salvation.mid	3 56
 Roxette/Silver Blue.1.mid	1 3
 Roxette/Silver Blue.1.mid	2 99
-Roxette/Sleeping In My Car.3.mid	2 33
-Roxette/Sleeping In My Car.4.mid	2 33
-Roxette/Sleeping In My Car.mid	2 33
+Roxette/Sleeping In My Car.3.mid	4 82
+Roxette/Sleeping In My Car.4.mid	4 82
+Roxette/Sleeping In My Car.mid	4 82
 Roxette/Spending My Time.2.mid	1 54
 Roxette/Spending My Time.4.mid	1 53
 Roxette/Spending My Time.5.mid	1 0
@@ -2376,7 +2375,8 @@ Schilling, Peter/Major Tom.mid	2 65
 Scooter/Back In The U.K..mid	4 24
 Scooter/Endless Summer.mid	4 53
 Scooter/Hyper Hyper.mid	4 82
-Scorpions/Hello Josephine.mid	2 32
+Scorpions/Hello Josephine.mid	3 25
+Scorpions/Hello Josephine.mid	5 62
 Scorpions/Johnny B. Goode.mid	4 5
 Scorpions/Send Me an Angel.1.mid	1 68
 Scorpions/Send Me an Angel.mid	1 68
@@ -2905,17 +2905,6 @@ The Cranberries/Twenty One.1.mid	8 65
 The Cranberries/Twenty One.2.mid	8 65
 The Cyrkle/Red Rubber Ball.1.mid	6 20
 The Dave Clark Five/Any Way You Want It.mid	1 57
-The Doobie Brothers/China Grove.1.mid	1 65
-The Doobie Brothers/China Grove.1.mid	2 52
-The Doobie Brothers/China Grove.1.mid	10 0
-The Doobie Brothers/China Grove.1.mid	3 33
-The Doobie Brothers/China Grove.1.mid	4 0
-The Doobie Brothers/China Grove.1.mid	5 84
-The Doobie Brothers/China Grove.1.mid	6 28
-The Doobie Brothers/China Grove.1.mid	7 30
-The Doobie Brothers/China Grove.1.mid	8 30
-The Doobie Brothers/China Grove.1.mid	9 25
-The Doobie Brothers/China Grove.1.mid	11 29
 The Doobie Brothers/China Grove.2.mid	1 65
 The Doobie Brothers/China Grove.mid	4 64
 The Doobie Brothers/Listen to the Music.1.mid	1 80
@@ -3046,7 +3035,6 @@ The Pretenders/I'll Stand By You.2.mid	4 82
 The Righteous Brothers/Unchained Melody.1.mid	1 0
 The Righteous Brothers/Unchained Melody.2.mid	1 0
 The Righteous Brothers/Unchained Melody.2.mid	3 48
-The Righteous Brothers/Unchained Melody.3.mid	2 32
 The Righteous Brothers/Unchained Melody.3.mid	1 0
 The Righteous Brothers/Unchained Melody.3.mid	3 48
 The Righteous Brothers/Unchained Melody.5.mid	1 0
