@@ -56,20 +56,20 @@ set i 0
 set outfile "MidiCoreStats.tsv"
 set outhandle [open $outfile  w]
 puts "outhandle = $outhandle"
-puts $outhandle "file\bad\tntrks\tppqn\tlastEvent\tlastBeat"
+puts $outhandle "file\tdefective\tntrks\tnchan\tppqn\tlastEvent\tlastBeat"
 foreach midi $midifileList {
 set cmd "exec ../midistats [list $midi] -corestats"
 set fname [string range $midi $inFolderLength end]
 catch {eval $cmd} output
 if {[string first "exited" $output] >= 0 ||\
-    [string first "bad time" $output] >= 0 ||
+    [string first "bad time" $output] >= 0 ||\
     [string first "Error" $output] >= 0} {
-  set output "\NaN\tNaN\t\NaN\tNaN"
+  set output "\tNan\tNaN\tNaN\tNaN"
   puts $outhandle "$fname\t1\t$output"
   } else {
-  puts $outhandle $fname\t0\t$output
+  puts $outhandle "$fname\t0\t$output"
   incr i
-  #if {$i > 200} break
+  #if {$i > 500} break
   }
 }
 close $outhandle

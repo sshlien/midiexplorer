@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.34 2023-11-10 16:40" 
+set midiexplorer_version "MidiExplorer version 4.34 2023-11-14 09:45" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -1993,6 +1993,7 @@ proc interpretMidi {} {
   global hasLyrics
   global notQuantized
   global hasTriplets
+  global qnotes
   global df
   global midierror
 
@@ -2024,6 +2025,7 @@ proc interpretMidi {} {
   label .info.lyrics -text "Has lyrics" -fg darkblue -font $df
   label .info.notQuantized -text "Not quantized" -fg darkblue -font $df
   label .info.triplets -text "Has triplets" -fg darkblue -font $df
+  label .info.qnotes -text "Mainly quarter notes" -fg darkblue -font $df
   label .info.error -text $midierror -fg red -font $df
 
   if {[string length $midierror]>0} {
@@ -2039,6 +2041,7 @@ proc interpretMidi {} {
   if {$notQuantized > 0} {append gridcmd ".info.notQuantized "}
   if {$hasLyrics > 0} {append gridcmd ".info.lyrics "}
   if {$hasTriplets > 0} {append gridcmd ".info.triplets "}
+  if {$qnotes > 0} {append gridcmd ".info.qnotes "}
   if {[string length $gridcmd] > 6} {
     append gridcmd "-sticky w"
     eval $gridcmd
@@ -2238,8 +2241,10 @@ global xchannel2program
 global hasLyrics
 global notQuantized
 global hasTriplets
+global qnotes
 global nkeysig
 global ntimesig
+global timesig
 global chanvol
 array unset xchannel2program
 array unset trkinfo
@@ -2248,6 +2253,7 @@ set ntrks 0
 set hasLyrics 0
 set hasTriplets 0
 set notQuantized 0
+set qnotes 0
 set nkeysig 0
 set ntimesig 0
 #array unset progr
@@ -2295,7 +2301,10 @@ foreach line [split $midi_info '\n'] {
     progsact {set cprogsact [lrange $line 1 end]}
     chanvol {set chanvol [lrange $line 1 end]}
     #keysig {incr nkeysig}
-    timesig {incr ntimesig}
+    timesig {
+             if {![info exist timesig]} {set timesig [lindex $line 1]}
+             if {$timesig != [lindex $line 1]} {incr ntimesig}
+             }
     Error: {set problem [lrange $line 1 end]
             set midierror  "defective file : $problem\t"
            }
@@ -2304,6 +2313,7 @@ foreach line [split $midi_info '\n'] {
     Lyrics {set hasLyrics 1}
     unquantized {set notQuantized 1}
     triplets {set hasTriplets 1}
+    qnotes {set qnotes 1}
     default {if {[info exist t] && ($info_id == "trkinfo" )} {
                  lappend trkinfo($t) $line
                  #puts "line = $line"

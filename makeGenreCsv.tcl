@@ -83,11 +83,12 @@ global midifileList
 global inFolderLength
 global genre_db
 set outhandle [open fullGenre.csv w]
+puts $outhandle "file\tgenre"
 set i 0
 foreach midifile $midifileList {
-  set shortname [string range $midifile $inFolderLength end]
-  set shortname [lakh_core_filename $shortname]
-  puts $outhandle "$midifile\t$genre_db($shortname)"
+  set filename [string range $midifile $inFolderLength end]
+  set shortname [lakh_core_filename $filename]
+  puts $outhandle "$filename\t$genre_db($shortname)"
   incr i
   #if {$i > 5} break
   }
