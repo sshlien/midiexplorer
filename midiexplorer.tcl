@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.34 2023-11-14 09:45" 
+set midiexplorer_version "MidiExplorer version 4.37 2023-11-26 20:20" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -797,6 +797,7 @@ proc midiInit {} {
 
 # pitch class map
     set midi(dotsize) 1
+    set midi(compression) 0
 # afterTouch
    set midi(speed) 0.5
    set midi(tplotWidth) 600
@@ -1499,17 +1500,6 @@ if {[winfo exist .midistructure]} {
   destroy .midistructure
   midi_structure_window 
   }
-set w .tinfo
-foreach col {trk chn program vol notes spread pavg duration rpat bends controls} {
-  $w.tree column $col -width [expr [font measure $df $col] + 10]
- }
-$w.tree column program -width [font measure $df "WWWWWWWWWWWWWW"]
-$w.tree column notes -width [font measure $df "WWWWWWWW"]
-$w.tree column vol -width [font measure $df "WWW"]
-#pack forget .tinfo.tree .tinfo.vsb
-#pack forget .tinfo
-#pack .tinfo.tree .tinfo.vsb -side left -expand 1 -fill both 
-#pack .tinfo
 tk_messageBox -message "Restart midiexplorer to fix font problems or resize mainwindow."
 }
 
@@ -1994,6 +1984,8 @@ proc interpretMidi {} {
   global notQuantized
   global hasTriplets
   global qnotes
+  global dithered
+  global cleanq
   global df
   global midierror
 
@@ -2026,6 +2018,8 @@ proc interpretMidi {} {
   label .info.notQuantized -text "Not quantized" -fg darkblue -font $df
   label .info.triplets -text "Has triplets" -fg darkblue -font $df
   label .info.qnotes -text "Mainly quarter notes" -fg darkblue -font $df
+  label .info.dithered -text "Dithered quantization" -fg darkblue -font $df
+  label .info.cleanq -text "Clean quantization" -fg darkblue -font $df
   label .info.error -text $midierror -fg red -font $df
 
   if {[string length $midierror]>0} {
@@ -2039,6 +2033,8 @@ proc interpretMidi {} {
   if {$ntimesig > 1} {append gridcmd ".info.ntimesig "}
   if {$nkeysig > 0} {append gridcmd ".info.nkeysig "}
   if {$notQuantized > 0} {append gridcmd ".info.notQuantized "}
+  if {$cleanq > 0} {append gridcmd ".info.cleanq "}
+  if {$dithered > 0} {append gridcmd ".info.dithered "}
   if {$hasLyrics > 0} {append gridcmd ".info.lyrics "}
   if {$hasTriplets > 0} {append gridcmd ".info.triplets "}
   if {$qnotes > 0} {append gridcmd ".info.qnotes "}
@@ -2242,6 +2238,8 @@ global hasLyrics
 global notQuantized
 global hasTriplets
 global qnotes
+global dithered
+global cleanq
 global nkeysig
 global ntimesig
 global timesig
@@ -2254,6 +2252,8 @@ set hasLyrics 0
 set hasTriplets 0
 set notQuantized 0
 set qnotes 0
+set cleanq 0
+set dithered 0
 set nkeysig 0
 set ntimesig 0
 #array unset progr
@@ -2301,9 +2301,9 @@ foreach line [split $midi_info '\n'] {
     progsact {set cprogsact [lrange $line 1 end]}
     chanvol {set chanvol [lrange $line 1 end]}
     #keysig {incr nkeysig}
-    timesig {
-             if {![info exist timesig]} {set timesig [lindex $line 1]}
-             if {$timesig != [lindex $line 1]} {incr ntimesig}
+    timesig {set value [lindex $line 1]
+             if {![info exist timesig]} {set timesig $value}
+             if {$timesig != $value} {incr ntimesig}
              }
     Error: {set problem [lrange $line 1 end]
             set midierror  "defective file : $problem\t"
@@ -2314,6 +2314,8 @@ foreach line [split $midi_info '\n'] {
     unquantized {set notQuantized 1}
     triplets {set hasTriplets 1}
     qnotes {set qnotes 1}
+    dithered_quantization {set dithered 1}
+    clean_quantization {set cleanq 1} 
     default {if {[info exist t] && ($info_id == "trkinfo" )} {
                  lappend trkinfo($t) $line
                  #puts "line = $line"
@@ -2421,7 +2423,7 @@ proc list_keysigmod {} {
  
 
 
-proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy line} {
+proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax prng duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy line} {
  global ppqn
  #global pitchbendsplit
  upvar 1 $channel c
@@ -2431,6 +2433,7 @@ proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax duration durmin 
  upvar 1 $pmean pavg
  upvar 1 $pmin pitchmin
  upvar 1 $pmax pitchmax
+ upvar 1 $prng pitchrange
  upvar 1 $duration dur 
  upvar 1 $durmin fnotedurmin
  upvar 1 $durmax fnotedurmax
@@ -2458,6 +2461,7 @@ proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax duration durmin 
  set pressCount [lindex $line 8]
  set pitchmin [lindex $line 11]
  set pitchmax [lindex $line 12]
+ set pitchrange [expr $pitchmax - $pitchmin]
  if {$c != 10} {
    #puts "line list = $line"
    set fnotedurmin [expr [lindex $line 13] /double($ppqn)]
@@ -2588,7 +2592,7 @@ $w.tree delete [$w.tree children {}]
 for {set i 1} {$i <= $ntrks} {incr i} {
   foreach line $trkinfo($i) {
     if {[lindex $line 0] == "trkinfo"} {
-       get_trkinfo channel prog nnotes nharmony pmean pmin pmax duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy $line
+       get_trkinfo channel prog nnotes nharmony pmean pmin pmax prng duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy $line
 
       set activechan($channel) 1
       set track2channel($i) $channel
@@ -3137,6 +3141,8 @@ if {![winfo exist $w]} {
   $w.header.dot.items add radiobutton -label 4 -font $df -command {dotmod 4}
   $w.header.dot.items add radiobutton -label 5 -font $df -command {dotmod 5}
 
+  checkbutton $w.header.comp -text compress  -font $df -variable midi(compression) -command detailed_tableau 
+
  menubutton $w.header.plot -text plot -menu $w.header.plot.items -font $df
   menu $w.header.plot.items -tearoff 0
  $w.header.plot.items add command  -label "pitch class plot" -font $df \
@@ -3178,7 +3184,7 @@ if {![winfo exist $w]} {
  
   button $w.header.help -text help -font $df -command {show_message_page $hlp_tableau word} -width 4
   label $w.header.msg -text "" -font $df -relief flat
-  pack $w.header.play $w.header.dot $w.header.circle $w.header.plot $w.header.abc  $w.header.help $w.header.msg -side left -anchor nw
+  pack $w.header.play $w.header.dot $w.header.comp $w.header.circle $w.header.plot $w.header.abc  $w.header.help $w.header.msg -side left -anchor nw
   pack .ptableau.status
   pack $w.header -side top -anchor nw
   pack .ptableau.scr -fill x -side bottom 
@@ -3239,6 +3245,8 @@ set midi(dotsize) $size
 detailed_tableau
 }
 
+
+
 proc tableau_midi_limits {can} {
     global lastpulse
     global ppqn
@@ -3285,7 +3293,7 @@ proc displayBeatGrid {height xspacing xmult mag can} {
  set x 0
  set spacing [expr round(4/$mag)]
  if {$spacing < 1} {set spacing 1}
- while {$x < $lastbeat} {
+ while {[expr $x*$xmult] < $lastbeat} {
     set x1  [expr $x*$xspacing*$mag]
     if {[expr $x % $spacing] == 0} {
     $can create line $x1 $iy0 $x1 $iy2 -dash {1 1} -fill white
@@ -3402,6 +3410,7 @@ proc plot_tableau_data {} {
      set end [lindex $line 1]
      if {[llength $line] == 6} {
        set begin [expr $begin/$ppqn4]
+       if {$midi(compression) == 1} {set begin [expr $begin/2]}
        if {$begin > $maxwidth} {set maxwidth $begin}
        set t [lindex $line 2]
        set c [lindex $line 3]
@@ -3461,6 +3470,7 @@ global chanlist
 global beatsperbar
 global lastTableau
 global tableauHeight40
+global midi
 global exec_out
 
 set exec_out "detailed_tableau"
@@ -3516,7 +3526,11 @@ for {set ix 0} {$ix < $maxsize} {incr ix $spacing} {
   .ptableau.frm.can create line $ix 0 $ix $tableauHeight -fill #606060 -stipple gray25 -width 2
   }
 
-displayBeatGrid $tableauHeight 16 4 1 .ptableau.frm.can
+if {$midi(compression) == 1} {
+  displayBeatGrid $tableauHeight 8 4 1 .ptableau.frm.can
+  } else {
+  displayBeatGrid $tableauHeight 16 4 1 .ptableau.frm.can
+  }
 }
 
 proc highlightTableauStrip {i} {
@@ -4235,8 +4249,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.79} {
-         appendInfoError "You need midistats.exe version 0.79 or higher."
+    if {$err == 0 || $ver < 0.81} {
+         appendInfoError "You need midistats.exe version 0.81 or higher."
          }
     return pass
 }
@@ -9531,6 +9545,8 @@ proc plot_pitch_class_histogram {} {
     set pitchcl [normalize_vectorlist $pitchcl]
     set entropy [pdf_entropy $pitchcl]
     set entropy [format "%6.3f" $entropy]
+    set perplexity [expr 2**$entropy]
+    set perplexity [format "%6.2f" $perplexity]
     set maxgraph [expr $maxgraph + 0.2]
     #puts "maxgraph = $maxgraph"
 
@@ -9583,7 +9599,7 @@ proc plot_pitch_class_histogram {} {
     set scompactMidifile [string map {\n ""} $compactMidifile]
     $pitchc create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
             -width 2
-    $pitchc create text 70 80 -text "entropy = $entropy"
+    $pitchc create text 130 80 -text "entropy = $entropy  perplexity = $perplexity"
     $pitchc create text 15 95 -text $scompactMidifile -anchor nw
     bind .pitchclass <Alt-p> {histogram_ps_output .pitchclass.c}
 }
@@ -14743,7 +14759,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 4.84\
             path_midi2abc 3.59\
             path_midicopy 1.39\
-	    path_midistats 0.79\
+	    path_midistats 0.81\
             path_abcm2ps 8.14.6}
 
 
@@ -16233,7 +16249,8 @@ label $w.ngaps -text "ngaps" -font $df
 label $w.pav -text "pav" -bg pink -font $df
 label $w.pmn -text "pmin" -bg pink -font $df
 label $w.pmx -text "pmax" -bg pink -font $df
-label $w.pme -text "pEntropy" -bg pink -font $df
+label $w.prng -text "prng" -bg pink -font $df
+label $w.pme -text "pPlex" -bg pink -font $df
 label $w.dav -text "drav" -bg "light blue" -font $df
 label $w.dmn -text "dmin" -bg "light blue" -font $df
 label $w.dmx -text "dmax" -bg "light blue" -font $df
@@ -16242,7 +16259,7 @@ label $w.pbn -text "pbn" -bg tan -font $df
 label $w.ctp -text "ctp" -bg tan -font $df
 label $w.prs -text "prs" -bg tan -font $df
 
-grid $w.chk $w.chn $w.prg $w.vol $w.notes $w.spread $w.ngaps $w.pav $w.pmn $w.pmx $w.pme $w.dav $w.dmn $w.dmx $w.rhy $w.pbn $w.ctp $w.prs -row $labelrow
+grid $w.chk $w.chn $w.prg $w.vol $w.notes $w.spread $w.ngaps $w.pav $w.prng $w.pme $w.dav $w.dmn $w.dmx $w.rhy $w.pbn $w.ctp $w.prs -row $labelrow
 
 tooltip::tooltip $w.chn "Midi channel number starting from 1"
 tooltip::tooltip $w.prg "Midi program"
@@ -16251,9 +16268,8 @@ tooltip::tooltip $w.notes "Number of chords / Number of notes"
 tooltip::tooltip $w.spread "Fraction of file where the channel is active"
 tooltip::tooltip $w.ngaps "Number of gaps greater than 8 beats"
 tooltip::tooltip $w.pav "Average midi pitch (60 is middle C)"
-tooltip::tooltip $w.pmn "Minimum midi pitch"
-tooltip::tooltip $w.pmx "Maximum midi pitch"
-tooltip::tooltip $w.pme "Entropy of the pitch class distribution"
+tooltip::tooltip $w.prng "Pitch range in semitones"
+tooltip::tooltip $w.pme "Perplexity of the pitch class distribution.\nThis is 2 the exponent of the entropy.\nIt is approximately the number of distinct note\nin the distribution."
 tooltip::tooltip $w.dav "Average note duration 1.0 = quarter note"
 tooltip::tooltip $w.dmn "Minimum note duration"
 tooltip::tooltip $w.dmx "Maximum note duration"
@@ -16296,7 +16312,7 @@ foreach token $midiInfo {
   if {[string first "trkinfo" $token] >= 0} {
     incr labelrow 
     set labelcol 0
-    get_trkinfo channel prog nnotes nharmony pmean pmin pmax dur durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy $token
+    get_trkinfo channel prog nnotes nharmony pmean pmin pmax prng dur durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy $token
 
    if {$ntrks == 1} {
      checkbutton $w.c$labelrow -text $trk -variable midichannels($channel) -font $df -pady 0
@@ -16353,11 +16369,15 @@ foreach token $midiInfo {
    grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -ipady 0 -pady 0
    incr labelcol
    
-   label $w.lab$labelrow$hyphen$labelcol -text $pmin -bg pink -font $df -pady 0
-   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -ipady 0 -pady 0
-   incr labelcol
+   #label $w.lab$labelrow$hyphen$labelcol -text $pmin -bg pink -font $df -pady 0
+   #grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -ipady 0 -pady 0
+   #incr labelcol
       
-   label $w.lab$labelrow$hyphen$labelcol -text $pmax -bg pink -font $df -pady 0
+   #label $w.lab$labelrow$hyphen$labelcol -text $pmax -bg pink -font $df -pady 0
+   #grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -ipady 0 -pady 0
+   #incr labelcol
+
+   label $w.lab$labelrow$hyphen$labelcol -text $prng -bg pink -font $df -pady 0
    grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -ipady 0 -pady 0
    incr labelcol
   

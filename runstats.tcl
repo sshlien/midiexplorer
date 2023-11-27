@@ -56,7 +56,7 @@ set i 0
 set outfile "MidiCoreStats.tsv"
 set outhandle [open $outfile  w]
 puts "outhandle = $outhandle"
-puts $outhandle "file\tdefective\tntrks\tnchan\tppqn\tlastEvent\tlastBeat"
+puts $outhandle "file\tdefective\tntrks\tnchan\tppqn\tbpm\tlastEvent\tlastBeat"
 foreach midi $midifileList {
 set cmd "exec ../midistats [list $midi] -corestats"
 set fname [string range $midi $inFolderLength end]
@@ -64,7 +64,7 @@ catch {eval $cmd} output
 if {[string first "exited" $output] >= 0 ||\
     [string first "bad time" $output] >= 0 ||\
     [string first "Error" $output] >= 0} {
-  set output "\tNan\tNaN\tNaN\tNaN"
+  set output "NaN\tNaN\tNaN\tNaN\tNaN\tNaN"
   puts $outhandle "$fname\t1\t$output"
   } else {
   puts $outhandle "$fname\t0\t$output"
@@ -343,6 +343,54 @@ while {[gets $melodyhandle line] >= 0} {
 close $melodyhandle
 }
 
+proc gather_derived_stats {inFolderLength} {
+global midifileList
+set i 0
+set outfile "derivedstats.csv"
+set outhandle [open $outfile  w]
+puts "outhandle = $outhandle"
+puts $outhandle "file\ttempocounts\tquantizer\tpplexity"
+foreach midi $midifileList {
+set cmd "exec ../midistats [list $midi]" 
+catch {eval $cmd} output
+if {[string first "exited" $output] > 0 ||
+    [string first "premature" $output] >0 ||
+    [string first "bad time" $output] >0 ||
+    [string first "expecting MThd" $output] > 0 ||
+    [string first "unexpected" $output] > 0} {
+  #puts "$fname $output"
+  } else {
+  #puts $outhandle $fname$output
+  set outputlines [split $output \n]
+  set fname [string range $midi $inFolderLength end]
+  set quantizer "u"
+  foreach line $outputlines {
+    #puts $line
+    if {[string first "tempocmds" $line] == 0} {
+      set tempocounts  [lindex $line 1]
+       }
+    if {[string first "unquantized" $line] == 0} {
+      set quantizer "n"
+      }
+    if {[string first "dithered_quantization" $line] == 0} {
+      set quantizer "d"
+      }
+    if {[string first "clean_quantization" $line] == 0} {
+      set quantizer "c"
+      }
+    if {[string first "pitchperplexity" $line] == 0} {
+      set entropy  [lindex $line 1]
+      set pperplexity [expr 2 ** $entropy]
+       }
+  }
+ incr i
+ if {[expr $i  % 1000] == 0} {puts $i}
+ puts $outhandle "$fname\t$tempocounts\t$quantizer\t$entropy"
+ }
+}
+close $outhandle
+}
+
 
 
 
@@ -351,7 +399,8 @@ close $melodyhandle
 #make_programcolor $inFolderLength
 #make_pulseanalysis $inFolderLength
 #make_perc_structure $inFolderLength
-make_core $inFolderLength
+#make_core $inFolderLength
 #make_pitchanalysis $inFolderLength
 #find_melody_labels $inFolderLength
 #extract_melody_parameters
+gather_derived_stats $inFolderLength

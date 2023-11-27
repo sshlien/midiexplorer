@@ -32,7 +32,7 @@ foreach {item0 item1} $countlist {
   set elem [list $item0 $item1] 
   lappend gcounts $elem
   }
-set gcounts [lsort -index 1 -integer $gcounts]
+set gcounts [lsort -index 1 -integer -decreasing $gcounts]
 return $gcounts
 }
 
