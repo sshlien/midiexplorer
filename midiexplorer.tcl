@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.37 2023-11-26 20:20" 
+set midiexplorer_version "MidiExplorer version 4.38 2023-12-06 09:25" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -1970,6 +1970,7 @@ proc interpretMidi {} {
   global channel2program
   global xchannel2program
   global tempo
+  global ntempos
   global ppqn
   global lastbeat
   global programmod
@@ -1982,6 +1983,7 @@ proc interpretMidi {} {
   global ntimesig
   global hasLyrics
   global notQuantized
+  global programchanges
   global hasTriplets
   global qnotes
   global dithered
@@ -1990,7 +1992,6 @@ proc interpretMidi {} {
   global midierror
 
 
-  if {[info exist tempo]} {unset tempo}
   array unset miditxt 
   #array unset track2channel
   array unset channel2program
@@ -2020,6 +2021,8 @@ proc interpretMidi {} {
   label .info.qnotes -text "Mainly quarter notes" -fg darkblue -font $df
   label .info.dithered -text "Dithered quantization" -fg darkblue -font $df
   label .info.cleanq -text "Clean quantization" -fg darkblue -font $df
+  label .info.progchanges -text "$programchanges Program changes" -fg darkblue -font $df
+  label .info.tempochanges -text "$ntempos Tempo changes" -fg darkblue -font $df
   label .info.error -text $midierror -fg red -font $df
 
   if {[string length $midierror]>0} {
@@ -2038,6 +2041,8 @@ proc interpretMidi {} {
   if {$hasLyrics > 0} {append gridcmd ".info.lyrics "}
   if {$hasTriplets > 0} {append gridcmd ".info.triplets "}
   if {$qnotes > 0} {append gridcmd ".info.qnotes "}
+  if {$programchanges > 0} {append gridcmd ".info.progchanges "}
+  if {$ntempos > 1} {append gridcmd ".info.tempochanges "}
   if {[string length $gridcmd] > 6} {
     append gridcmd "-sticky w"
     eval $gridcmd
@@ -2244,6 +2249,9 @@ global nkeysig
 global ntimesig
 global timesig
 global chanvol
+global programchanges
+global tempo
+global ntempos
 array unset xchannel2program
 array unset trkinfo
 set midierror ""
@@ -2251,11 +2259,14 @@ set ntrks 0
 set hasLyrics 0
 set hasTriplets 0
 set notQuantized 0
+set programchanges 0
 set qnotes 0
 set cleanq 0
 set dithered 0
 set nkeysig 0
 set ntimesig 0
+set ntempos 0
+if {[info exist tempo]} {unset tempo}
 #array unset progr
 set rootfolder $midi(rootfolder)
 set rootfolderbytes [string length $rootfolder]
@@ -2282,6 +2293,8 @@ foreach line [split $midi_info '\n'] {
             set lastpulse [lindex $line 1]
             set lastbeat [expr $lastpulse/$ppqn]
             }
+    tempo {set tempo [lindex $line 1]}
+    tempocmds {set ntempos [lindex $line 1]}
     tsignature {set tsignature [lindex $line 1]}
     trk {set t [lindex $line 1]
          set trkinfo($t) ""}
@@ -2311,6 +2324,7 @@ foreach line [split $midi_info '\n'] {
     activetrack {set ntrks [lindex $line 1]
                  append midierror "only $ntrks valid tracks"}
     Lyrics {set hasLyrics 1}
+    programcmd {set programchanges [lindex $line 1]}
     unquantized {set notQuantized 1}
     triplets {set hasTriplets 1}
     qnotes {set qnotes 1}
@@ -2482,86 +2496,6 @@ proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax prng duration du
    }
 }
 
-
-# This function does not work and is not used
-proc gatherMidiSummary {} {
-global trkinfo
-global ppqn
-global ntrks
-global addendum
-global miditxt
-global lastbeat
-global lastpulse
-global tempo
-global pitchbends
-global tempocmds
-global mididuration
-global keysig
-global timesig
-global nprogramchange
-global pitchbendsplit
-global tempomod
-global timesigmod
-global keysigmod
-global midiTempo
-
-puts "gatherMidiSummary:"
-set nprogramchange 0
-set tempocmds 1
-return
-
-set addendum ""
-if {[info exist pitchbendsplit]} {unset pitchbendsplit} 
-set tempomod {}
-set timesigmod {}
-set keysigmod {}
-
-set tempo 120
-for {set i 1} {$i <= $ntrks} {incr i} {
-   foreach token $trkinfo($i) {
-     if {[lindex $token 0] == "cprogram"} {
-        set c [lindex $token 1]
-        set p [lindex $token 2]
-        set beat [lindex $token 3]
-        update_programmod $c $p $beat
-     } elseif {[lindex $token 0] == "pitchbends"} {
-      set pitchbends [lindex $token 1]
-      if {$nvalue > 0} {append addendum " There are $pitchbends pitchbends split between channels"}
-     } elseif {[lindex $token 0] == "pitchbendin"} {
-      append addendum " [lindex $token 1] ([lindex $token 2]),"
-      set pitchbendsplit([lindex $token 1]) [lindex $token 2]
-     } elseif {[lindex $token 0] == "tempocmds"} {
-      set nvalue [lindex $token 1]
-      set tempocmds $nvalue
-      if {$nvalue > 1} {append addendum " There are $nvalue tempo commands."}
-     } elseif {[lindex $token 0] == "ctempo"} {
-       update_tempomod [lindex $token 1] [lindex $token 2]
-     } elseif {[lindex $token 0] == "programcmd"} {
-      set nprogramchange [lindex $token 1]
-      if {$nprogramchange > 1} {append addendum " The program assignment for any channel was modified $nprogramchange times."}
-     } elseif {[lindex $token 0] == "tempo"} {
-        set tempo [lindex $token 1]
-        set midiTempo $tempo
-        append miditxt(0) "The tempo is set to $tempo beats/minute."
-     } elseif {[lindex $token 0] == "npulses"} {
-	set lastpulse [lindex $token 1]
-        set lastbeat [expr $lastpulse/$ppqn]
-        append miditxt(0) " $lastbeat beats long."
-     } elseif {[lindex $token 0] == "timesig"} {
-        set timesig [lindex $token 1]
-        lappend timesigmod [lrange $token 1 end]
-        incr ntimesig
-        puts "ntimesig now $ntimesig"
-     } elseif {[lindex $token 0] == "keysig"} {
-        set keysig [lindex $token 1]
-        incr nkeysig
-        lappend keysigmod [lrange $token 1 end]
-     } 
-   }
- }
-set mididuration [expr 60.0*$lastbeat/$tempo]
-set mididuration [format %6.1f $mididuration]
-}
 
 
 
@@ -3088,10 +3022,14 @@ For each channel, the pitch classes of each note onset are shown as\
 function of time up to a resolution of 1/16 note. These onsets are\
 color coded according to their midi program (musical instrument).\
 The dot size menu controls how prominent these onsets appear in the\
-plots. If the dot sizes are too large, the onsets may overlap.\n\
+plots. If the dot sizes are too large, the onsets may overlap.\n\n\
 Hovering the mouse pointer on one of the channel checkboxes will\
 pop up the midi program number and name. The lower horizontal scale\
 indicates the beat number (quarter note) position.\n\n\
+Ticking the compress checkbutton, will horizontally compress the\
+the tableau so that it fits in the window. The textural details\
+may be obscured, but the overall structure of the midi file is\
+easier to see.\n\n\
 Ticking the circle of fifths checkbutton, will lay out the note\
 onsets according to the circle of fifths (C,G,D, etc) instead of\
 sequentially (C,C#,D, etc). This may produce a more compact\
@@ -3132,6 +3070,7 @@ if {![winfo exist $w]} {
   label .ptableau.status -text "$midi(midifilein)"
   frame $w.header
   button $w.header.play -text play -command {playExposed tableau} -font $df
+  tooltip::tooltip $w.header.play "Generates the midi file for the selected\nchannels and region and plays it.."
   menubutton $w.header.dot -text "dot size" -font $df -menu $w.header.dot.items
   menu $w.header.dot.items -tearoff 0
   $w.header.dot.items add radiobutton -label 0 -font $df -command {dotmod 0}
@@ -3140,8 +3079,10 @@ if {![winfo exist $w]} {
   $w.header.dot.items add radiobutton -label 3 -font $df -command {dotmod 3}
   $w.header.dot.items add radiobutton -label 4 -font $df -command {dotmod 4}
   $w.header.dot.items add radiobutton -label 5 -font $df -command {dotmod 5}
+ tooltip::tooltip $w.header.dot "Adjusts the dot size for each note."
 
   checkbutton $w.header.comp -text compress  -font $df -variable midi(compression) -command detailed_tableau 
+ tooltip::tooltip $w.header.comp "Compresses the horizontal scale so that the\nentire midi file fits in the window for most files."
 
  menubutton $w.header.plot -text plot -menu $w.header.plot.items -font $df
   menu $w.header.plot.items -tearoff 0
@@ -3179,8 +3120,10 @@ if {![winfo exist $w]} {
 
 
   checkbutton $w.header.circle -text "circle of fifths" -variable midi(tableau5) -font $df -command updateTableauWindows
+ tooltip::tooltip $w.header.circle "Sets the vertical scale for notes to follow\nthe circle of fifths when checked."
 
   button $w.header.abc -text abc -font $df -command tableau_abc
+ tooltip::tooltip $w.header.abc "Generates the abc music notation file for the\nselected channels and region."
  
   button $w.header.help -text help -font $df -command {show_message_page $hlp_tableau word} -width 4
   label $w.header.msg -text "" -font $df -relief flat
@@ -3527,7 +3470,7 @@ for {set ix 0} {$ix < $maxsize} {incr ix $spacing} {
   }
 
 if {$midi(compression) == 1} {
-  displayBeatGrid $tableauHeight 8 4 1 .ptableau.frm.can
+  displayBeatGrid $tableauHeight 16 8 1 .ptableau.frm.can
   } else {
   displayBeatGrid $tableauHeight 16 4 1 .ptableau.frm.can
   }
@@ -9412,6 +9355,9 @@ if {[winfo exists .channel9]} {
 if {[winfo exists .ptableau]} {
    detailed_tableau
    }
+if {[winfo exists .ribbon]} {
+   simple_tableau
+   }
 if {[winfo exists .effect]} {
    aftertouch
    }
@@ -10394,7 +10340,7 @@ global cprogsact
 set cprogs {}
 set tempo 120.0
 set pitchbends 0
-set programcmd 0
+set programcchanges 0
 #in case the midi file is corrupted
 set midilength 0
 set drums {}
@@ -10412,7 +10358,7 @@ foreach line [split $midi_info '\n'] {
     cprogram {lappend programlist [lindex $line 2]}
     tempo {set tempo [lindex $line 1]}
     pitchbends {set pitchbends [lindex $line 1]}
-    programcmd {set programcmd [lindex $line 1]}
+    programcmd {set programchanges [lindex $line 1]}
     drums {lappend drums [lrange $line 1 end]}
     drumhits {set drumhits [lrange $line 1 end]}
     progcolor {set progcolor [lrange $line 1 end]}
@@ -10457,7 +10403,7 @@ puts $outhandle "pitchbend $pitchbends"
 #puts $outhandle "programs [list $programlist]"
 puts $outhandle "progs  $progs"
 puts $outhandle "cprogsact $cprogsact"
-puts $outhandle "programcmd $programcmd"
+puts $outhandle "programchanges $programchanges"
 puts $outhandle "drums $drums"
 puts $outhandle "drumhits $drumhits"
 puts $outhandle "progcolor $pcolor"
@@ -10620,7 +10566,7 @@ grid $w.checkpitch $w.labpitch $w.scalepitchthr $w.labpitchthr -sticky nsew
 
 checkbutton $w.checktempo -variable searchstate(ctempo) -command searchtempo
 label $w.labtempo -text "tempo is " -font $df 
-scale $w.scaletempo -length 120 -from 40 -to 300 -orient horizontal\
+scale $w.scaletempo -length 120 -from 20 -to 320 -orient horizontal\
   -resolution 10 -width 9 -variable midi(tempo) -font $df
 label $w.labbeats -text "beats/minute" -font $df
 grid $w.checktempo $w.labtempo $w.scaletempo  $w.labbeats -sticky nsew
