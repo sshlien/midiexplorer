@@ -303,7 +303,7 @@ return $output
 
 set programtext {"Acoustic Grand" "Bright Acoustic" "Electric Grand" "Honky-Tonk" 
 "Electric Piano 1" "Electric Piano 2" "Harpsichord" "Clav" 
-"Celesta" " Glockenspiel" "Music Box" "Vibraphone" 
+"Celesta" "Glockenspiel" "Music Box" "Vibraphone" 
 "Marimba" "Xylophone" "Tubular Bells" "Dulcimer" 
 "Drawbar Organ" "Percussive Organ" "Rock Organ" "Church Organ" 
 "Reed Organ" "Accordian" "Harmonica" "Tango Accordian" 
@@ -325,7 +325,7 @@ set programtext {"Acoustic Grand" "Bright Acoustic" "Electric Grand" "Honky-Tonk
 "Lead 5 (charang)" "Lead 6 (voice)" "Lead 7 (fifths)" "Lead 8 (bass+lead)" 
 "Pad 1 (new age)" "Pad 2 (warm)" "Pad 3 (polysynth)" "Pad 4 (choir)" 
 "Pad 5 (bowed)" "Pad 6 (metallic)" "Pad 7 (halo)" "Pad 8 (sweep)" 
-" FX 1 (rain)" "FX 2 (soundtrack)" "FX 3 (crystal)" "FX 4 (atmosphere)" 
+"FX 1 (rain)" "FX 2 (soundtrack)" "FX 3 (crystal)" "FX 4 (atmosphere)" 
 "FX 5 (brightness)" "FX 6 (goblins)" "FX 7 (echoes)" "FX 8 (sci-fi)" 
 "Sitar" "Banjo" "Shamisen" "Koto" 
 "Kalimba" "Bagpipe" "Fiddle" "Shanai" 
@@ -382,6 +382,7 @@ foreach line $output {
        } else {
          set melody "F"
        }
+    if {$c == 10} continue
      set prg [lindex $line 2]
      set prgtext [lindex $programtext $prg]
      set notes [lindex $line 3]
@@ -389,7 +390,7 @@ foreach line $output {
      set allnotes [expr $notes + $chordnotes]
      set pavg [expr round ([lindex $line 5] / double($allnotes))]
      set rpat [lindex $line 10]
-     puts \"$filename\",$melody,$prg,$allnotes,$chordnotes,$pavg,$rpat
+     puts \"$filename\",$melody,$prg,$prgtext,$notes,$chordnotes,$pavg,$rpat
    }
  }
 }
@@ -398,7 +399,7 @@ foreach line $output {
 proc extract_melody_parameters {} {
 set melodyhandle [open "/home/seymour/abc/midiexplorer/melody.txt" r]
 set i 0
-puts "file,program,instrument,notes,chordalnotes,avgpitch,rpat"
+puts "file,ismelody,program,instrument,notes,chordalnotes,avgpitch,rpat"
 while {[gets $melodyhandle line] >= 0} {
   set linedata [split $line \t]
   set filename [lindex $linedata 0]
@@ -418,7 +419,7 @@ set i 0
 set outfile "derivedstats.csv"
 set outhandle [open $outfile  w]
 puts "outhandle = $outhandle"
-puts $outhandle "file\ttempocounts\tquantizer\tpplexity"
+puts $outhandle "file\ttempocounts\tquantizer\tpplexity\tkeysig"
 foreach midi $midifileList {
 set cmd "exec ../midistats [list $midi]" 
 catch {eval $cmd} output
@@ -451,10 +452,15 @@ if {[string first "exited" $output] > 0 ||
       set entropy  [lindex $line 1]
       set pperplexity [expr 2 ** $entropy]
        }
+    if {[string first "key" $line] == 0} {
+      set keysig  [lindex $line 1]
+      set confidence [lindex $line 3]
+      if {$confidence < 0.4} {set keysig "u"}
+      }
   }
  incr i
  if {[expr $i  % 1000] == 0} {puts $i}
- puts $outhandle "$fname\t$tempocounts\t$quantizer\t$entropy"
+ puts $outhandle "$fname\t$tempocounts\t$quantizer\t$entropy\t$keysig"
  }
 }
 close $outhandle
@@ -471,5 +477,5 @@ close $outhandle
 #make_core $inFolderLength
 #make_pitchanalysis $inFolderLength
 #find_melody_labels $inFolderLength
-extract_melody_parameters
-#gather_derived_stats $inFolderLength
+#extract_melody_parameters
+gather_derived_stats $inFolderLength

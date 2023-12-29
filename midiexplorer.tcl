@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.38 2023-12-06 09:25" 
+set midiexplorer_version "MidiExplorer version 4.39 2023-12-26 14:00" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -1978,6 +1978,8 @@ proc interpretMidi {} {
   global miditxt
   global midierror
   global keysig
+  global keysf
+  global keyconfidence
   global nkeysig
   global timesig
   global ntimesig
@@ -2007,7 +2009,11 @@ proc interpretMidi {} {
   label .info.genre -text "genre: $genre" -font $df
 
 #update_table_header
-  if {$nkeysig < 1} {set keysig C}
+  if {![info exist keysig]} {set keysig C}
+  #if {$nkeysig < 1} {set keysig C}
+  if {[info exist keyconfidence]} {
+    if {$keyconfidence < 0.4} {set keysig "unknown"}
+    }
   if {![info exist tempo]} {set tempo 120}
   label .info.tempo -text "$tempo beats/minute" -font $df
   label .info.size -text "$lastbeat beats"  -font $df
@@ -2246,6 +2252,9 @@ global qnotes
 global dithered
 global cleanq
 global nkeysig
+global keysig
+global keysf
+global keyconfidence
 global ntimesig
 global timesig
 global chanvol
@@ -2296,6 +2305,10 @@ foreach line [split $midi_info '\n'] {
     tempo {set tempo [lindex $line 1]}
     tempocmds {set ntempos [lindex $line 1]}
     tsignature {set tsignature [lindex $line 1]}
+    key {set keysig [lindex $line 1]
+         set keysf [lindex $line 2]
+         set keyconfidence [lindex $line 3]
+        }
     trk {set t [lindex $line 1]
          set trkinfo($t) ""}
     progcolor {set cprogcolor [lrange $line 1 end]
@@ -2313,7 +2326,6 @@ foreach line [split $midi_info '\n'] {
     progs {set cprogs [lrange $line 1 end]}
     progsact {set cprogsact [lrange $line 1 end]}
     chanvol {set chanvol [lrange $line 1 end]}
-    #keysig {incr nkeysig}
     timesig {set value [lindex $line 1]
              if {![info exist timesig]} {set timesig $value}
              if {$timesig != $value} {incr ntimesig}
@@ -4192,8 +4204,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.81} {
-         appendInfoError "You need midistats.exe version 0.81 or higher."
+    if {$err == 0 || $ver < 0.83} {
+         appendInfoError "You need midistats.exe version 0.83 or higher."
          }
     return pass
 }
@@ -9463,6 +9475,16 @@ proc pdf_entropy {pdf} {
     return [expr -$entropy/log(2.0)]
     }
 
+proc copy_pitchcl_to_histogram {} {
+global histogram
+global pitchcl
+set i 0
+foreach p $pitchcl {
+  set histogram($i) $p
+  incr i
+  }
+}
+ 
 proc plot_pitch_class_histogram {} {
     global pitchxfm
     global notedist
@@ -9474,6 +9496,7 @@ proc plot_pitch_class_histogram {} {
     global pitchcl
     global midi
     global compactMidifile
+    global sharpflatnotes
     
     set w 400
     set h 65 
@@ -9481,6 +9504,7 @@ proc plot_pitch_class_histogram {} {
     set xrbx [expr $w -5]
     set ytbx 5
     set ybbx [expr $h -15]
+    set sharpflatnotes  {C C# D Eb E F F# G G# A Bb B}
 
     set maxgraph 0.0
     set pitchcl ""
@@ -9495,6 +9519,16 @@ proc plot_pitch_class_histogram {} {
     set perplexity [format "%6.2f" $perplexity]
     set maxgraph [expr $maxgraph + 0.2]
     #puts "maxgraph = $maxgraph"
+
+    copy_pitchcl_to_histogram 
+    set keyMatchResult [keyMatch]
+    puts "keyMatchResult = $keyMatchResult"
+    set jc [lindex $keyMatchResult 0]
+    if {$jc >= 0} {
+      set keysig [lindex $sharpflatnotes $jc][lindex $keyMatchResult 1]
+      } else {
+      set keysig "undetermined"
+     }
 
     set flats [expr $notedist(3) + $notedist(10)]
     set sharps [expr $notedist(1) + $notedist(6)]
@@ -9545,7 +9579,7 @@ proc plot_pitch_class_histogram {} {
     set scompactMidifile [string map {\n ""} $compactMidifile]
     $pitchc create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
             -width 2
-    $pitchc create text 130 80 -text "entropy = $entropy  perplexity = $perplexity"
+    $pitchc create text 160 80 -text "entropy = $entropy  perplexity = $perplexity $keysig"
     $pitchc create text 15 95 -text $scompactMidifile -anchor nw
     bind .pitchclass <Alt-p> {histogram_ps_output .pitchclass.c}
 }
@@ -14162,7 +14196,7 @@ array set ssMn {
 
 array set majorColors {
  0       #00FF00
- 1       #26FF8C
+ 1       #26FFAC
  2       #3F5FFF
  3       #E41353
  4       #FF0000
@@ -14493,6 +14527,7 @@ global rmajmin
 set best 0.0
 set bestIndex 0
 set bestMode ""
+set sharpflatnotes  {C C# D Eb E F F# G G# A Bb B}
 
 set rmajmin [list]
 for {set r 0} {$r < 12} {incr r} {
@@ -14527,11 +14562,13 @@ for {set r 0} {$r < 12} {incr r} {
    }
 
 #search for best match
+set str2 ""
 set str3 ""
 set str4 ""
 for {set r 0} {$r <12} {incr r} {
-    append str3 [format %5.1f $rmaj($r)]
-    append str4 [format %5.1f $rmin($r)]
+    append str2 [format %5.2f $histogram($r)]
+    append str3 [format %5.2f $rmaj($r)]
+    append str4 [format %5.2f $rmin($r)]
     if {$rmaj($r) > $best} {set best $rmaj($r)
                        set bestIndex $r
                        set bestMode major}
@@ -14541,6 +14578,12 @@ for {set r 0} {$r <12} {incr r} {
     }
 if {$midi(debug)} {puts $str3}
 if {$midi(debug)} {puts $str4}
+# c2M and c2m are always 6.25
+#puts "c2M = $c2M"
+#puts "c2m = $c2m"
+#puts "str2 = $str2"
+#puts "str3 = $str3"
+#puts "str4 = $str4"
 
 return "$bestIndex $bestMode [format %7.3f $best]"
   }
@@ -14702,10 +14745,10 @@ proc show_data_page {text wrapmode clean} {
 }
 
 
-set abcmidilist {path_abc2midi 4.84\
+set abcmidilist {path_abc2midi 4.85\
             path_midi2abc 3.59\
             path_midicopy 1.39\
-	    path_midistats 0.81\
+	    path_midistats 0.83\
             path_abcm2ps 8.14.6}
 
 
