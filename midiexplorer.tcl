@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.39 2023-12-26 14:00" 
+set midiexplorer_version "MidiExplorer version 4.40 2024-01-03 13:05" 
 set briefconsole 1
 
 # Copyright (C) 2019-2022 Seymour Shlien
@@ -689,6 +689,7 @@ proc midiInit {} {
     set midi(.programcolor) ""
     set midi(.tinfo) ""
     set midi(.ftable) ""
+    set midi(.rminmaj) ""
 
     
     set midi(player1) ""
@@ -1971,6 +1972,8 @@ proc interpretMidi {} {
   global xchannel2program
   global tempo
   global ntempos
+  global rmin
+  global rmaj
   global ppqn
   global lastbeat
   global programmod
@@ -2017,7 +2020,7 @@ proc interpretMidi {} {
   if {![info exist tempo]} {set tempo 120}
   label .info.tempo -text "$tempo beats/minute" -font $df
   label .info.size -text "$lastbeat beats"  -font $df
-  label .info.keysig -text "key signature: $keysig" -font $df
+  button .info.keysig -text "key signature: $keysig" -font $df -command show_rmaj
   label .info.timesig -text "time signature: $timesig" -font $df
   label .info.ntimesig -text "$ntimesig time signatures" -font $df -fg darkblue
   label .info.nkeysig -text "$nkeysig key signatures" -font $df -fg darkblue
@@ -2261,6 +2264,8 @@ global chanvol
 global programchanges
 global tempo
 global ntempos
+global rmin
+global rmaj
 array unset xchannel2program
 array unset trkinfo
 set midierror ""
@@ -2275,6 +2280,9 @@ set dithered 0
 set nkeysig 0
 set ntimesig 0
 set ntempos 0
+set rmin 0
+set rmaj 0
+
 if {[info exist tempo]} {unset tempo}
 #array unset progr
 set rootfolder $midi(rootfolder)
@@ -2330,6 +2338,8 @@ foreach line [split $midi_info '\n'] {
              if {![info exist timesig]} {set timesig $value}
              if {$timesig != $value} {incr ntimesig}
              }
+    rmin {set rmin [lrange $line 1 end]}
+    rmaj {set rmaj [lrange $line 1 end]}
     Error: {set problem [lrange $line 1 end]
             set midierror  "defective file : $problem\t"
            }
@@ -4204,8 +4214,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.83} {
-         appendInfoError "You need midistats.exe version 0.83 or higher."
+    if {$err == 0 || $ver < 0.84} {
+         appendInfoError "You need midistats.exe version 0.84 or higher."
          }
     return pass
 }
@@ -9393,6 +9403,9 @@ if {[winfo exists .ftable]} {
    set midi_info [split $midi_info '\n]
    make_table $midi_info
    }
+if {[winfo exists .rminmaj]} {
+   show_rmaj
+   }
 }
 
 proc update_drumroll_pdfs {} {
@@ -9461,6 +9474,67 @@ proc show_note_distribution {} {
     plot_pitch_class_histogram
 }
 
+set hlp_rminmaj "Key match function\n
+
+The key of the midi file is determined by correlating the pitch class\
+histogram with a set of 24 functions corresponding to the 12 major\
+and 12 minor keys.  The correlation values are graphed in black for\
+the major keys, and in red for the minor keys. The key is assumed\
+to that corresponding to the maximum value.\
+"
+
+proc show_rmaj {} {
+global rmin
+global rmaj
+set sharpflatnotes  {C C# D Eb E F F# G G# A Bb B}
+if {$rmaj == 0} return
+set rmajplot .rminmaj.c
+if {![winfo exist .rminmaj]} {
+  toplevel .rminmaj
+  positionWindow .rminmaj
+  button .rminmaj.hlp -text help -command {show_message_page $hlp_rminmaj word}
+  pack .rminmaj.hlp -side top -anchor e
+  pack [canvas $rmajplot -width 425 -height 165]
+  } else {
+  $rmajplot delete all}
+
+set w 400
+set h 85 
+set xlbx 50
+set xrbx [expr $w -5]
+set ytbx 5
+set ybbx [expr $h +55]
+$rmajplot create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
+            -width 2 -fill white
+Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx -0.5 11.5 -1.0 1.0
+draw_y_grid $rmajplot -0.9 0.9 0.1 3 %2.1f 
+
+set i 0
+set pointsj {}
+set pointsn {}
+for {set j 0} {$j < 12} {incr j} {
+   set i [expr ($j*7) % 12]
+   set ix [ixpos $j]
+   set iy [iypos [lindex $rmaj $i]]
+   #puts "$i [lindex $rmaj $i]"
+   lappend pointsj $ix
+   lappend pointsj $iy
+   set iy [iypos [lindex $rmin $i]]
+   lappend pointsn $ix
+   lappend pointsn $iy
+   } 
+$rmajplot create line $pointsj
+$rmajplot create line $pointsn -fill red
+
+for {set j 0} {$j < 12} {incr j} {
+  set ix [ixpos $j]
+  $rmajplot create line $ix $ybbx $ix $ytbx -dash {1 2}
+  set i [expr ($j*7) % 12]
+  $rmajplot create text $ix 150 -text [lindex $sharpflatnotes $i] 
+  }
+}
+
+
 proc pdf_entropy {pdf} {
     set entropy 0.0
     set total 0.0
@@ -9522,7 +9596,7 @@ proc plot_pitch_class_histogram {} {
 
     copy_pitchcl_to_histogram 
     set keyMatchResult [keyMatch]
-    puts "keyMatchResult = $keyMatchResult"
+    #puts "keyMatchResult = $keyMatchResult"
     set jc [lindex $keyMatchResult 0]
     if {$jc >= 0} {
       set keysig [lindex $sharpflatnotes $jc][lindex $keyMatchResult 1]
@@ -12266,7 +12340,7 @@ proc getGeometryOfAllToplevels {} {
                ".midiplayer" ".tmpfile" ".cfgmidi2abc" ".pgram" ".keystrip"
                ".keypitchclass" ".channel9" ".ribbon" ".ptableau"
                ".touchplot" ".effect" ".csettings" ".drummap" ".programcolor"
-               ".tinfo" ".ftable"}
+               ".tinfo" ".ftable" ".rminmaj"}
   foreach top $toplevellist {
     if {[winfo exist $top]} {
       set g [wm geometry $top]"
@@ -14748,7 +14822,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 4.85\
             path_midi2abc 3.59\
             path_midicopy 1.39\
-	    path_midistats 0.83\
+	    path_midistats 0.84\
             path_abcm2ps 8.14.6}
 
 
