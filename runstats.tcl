@@ -366,6 +366,7 @@ foreach line $output {
 
 proc get_all_melody_parameters_for {filename channel} {
 global programtext
+global ppqn
 set fullfilename [file join "../../clean_midi/" $filename]
 #puts "fullfilename = $fullfilename"
 set cmd "exec ../midistats [list $fullfilename]" 
@@ -375,6 +376,9 @@ set output [split $output '\n]
 foreach line $output {
   set line [split $line " "]
   set type [lindex $line 0]
+  if {$type == "ppqn"} {
+     set ppqn [lindex $line 1]
+     }
   if {$type == "trkinfo"} {
     set c [lindex $line 1]
     if {$c == $channel} {
@@ -389,8 +393,34 @@ foreach line $output {
      set chordnotes [lindex $line 4]
      set allnotes [expr $notes + $chordnotes]
      set pavg [expr round ([lindex $line 5] / double($allnotes))]
+
+     set pitchmin [lindex $line 11]
+     set pitchmax [lindex $line 12]
+     set pitchrange [expr $pitchmax - $pitchmin]
+
+     set dur [lindex $line 6]
+     set dur [expr $dur / $allnotes]
+     set dur [expr double($dur) / $ppqn]
+     set dur [format %5.3f $dur]
+
      set rpat [lindex $line 10]
-     puts \"$filename\",$melody,$prg,$prgtext,$notes,$chordnotes,$pavg,$rpat
+     if {$notes > 0} {
+       set rcrit [expr round(200.0 * $rpat / $notes)]
+       } else {set rcrit 0}
+
+     set chordratio [expr $notes / double($allnotes)]
+     set chordratio [format %3.2f $chordratio]
+
+     set zeros [lindex $line 16]
+     set steps [lindex $line 17]
+     set jumps [lindex $line 18]
+     set nonsteps [expr $zeros + $jumps]
+     if {$nonsteps > 0} {
+      set stepscriterion [expr $steps/double($nonsteps)]
+      } else {set stepscriterion  0.0}
+     set stepscriterion [format %5.3f $stepscriterion]
+
+     puts \"$filename\",$melody,$prg,$prgtext,$notes,$chordratio,$pavg,$pitchrange,$rpat,$dur,$steps
    }
  }
 }
@@ -399,7 +429,8 @@ foreach line $output {
 proc extract_melody_parameters {} {
 set melodyhandle [open "/home/seymour/abc/midiexplorer/melody.txt" r]
 set i 0
-puts "file,ismelody,program,instrument,notes,chordalnotes,avgpitch,rpat"
+#puts "file,ismelody,program,instrument,notes,chordratio,avgpitch,pitchrange,rpat,stepscrit,dur"
+puts "file,ismelody,program,instrument,notes,chordratio,avgpitch,pitchrange,rpat,dur,steps"
 while {[gets $melodyhandle line] >= 0} {
   set linedata [split $line \t]
   set filename [lindex $linedata 0]
@@ -477,5 +508,5 @@ close $outhandle
 #make_core $inFolderLength
 #make_pitchanalysis $inFolderLength
 #find_melody_labels $inFolderLength
-#extract_melody_parameters
-gather_derived_stats $inFolderLength
+extract_melody_parameters
+#gather_derived_stats $inFolderLength

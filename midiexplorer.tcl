@@ -5,10 +5,10 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.40 2024-01-03 13:05" 
+set midiexplorer_version "MidiExplorer version 4.44 2024-03-13 09:35" 
 set briefconsole 1
 
-# Copyright (C) 2019-2022 Seymour Shlien
+# Copyright (C) 2019-2024 Seymour Shlien
 #
 #
 # This program is free software; you can redistribute it and/or modify
@@ -931,7 +931,8 @@ wm protocol . WM_DELETE_WINDOW {
     getGeometryOfAllToplevels 
     WriteMidiExplorerIni 
     if {$genreUpdated} {update_genre_database}
-    exit
+    #exit does not work when started with midiexplorer.py 2024-01-20
+    destroy .
     }
 
 
@@ -1007,7 +1008,8 @@ $ww add command -label "genre finder" -font $df -command {
 
 $ww add command -label "quit" -font $df -command {
     WriteMidiExplorerIni 
-    exit
+    #exit does not work when started with midiexplorer.py 2024-01-20
+    destroy .
     }
 
 $ww add command -label "help" -font $df -command {show_message_page $hlp_filemenu word}
@@ -1412,6 +1414,7 @@ bind all <Control-u> duckduckgo_search
 bind all <Control-v> genre_window
 bind all <Control-w> {playmidifile 0}
 bind all <Control-y> {keymap none}
+bind all <Control-z> {newfunction}
 }
 
 bind_accelerators
@@ -1781,15 +1784,15 @@ set w .tinfo
 toplevel .tinfo
 positionWindow .tinfo
 set fontheight [font metrics $df -linespace]
-ttk::treeview $w.tree -columns {trk chn program vol  notes spread pavg duration rpat bends controls} -show headings -yscroll "$w.vsb set" -height $fontheight
+ttk::treeview $w.tree -columns {trk chn program vol  notes spread pavg duration rpat zero step jump bends controls} -show headings -yscroll "$w.vsb set" -height $fontheight
 ttk::scrollbar $w.vsb -orient vertical -command ".tinfo.tree yview"
-foreach col {trk chn program vol notes spread pavg duration rpat bends controls} {
+foreach col {trk chn program vol notes spread pavg duration rpat zero step jump bends controls} {
   $w.tree heading $col -text $col
   $w.tree heading $col -command [list TinfoSortBy $col 0]
   $w.tree column $col -width [expr [font measure $df $col] + 10]
   }
-$w.tree column program -width [font measure $df "WWWWWWWWWWWWWW"]
-$w.tree column notes -width [font measure $df "WWWWWWWW"]
+$w.tree column program -width [font measure $df "WWWWWWWWWWWW"]
+$w.tree column notes -width [font measure $df "WWWWW"]
 $w.tree column vol -width [font measure $df "WWW"]
 $w.tree tag configure fnt -font $df
 pack $w.tree $w.vsb -side left -expand 1 -fill both 
@@ -2459,7 +2462,7 @@ proc list_keysigmod {} {
  
 
 
-proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax prng duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy line} {
+proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax prng duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy nzeros nsteps njumps line} {
  global ppqn
  #global pitchbendsplit
  upvar 1 $channel c
@@ -2480,6 +2483,9 @@ proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax prng duration du
  upvar 1 $rhythmpatterns rpat
  upvar 1 $ngaps ngap 
  upvar 1 $pitchEntropy pentropy
+ upvar 1 $nzeros zeros
+ upvar 1 $nsteps steps
+ upvar 1 $njumps jumps
  set c [lindex $line 1]
  set p [lindex $line 2]
  set n [lindex $line 3]
@@ -2510,6 +2516,9 @@ proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax prng duration du
    set dur 0
    } 
  set pentropy [lindex $line 16]
+ set zeros [lindex $line 17]
+ set steps [lindex $line 18]
+ set jumps [lindex $line 19]
  if {[string length $pentropy] > 1} {set pentropy [format %4.2f $pentropy]}
  if {[info exist pitchbendsplit($c)]} {
        set pbend $pitchbendsplit($c)
@@ -2548,7 +2557,7 @@ $w.tree delete [$w.tree children {}]
 for {set i 1} {$i <= $ntrks} {incr i} {
   foreach line $trkinfo($i) {
     if {[lindex $line 0] == "trkinfo"} {
-       get_trkinfo channel prog nnotes nharmony pmean pmin pmax prng duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy $line
+       get_trkinfo channel prog nnotes nharmony pmean pmin pmax prng duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy nzeros nsteps njumps $line
 
       set activechan($channel) 1
       set track2channel($i) $channel
@@ -2572,7 +2581,11 @@ for {set i 1} {$i <= $ntrks} {incr i} {
       }
       set outline "$i $channel [list $prog ] $vol"
       #set outline "$i $channel [list $prog ]"
-      append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $rhythmpatterns $pitchbendCount $cntlparamCount"
+      if {$channel != 10} {
+        append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $rhythmpatterns $nzeros $nsteps $njumps $pitchbendCount $cntlparamCount"
+      } else {
+        append outline " $nnotes/$totalnotes $chan_spread" 
+      }
       #append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
       set id [$w.tree insert {} end -values $outline -tag fnt]
 # Focus on selected channels or tracks
@@ -4214,8 +4227,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.84} {
-         appendInfoError "You need midistats.exe version 0.84 or higher."
+    if {$err == 0 || $ver < 0.87} {
+         appendInfoError "You need midistats.exe version 0.87 or higher."
          }
     return pass
 }
@@ -14822,7 +14835,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 4.85\
             path_midi2abc 3.59\
             path_midicopy 1.39\
-	    path_midistats 0.84\
+	    path_midistats 0.87\
             path_abcm2ps 8.14.6}
 
 
@@ -16317,12 +16330,16 @@ label $w.pme -text "pPlex" -bg pink -font $df
 label $w.dav -text "drav" -bg "light blue" -font $df
 label $w.dmn -text "dmin" -bg "light blue" -font $df
 label $w.dmx -text "dmax" -bg "light blue" -font $df
-label $w.rhy -text "rhy" -bg bisque -font $df
+label $w.zer -text "zero" -bg bisque -font $df
+label $w.stp -text "step" -bg bisque -font $df
+label $w.jmp -text "jump" -bg bisque -font $df
+label $w.rhy -text "rpat" -bg bisque -font $df
 label $w.pbn -text "pbn" -bg tan -font $df
 label $w.ctp -text "ctp" -bg tan -font $df
 label $w.prs -text "prs" -bg tan -font $df
 
-grid $w.chk $w.chn $w.prg $w.vol $w.notes $w.spread $w.ngaps $w.pav $w.prng $w.pme $w.dav $w.dmn $w.dmx $w.rhy $w.pbn $w.ctp $w.prs -row $labelrow
+#grid $w.chk $w.chn $w.prg $w.vol $w.notes $w.spread $w.ngaps $w.pav $w.prng $w.pme $w.dav $w.dmn $w.dmx $w.zer $w.stp $w.jmp $w.rhy $w.pbn $w.ctp $w.prs -row $labelrow
+grid $w.chk $w.chn $w.prg $w.vol $w.notes $w.spread $w.ngaps $w.pav $w.prng $w.pme $w.dav  $w.zer $w.stp $w.jmp $w.rhy $w.pbn $w.ctp $w.prs -row $labelrow
 
 tooltip::tooltip $w.chn "Midi channel number starting from 1"
 tooltip::tooltip $w.prg "Midi program"
@@ -16334,9 +16351,12 @@ tooltip::tooltip $w.pav "Average midi pitch (60 is middle C)"
 tooltip::tooltip $w.prng "Pitch range in semitones"
 tooltip::tooltip $w.pme "Perplexity of the pitch class distribution.\nThis is 2 the exponent of the entropy.\nIt is approximately the number of distinct note\nin the distribution."
 tooltip::tooltip $w.dav "Average note duration 1.0 = quarter note"
-tooltip::tooltip $w.dmn "Minimum note duration"
-tooltip::tooltip $w.dmx "Maximum note duration"
-tooltip::tooltip $w.rhy "Number of distinct rhythm patterns 4 beats long"
+#tooltip::tooltip $w.dmn "Minimum note duration"
+#tooltip::tooltip $w.dmx "Maximum note duration"
+tooltip::tooltip $w.zer "Number of pitch repeats"
+tooltip::tooltip $w.stp "Number of pitch steps"
+tooltip::tooltip $w.jmp "Number of pitch jumps"
+tooltip::tooltip $w.rhy "Number of rhythm pattern"
 tooltip::tooltip $w.pbn "Number of pitchbends"
 tooltip::tooltip $w.ctp "Number of control messages"
 tooltip::tooltip $w.prs "Number of pressure messages"
@@ -16360,9 +16380,11 @@ set hyphen "-"
 set w .ftable
 if {![winfo exists $w]} {
    toplevel $w
+   positionWindow $w
   } else {
   destroy $w
   toplevel $w
+  positionWindow $w
   }
 label $w.00 -text $midi(midifilein)
 grid $w.00 -row 0 -columnspan 12
@@ -16375,7 +16397,7 @@ foreach token $midiInfo {
   if {[string first "trkinfo" $token] >= 0} {
     incr labelrow 
     set labelcol 0
-    get_trkinfo channel prog nnotes nharmony pmean pmin pmax prng dur durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy $token
+    get_trkinfo channel prog nnotes nharmony pmean pmin pmax prng dur durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy nzeros nsteps njumps $token
 
    if {$ntrks == 1} {
      checkbutton $w.c$labelrow -text $trk -variable midichannels($channel) -font $df -pady 0
@@ -16453,11 +16475,27 @@ foreach token $midiInfo {
    grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -ipady 0
    incr labelcol
 
-   label $w.lab$labelrow$hyphen$labelcol -text $durmin -bg "light blue" -font $df -pady 0
+#   label $w.lab$labelrow$hyphen$labelcol -text $durmin -bg "light blue" -font $df -pady 0
+#   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -ipady 0 -pady 0
+#   incr labelcol
+
+#   label $w.lab$labelrow$hyphen$labelcol -text $durmax -bg "light blue" -font $df -pady 0
+#   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -ipady 0 -pady 0
+#   incr labelcol
+
+
+   # number of zero pitch changes
+   label $w.lab$labelrow$hyphen$labelcol -text $nzeros -bg bisque -font $df -pady 0
    grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -ipady 0 -pady 0
    incr labelcol
 
-   label $w.lab$labelrow$hyphen$labelcol -text $durmax -bg "light blue" -font $df -pady 0
+   # number of pitch steps
+   label $w.lab$labelrow$hyphen$labelcol -text $nsteps -bg bisque -font $df -pady 0
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -ipady 0 -pady 0
+   incr labelcol
+
+   # number of pitch jumps
+   label $w.lab$labelrow$hyphen$labelcol -text $njumps -bg bisque -font $df -pady 0
    grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -ipady 0 -pady 0
    incr labelcol
 
@@ -16499,6 +16537,15 @@ set midichannels($channel) [expr 1 - $midichannels($channel)]
 }
 
 
+proc newfunction {} {
+# experimental function
+global midi
+global df
+set exec_options "[list $midi(midifilein) ] -pmove"
+set cmd "exec [list $midi(path_midistats)]  $exec_options"
+catch {eval $cmd} midistats_output
+puts $midistats_output
+}
 
 
 #trace add execution compute_pianoroll leave "cmdstr"
