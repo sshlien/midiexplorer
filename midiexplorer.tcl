@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.44 2024-03-13 09:35" 
+set midiexplorer_version "MidiExplorer version 4.45 2024-03-15 15:30" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -481,6 +481,7 @@ pack $w.frame.list $w.frame.scroll -side left -fill y -expand 1
 bind $w.frame.list <Double-1> {
     tk_setPalette [selection get]
     set midi(colorscheme) [selection get]
+    ttk::style configure Treeview -background [selection get]
 }
 $w.frame.list insert 0 gray60 gray70 gray80 gray85 gray90 gray95 \
     snow1 snow2 snow3 snow4 seashell1 seashell2 \
@@ -1584,6 +1585,9 @@ proc popMessage {text} {
 ## Create the tree and set it up
 ttk::style configure Treeview.Heading -font $df
 ttk::style configure Treeview -background azure1
+if {[string length $midi(colorscheme)] > 0} {
+  ttk::style configure Treeview -background $midi(colorscheme)
+  }
 ttk::treeview $w.tree -columns {fullpath type size criterion} -displaycolumns {size criterion} \
 	-yscroll "$w.vsb set" -xscroll "$w.hsb set" -selectmode browse -padding 3
 #puts [$w.tree configure]
@@ -1779,21 +1783,23 @@ proc TreeBrowserSortBy {col direction} {
 
 proc expose_tinfo {} {
 global df
+global midi
 set w .tinfo
 # frame $w 
+puts "ttk styles = [ttk::style theme names]"
+ttk::style theme use default
 toplevel .tinfo
 positionWindow .tinfo
 set fontheight [font metrics $df -linespace]
-ttk::treeview $w.tree -columns {trk chn program vol  notes spread pavg duration rpat zero step jump bends controls} -show headings -yscroll "$w.vsb set" -height $fontheight
+ttk::treeview $w.tree -columns {trk chn program notes spread pavg duration rpat zero step jump bends controls} -show headings -yscroll "$w.vsb set" -height $fontheight
 ttk::scrollbar $w.vsb -orient vertical -command ".tinfo.tree yview"
-foreach col {trk chn program vol notes spread pavg duration rpat zero step jump bends controls} {
+foreach col {trk chn program notes spread pavg duration rpat zero step jump bends controls} {
   $w.tree heading $col -text $col
   $w.tree heading $col -command [list TinfoSortBy $col 0]
   $w.tree column $col -width [expr [font measure $df $col] + 10]
   }
 $w.tree column program -width [font measure $df "WWWWWWWWWWWW"]
 $w.tree column notes -width [font measure $df "WWWWW"]
-$w.tree column vol -width [font measure $df "WWW"]
 $w.tree tag configure fnt -font $df
 pack $w.tree $w.vsb -side left -expand 1 -fill both 
 bind $w.tree <<TreeviewSelect>> {tinfoSelect}
@@ -2553,7 +2559,7 @@ set w .tinfo
 if {![winfo exist $w]} {expose_tinfo}
 $w.tree delete [$w.tree children {}]
 
-
+set nlines 0
 for {set i 1} {$i <= $ntrks} {incr i} {
   foreach line $trkinfo($i) {
     if {[lindex $line 0] == "trkinfo"} {
@@ -2579,8 +2585,8 @@ for {set i 1} {$i <= $ntrks} {incr i} {
         set prog $channel2program($channel)
         set prog [lindex $mlist $prog]
       }
-      set outline "$i $channel [list $prog ] $vol"
-      #set outline "$i $channel [list $prog ]"
+      set outline "$i $channel [list $prog ]"
+      #set outline "$i $channel [list $prog ] $vol"
       if {$channel != 10} {
         append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $rhythmpatterns $nzeros $nsteps $njumps $pitchbendCount $cntlparamCount"
       } else {
@@ -2588,6 +2594,7 @@ for {set i 1} {$i <= $ntrks} {incr i} {
       }
       #append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
       set id [$w.tree insert {} end -values $outline -tag fnt]
+      incr nlines
 # Focus on selected channels or tracks
       if {$midi(midishow_sep) == "track"} {
            if {$miditracks($i) == 1} {
@@ -2604,6 +2611,8 @@ for {set i 1} {$i <= $ntrks} {incr i} {
  # end of line
    }
  } 
+if {$nlines > 16} {set nlines 16}
+$w.tree configure -height $nlines 
 }
 
 
