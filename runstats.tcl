@@ -364,6 +364,7 @@ foreach line $output {
  }
 }
 
+
 proc get_all_melody_parameters_for {filename channel} {
 global programtext
 global ppqn
@@ -444,6 +445,57 @@ while {[gets $melodyhandle line] >= 0} {
 close $melodyhandle
 }
 
+proc get_melody_step_parameters_for {filename channel} {
+global programtext
+global ppqn
+set fullfilename [file join "../../clean_midi/" $filename]
+#puts "fullfilename = $fullfilename"
+set cmd "exec ../midistats [list $fullfilename]" 
+catch {eval $cmd} output
+set output [split $output '\n]
+#puts $output
+foreach line $output {
+  set line [split $line " "]
+  set type [lindex $line 0]
+  if {$type == "ppqn"} {
+     set ppqn [lindex $line 1]
+     }
+  if {$type == "trkinfo"} {
+    set c [lindex $line 1]
+    if {$c == $channel} {
+         set melody "T"
+       } else {
+         set melody "F"
+       }
+    if {$c == 10} continue
+
+     set rpat  [lindex $line 10]
+     set zeros [lindex $line 17]
+     set steps [lindex $line 18]
+     set jumps [lindex $line 19]
+
+     puts \"$filename\",$melody,$rpat,$zeros,$steps,$jumps
+   }
+ }
+}
+
+proc extract_melody_step_parameters {} {
+set melodyhandle [open "/home/seymour/abc/midiexplorer/melody.txt" r]
+set i 0
+puts "file,ismelody,rpat,zeros,steps,jumps"
+while {[gets $melodyhandle line] >= 0} {
+  set linedata [split $line \t]
+  set filename [lindex $linedata 0]
+  set channel [lindex [lindex $linedata 1] 0]
+  #puts "file = $filename channel = $channel"
+  #get_melody_parameters_for $filename  $channel 
+  get_melody_step_parameters_for $filename  $channel 
+  incr i
+  if {$i > 3300} break
+  }
+close $melodyhandle
+}
+
 proc gather_derived_stats {inFolderLength} {
 global midifileList
 set i 0
@@ -508,5 +560,6 @@ close $outhandle
 #make_core $inFolderLength
 #make_pitchanalysis $inFolderLength
 #find_melody_labels $inFolderLength
-extract_melody_parameters
+#extract_melody_parameters
+extract_melody_step_parameters 
 #gather_derived_stats $inFolderLength

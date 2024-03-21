@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.45 2024-03-15 15:30" 
+set midiexplorer_version "MidiExplorer version 4.46 2024-03-20 14:45" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -4236,8 +4236,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.87} {
-         appendInfoError "You need midistats.exe version 0.87 or higher."
+    if {$err == 0 || $ver < 0.91} {
+         appendInfoError "You need midistats.exe version 0.91 or higher."
          }
     return pass
 }
@@ -4420,7 +4420,7 @@ proc piano_window {} {
     $p.action.items add command  -label "chordtext" -font $df \
             -command {chordtext_window pianoroll}
     $p.action.items add command  -label "chord histogram" -font $df \
-            -command {chord_histogram none}
+            -command {chord_histogram pianoroll}
     $p.action.items add command  -label "chordgram" -font $df \
             -command {chordgram_plot pianoroll}
     $p.action.items add command -label "help" -font $df\
@@ -4860,7 +4860,7 @@ proc ppqn_adjustment_window {} {
 
 
 #         chord histogram
-proc chord_histogram_window {} {
+proc chord_histogram_window {source} {
     global df
     global midi
     
@@ -4871,8 +4871,8 @@ proc chord_histogram_window {} {
     
     frame $w.head
     label $w.head.lab -text "sort by" -font $df
-    radiobutton $w.head.key -text key -font $df -variable midi(sortchordnames) -value key -command chord_histogram
-    radiobutton $w.head.freq -text frequency -font $df -variable midi(sortchordnames) -value freq -command chord_histogram
+    radiobutton $w.head.key -text key -font $df -variable midi(sortchordnames) -value key -command "chord_histogram $source"
+    radiobutton $w.head.freq -text frequency -font $df -variable midi(sortchordnames) -value freq -command "chord_histogram $source"
     radiobutton $w.head.txt -text list -font $df -variable midi(chordhist) -value txt -command switch_text_barchart
     radiobutton $w.head.bar -text barchart -font $df -variable midi(chordhist) -value bar -command switch_text_barchart
     pack $w.head.lab $w.head.key $w.head.freq $w.head.txt $w.head.bar -side left -anchor w
@@ -5204,7 +5204,6 @@ proc chordname {chordstring root} {
     lset notevals $i [expr ([lindex $notevals $i] - $rootval) % 12]
     }
   set notevals [lsort -increasing -unique -integer $notevals]
-  #puts "$root $rootval"
   if {[lsearch $notevals 3] > 0} {
     if {[lsearch $notevals 6] > 0} {
       set key $root$dim
@@ -5218,6 +5217,7 @@ proc chordname {chordstring root} {
       set key $root$aug
       } else {set key $root$maj}
   } else {set key $root}
+  #puts "root and notevals $root $notevals"
   #puts $key
   return $key
   }
@@ -5380,7 +5380,7 @@ if {$midi(chordhist) == "bar"} {
 }
 
 proc chord_histogram {source} {
-    chord_histogram_window
+    chord_histogram_window $source
     make_chord_histogram $source
     switch_text_barchart
 }
@@ -5513,6 +5513,7 @@ switch $source {
      }
    }
   }
+#puts "getCanvasLimits $source returns $start and $stop"
 return [list $start $stop]
 }
 
@@ -6931,6 +6932,7 @@ proc midi_limits {can} {
     if {$begin < 0} {
         set $begin 0
     }
+    #puts "midi_limits for $can returns $begin and $end"
     return [list $begin $end]
 }
 
@@ -9370,7 +9372,7 @@ if {[winfo exists .chordview]} {
    chordtext_window $source
    }
 if {[winfo exists .chordstats]} {
-   chord_histogram
+   chord_histogram $source
    }
 if {[winfo exists .chordgram]} {
    chordgram_plot $source 
@@ -14844,7 +14846,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 4.85\
             path_midi2abc 3.59\
             path_midicopy 1.39\
-	    path_midistats 0.87\
+	    path_midistats 0.91\
             path_abcm2ps 8.14.6}
 
 
