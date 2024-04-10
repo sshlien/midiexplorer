@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.46 2024-03-20 14:45" 
+set midiexplorer_version "MidiExplorer version 4.47 2024-04-09 15:05" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -1786,18 +1786,19 @@ global df
 global midi
 set w .tinfo
 # frame $w 
-puts "ttk styles = [ttk::style theme names]"
+#puts "ttk styles = [ttk::style theme names]"
 ttk::style theme use default
 toplevel .tinfo
 positionWindow .tinfo
 set fontheight [font metrics $df -linespace]
-ttk::treeview $w.tree -columns {trk chn program notes spread pavg duration rpat zero step jump bends controls} -show headings -yscroll "$w.vsb set" -height $fontheight
+ttk::treeview $w.tree -columns {trk chn program notes spread pavg duration rpat zero step jump melcr bends controls} -show headings -yscroll "$w.vsb set" -height $fontheight
 ttk::scrollbar $w.vsb -orient vertical -command ".tinfo.tree yview"
-foreach col {trk chn program notes spread pavg duration rpat zero step jump bends controls} {
+foreach col {trk chn program notes spread pavg duration rpat zero step jump melcr bends controls} {
   $w.tree heading $col -text $col
   $w.tree heading $col -command [list TinfoSortBy $col 0]
   $w.tree column $col -width [expr [font measure $df $col] + 10]
   }
+
 $w.tree column program -width [font measure $df "WWWWWWWWWWWW"]
 $w.tree column notes -width [font measure $df "WWWWW"]
 $w.tree tag configure fnt -font $df
@@ -2533,7 +2534,36 @@ proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax prng duration du
    }
 }
 
+# progMel maps the midi program number 0 to 127 to
+# the probability (times 100) that it is used for
+# a melody track. The probabilities were estimated
+# from the lakh clean midi dataset.
+set progMel { 3 10 13 14 4 9 5 8 3 0 5 45 3 8 2 8\
+ 6 12 16 9 17 34 41 28 21 4 26 3 2 3 4 0 0 0 3 7 0\
+ 0 2 2 13 3 7 9 15 1 7 1 2 2 3 1 4 16 20 0 15 14 20\
+ 14 14 6 19 26 33 46 24 7 30 24 22 47 22 51 24 62 15\
+ 33 10 20 24 12 58 29 20 41 0 30 19 7 9 17 10 8 9 1 4\
+ 0 0 38 17 0 10 25 10 9 0 13 0 5 3 33 0 0 12 0 0 0 \
+ 0 0 0 0 0 0 0 0 0 2 }
 
+# ldaCoef and ldaIntercept are the linear discriminant model
+# computed by the Jupyter Notebook stepLinearDiscriminant.ipynb
+set ldaCoef  { 0.06707022  0.07036973 -0.00266632  0.01274548 -0.00551999}
+set ldaIntercept -3.141108303
+
+proc melodyLogProbability {program rpat zeros steps jumps} {
+global ldaCoef
+global ldaIntercept
+global progMel
+set p $ldaIntercept
+set p [expr $p + [lindex $progMel $program] * [lindex $ldaCoef 0]]
+set p [expr $p + $rpat * [lindex $ldaCoef 1]]
+set p [expr $p + $zeros * [lindex $ldaCoef 2]]
+set p [expr $p +  $steps * [lindex $ldaCoef 3]]
+set p [expr $p +  $jumps * [lindex $ldaCoef 4]]
+set p [expr round($p * 100)/100.0]
+return $p
+}
 
 
 proc midiType1Table {} {
@@ -2550,6 +2580,7 @@ global activechan
 global track2channel
 global lastpulse
 global chanvol
+global df
 
 #puts "miditracks [array get miditracks]"
 #puts "midichannels [array get midichannels]"
@@ -2558,12 +2589,14 @@ array unset activechan
 set w .tinfo
 if {![winfo exist $w]} {expose_tinfo}
 $w.tree delete [$w.tree children {}]
+$w.tree tag  configure green -foreground darkgreen -font $df
+set itemMelProb {}
 
 set nlines 0
 for {set i 1} {$i <= $ntrks} {incr i} {
   foreach line $trkinfo($i) {
     if {[lindex $line 0] == "trkinfo"} {
-       get_trkinfo channel prog nnotes nharmony pmean pmin pmax prng duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy nzeros nsteps njumps $line
+       get_trkinfo channel p nnotes nharmony pmean pmin pmax prng duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy nzeros nsteps njumps $line
 
       set activechan($channel) 1
       set track2channel($i) $channel
@@ -2584,16 +2617,18 @@ for {set i 1} {$i <= $ntrks} {incr i} {
       } else {
         set prog $channel2program($channel)
         set prog [lindex $mlist $prog]
+        set  melprob  [melodyLogProbability $p $rhythmpatterns $nzeros $nsteps $njumps] 
       }
       set outline "$i $channel [list $prog ]"
       #set outline "$i $channel [list $prog ] $vol"
       if {$channel != 10} {
-        append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $rhythmpatterns $nzeros $nsteps $njumps $pitchbendCount $cntlparamCount"
+        append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $rhythmpatterns $nzeros $nsteps $njumps $melprob $pitchbendCount $cntlparamCount"
       } else {
         append outline " $nnotes/$totalnotes $chan_spread" 
       }
       #append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
       set id [$w.tree insert {} end -values $outline -tag fnt]
+      lappend itemMelProb [list $melprob $id] 
       incr nlines
 # Focus on selected channels or tracks
       if {$midi(midishow_sep) == "track"} {
@@ -2609,8 +2644,19 @@ for {set i 1} {$i <= $ntrks} {incr i} {
  # end of trkinfo
       } 
  # end of line
+#if {$channel != 10} {
+#   puts "$channel prob = [melodyLogProbability $p $rhythmpatterns $nzeros $nsteps $njumps]" 
+#     }
    }
  } 
+set sortedItemMelProb [lsort -decreasing -command compareOnset $itemMelProb]
+#puts "sortedItemMelProb = $sortedItemMelProb"
+# highlight largest MelProb item
+set bestItem [lindex $sortedItemMelProb 0]
+#puts "bestItem = $bestItem" 
+set id [lindex $bestItem 1]
+$w.tree item $id -tag green 
+
 if {$nlines > 16} {set nlines 16}
 $w.tree configure -height $nlines 
 }

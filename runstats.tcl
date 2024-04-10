@@ -445,14 +445,34 @@ while {[gets $melodyhandle line] >= 0} {
 close $melodyhandle
 }
 
+proc load_progMelProb {} {
+global progMelProb
+set inhandle [open "progMelProb.csv" r]
+while {[gets $inhandle line] >= 0} {
+  set linedata [split $line ',']
+  set p [lindex $linedata 0]
+  set prob [lindex $linedata 1]
+  set progMelProb($p) $prob
+  }
+close $inhandle
+#puts "set progMel "
+#for {set i 0} {$i < 128} {incr i} {
+#  set prgProb [expr round(100.0*$progMelProb($i))] 
+#  puts -nonewline "$prgProb "
+#  }
+#puts "\n"
+}
+
 proc get_melody_step_parameters_for {filename channel} {
 global programtext
 global ppqn
+global progMelProb
 set fullfilename [file join "../../clean_midi/" $filename]
 #puts "fullfilename = $fullfilename"
 set cmd "exec ../midistats [list $fullfilename]" 
 catch {eval $cmd} output
 set output [split $output '\n]
+set at "@"
 #puts $output
 foreach line $output {
   set line [split $line " "]
@@ -469,20 +489,25 @@ foreach line $output {
        }
     if {$c == 10} continue
 
+     set chn [lindex $line 1]
+     set prg [lindex $line 2]
+     set prgProb $progMelProb($prg)
+     set prgProb [expr round(100.0*$prgProb)] 
      set rpat  [lindex $line 10]
      set zeros [lindex $line 17]
      set steps [lindex $line 18]
      set jumps [lindex $line 19]
 
-     puts \"$filename\",$melody,$rpat,$zeros,$steps,$jumps
+     puts \"$filename$at$chn\",$melody,$prgProb,$rpat,$zeros,$steps,$jumps
    }
  }
 }
 
 proc extract_melody_step_parameters {} {
+load_progMelProb
 set melodyhandle [open "/home/seymour/abc/midiexplorer/melody.txt" r]
 set i 0
-puts "file,ismelody,rpat,zeros,steps,jumps"
+puts "file,ismelody,prgP,rpat,zeros,steps,jumps"
 while {[gets $melodyhandle line] >= 0} {
   set linedata [split $line \t]
   set filename [lindex $linedata 0]
@@ -492,6 +517,7 @@ while {[gets $melodyhandle line] >= 0} {
   get_melody_step_parameters_for $filename  $channel 
   incr i
   if {$i > 3300} break
+  #if {$i > 3} break
   }
 close $melodyhandle
 }
