@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.47 2024-04-09 15:05" 
+set midiexplorer_version "MidiExplorer version 4.48 2024-04-15 08:55" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -1316,6 +1316,7 @@ menubutton .treebrowser.menuline.help -text help  -font $df -borderwidth 3 -reli
 menu .treebrowser.menuline.help.actions -tearoff 0
 .treebrowser.menuline.help.actions add command -label "Context Help" -command {show_message_page $hlp_midiexplorer word} -font $df
 .treebrowser.menuline.help.actions add command -label "Web Help" -command webhelp -font $df
+.treebrowser.menuline.help.actions add command -label "ShortCuts" -command {show_message_page $hlp_shortcuts word} -font $df
 
 
 set hlp_midiexplorer "A long description of this program can be\
@@ -1400,6 +1401,7 @@ pack .treebrowser.menuline2 -anchor w
 
 proc bind_accelerators {} {
 bind all <Control-a> aftertouch
+bind all <Control-b> {play_selected_lines none}
 bind all <Control-d> drumroll_window
 bind all <Control-e> count_bar_rhythm_patterns
 bind all <Control-g> {google_search genre}
@@ -1419,6 +1421,25 @@ bind all <Control-z> {newfunction}
 }
 
 bind_accelerators
+
+set hlp_shortcuts "Shortcuts\n
+Control-a\taftertouch
+Control-b\tplay
+Control-d\drumroll
+Control-e\tbar rhythm patterns
+Control-g\tsearch genre
+Control-h\tchordgram
+Control-k\tconsole
+Control-o\tgoogle search
+Control-n\tnotebook
+Control-p\tselect midi player
+Control-r\tpiano roll
+Control-s\tmidi structre
+Control-t\tdetailed tableau
+Control-u\tduckduckgo search
+Control-w\tplay midi file
+"
+
 
 
 
@@ -2628,7 +2649,7 @@ for {set i 1} {$i <= $ntrks} {incr i} {
       }
       #append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
       set id [$w.tree insert {} end -values $outline -tag fnt]
-      lappend itemMelProb [list $melprob $id] 
+      if {$channel != 10} {lappend itemMelProb [list $melprob $id]} 
       incr nlines
 # Focus on selected channels or tracks
       if {$midi(midishow_sep) == "track"} {
