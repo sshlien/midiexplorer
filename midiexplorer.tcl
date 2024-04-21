@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.48 2024-04-15 08:55" 
+set midiexplorer_version "MidiExplorer version 4.50 2024-04-21 09:20" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -619,6 +619,7 @@ proc midiInit {} {
         set midi(path_midicopy) midicopy.exe
 	set midi(path_abc2midi) abc2midi.exe
 	set midi(path_abcm2ps)  abcm2ps.exe
+        set midi(path_editor) "C:/Windows/System32/notepad.exe"
         set midi(path_gs) ""
 
         set midi(path_midiplay) "C:/Program Files/Windows Media Player/wmplayer.exe"
@@ -631,6 +632,7 @@ proc midiInit {} {
 	set midi(path_abc2midi) abc2midi
 	set midi(path_abcm2ps)  abcm2ps
         set midi(path_midiplay) timidity
+        set midi(path_editor) xed
         set midi(midiplay_options) "-A 50 -ik"
         set midi(browser) firefox
         set midi(path_gs) gs
@@ -3853,15 +3855,21 @@ bind $w.abcmidient <Return> {focus .support.header
 
 button $w.browserbut -text "internet browser" -width 14 -command {locate_browser} -font $df
 entry $w.browserent -width 64 -relief sunken -textvariable midi(browser) -font $df
-grid $w.browserbut -row 10 -column 1
-grid $w.browserent -row 10 -column 2
+grid $w.browserbut -row 2 -column 1
+grid $w.browserent -row 2 -column 2
 bind $w.browserent <Return> {focus .support.header}
 
 button $w.gsbut -text "ghostscript" -width 14 -command {locate_ghostscript} -font $df
 entry $w.gsent -width 64 -relief sunken -textvariable midi(path_gs) -font $df
-grid $w.gsbut -row 11 -column 1
-grid $w.gsent -row 11 -column 2
+grid $w.gsbut -row 3 -column 1
+grid $w.gsent -row 3 -column 2
 bind $w.gsent <Return> {focus .support.header}
+
+button $w.edbut -text "editor" -width 14 -font $df -command {locate_editor}
+entry $w.edent -textvariable midi(path_editor) -font $df -width 64
+grid $w.edbut -row 4 -column 1
+grid $w.edent -row 4 -column 2
+bind $w.edent <Return> {focus .support.header}
 }
 
 
@@ -4051,6 +4059,11 @@ proc locate_browser {} {
 proc locate_ghostscript {} {
     global midi
     set midi(path_gs) [tk_getOpenFile]
+    }
+
+proc locate_editor {} {
+    global midi
+    set midi(path_editor) [tk_getOpenFile]
     }
 
 
@@ -4284,7 +4297,12 @@ set hlp_pianoroll " The function will display the selected MIDI file in a piano\
         It is possible to shift or change the spacing of the vertical quarter\
         note line indications by selecting the config/ppqn adjustment item.\
         This temporarily changes the ppqn value of the MIDI file which\
-        also affects the output of action/beat graph."
+        also affects the output of action/beat graph.\n\n\
+        There are several buttons at the bottom of the window to play,\
+        display, or notate the selected channels (or tracks) of the midi file.\
+        If you choose notate, an editor shows the selected\
+        portion in abc music notation format.
+"
 
 
 proc check_midi2abc_midistats_and_midicopy_versions {} {
@@ -4548,18 +4566,24 @@ proc piano_window {} {
 
     configureTrackSelector
     button .piano.trkchn.play -relief raised -padx 1 -pady 1
-    grid .piano.trkchn.play -column 1
+    grid .piano.trkchn.play -column 1 -row 0
     bind .piano.trkchn.play <Button> {
         set miditime [midi_to_midi 1]
         piano_play_midi_extract
         startup_playmark_motion $miditime
     }
     button .piano.trkchn.display -relief raised -padx 1 -pady 1
-    grid .piano.trkchn.display -column 1
+    grid .piano.trkchn.display -column 1 -row 1
     bind .piano.trkchn.display <Button> {
         set miditime [midi_to_midi 1]
         piano_display_midi_extract
-}
+        }
+    button .piano.trkchn.abc -relief raised -padx 1 -pady 1
+    grid .piano.trkchn.abc -column 1 -row 2
+    bind .piano.trkchn.abc <Button> {
+        set miditime [midi_to_midi 1]
+        piano_notate_midi_extract
+        }
     
     
     bind $p.can <ButtonPress-1> {piano_Button1Press %x %y}
@@ -6779,8 +6803,9 @@ proc put_trkchan_selector {} {
         }
 # depending on whether we are separating by midi channel or track number
     if {$midi(midishow_sep)=="track"} {
-        .piano.trkchn.play configure -text "play selected tracks" -font $df
-        .piano.trkchn.display configure -text "display selected tracks" -font $df
+        .piano.trkchn.play configure -text "play tracks" -font $df
+        .piano.trkchn.display configure -text "display tracks" -font $df
+        .piano.trkchn.abc configure -text "notate tracks" -font $df
 	for {set i 2} {$i <32} {incr i} {
             if {[info exist track2channel($i)]} {
               grid .piano.trkchn.$i -sticky nw -row [expr $j/10] -column [expr 2 +( $j % 10)]
@@ -6790,8 +6815,9 @@ proc put_trkchan_selector {} {
 
     } else {
 
-        .piano.trkchn.play configure -text "play selected channels" -font $df
-        .piano.trkchn.display configure -text "display selected channels" -font $df
+        .piano.trkchn.play configure -text "play channels" -font $df
+        .piano.trkchn.display configure -text "display channels" -font $df
+        .piano.trkchn.abc configure -text "notate channels" -font $df
 	for {set i 0} {$i <17} {incr i} {
             if {[lindex $channel_activity $i] > 0} {
               set i1 [expr $i+1]
@@ -7409,6 +7435,13 @@ proc piano_play_midi_extract {} {
 proc piano_display_midi_extract {} {
     global midi
     piano_abc_file
+    display_Xtmp
+}
+
+proc piano_notate_midi_extract {} {
+    global midi
+    piano_abc_file
+    show_Xtmp
 }
 
 proc create_midi_file {} {
@@ -13486,12 +13519,28 @@ set exec_out $exec_out\n$cmd\n$result
 set outhandle [open X.tmp w]
 puts $outhandle $result
 close $outhandle
-copyXtmptohtml 
-set cmd "exec [list $midi(browser)] file:[file join [pwd] $midi(outhtml)] &"
-catch {eval $cmd} exec_out
 set exec_out "$cmd\n$exec_out"
 update_console_page
 }
+
+proc display_Xtmp {} {
+global midi
+global exec_out
+copyXtmptohtml 
+set cmd "exec [list $midi(browser)] file:[file join [pwd] $midi(outhtml)] &"
+catch {eval $cmd} result
+set exec_out "$exec_out\n$cmd\n$result"
+update_console_page
+}
+
+proc show_Xtmp {} {
+global midi
+set cmd "exec [list $midi(path_editor)] X.tmp"
+eval $cmd
+}
+
+
+
 
 proc edit_abc_output {output} {
 global midi

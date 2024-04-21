@@ -491,6 +491,10 @@ foreach line $output {
 
      set chn [lindex $line 1]
      set prg [lindex $line 2]
+     set n [lindex $line 3]
+     set h [lindex $line 4]
+     set totalpitches [lindex $line 5]
+     set pavg [expr $totalpitches/($n + $h)]
      set prgProb $progMelProb($prg)
      set prgProb [expr round(100.0*$prgProb)] 
      set rpat  [lindex $line 10]
@@ -498,7 +502,7 @@ foreach line $output {
      set steps [lindex $line 18]
      set jumps [lindex $line 19]
 
-     puts \"$filename$at$chn\",$melody,$prgProb,$rpat,$zeros,$steps,$jumps
+     puts \"$filename$at$chn\",$melody,$prgProb,$rpat,$zeros,$steps,$jumps,$pavg
    }
  }
 }
@@ -507,7 +511,7 @@ proc extract_melody_step_parameters {} {
 load_progMelProb
 set melodyhandle [open "/home/seymour/abc/midiexplorer/melody.txt" r]
 set i 0
-puts "file,ismelody,prgP,rpat,zeros,steps,jumps"
+puts "file,ismelody,prgP,rpat,zeros,steps,jumps,pavg"
 while {[gets $melodyhandle line] >= 0} {
   set linedata [split $line \t]
   set filename [lindex $linedata 0]
