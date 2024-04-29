@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.50 2024-04-21 09:20" 
+set midiexplorer_version "MidiExplorer version 4.51 2024-04-29 14:40" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -2043,6 +2043,7 @@ proc interpretMidi {} {
   button .info.tracks -text "$ntrks tracks" -font $df -command midiType1Table
   label .info.ppqn -text "$ppqn pulses/beat" -font $df
   label .info.genre -text "genre: $genre" -font $df
+  button .info.help -text help -font $df -command {show_message_page $hlp_trackInfo w}
 
 #update_table_header
   if {![info exist keysig]} {set keysig C}
@@ -2053,10 +2054,10 @@ proc interpretMidi {} {
   if {![info exist tempo]} {set tempo 120}
   label .info.tempo -text "$tempo beats/minute" -font $df
   label .info.size -text "$lastbeat beats"  -font $df
-  button .info.keysig -text "key signature: $keysig" -font $df -command show_rmaj
+  button .info.keysig -text "key: $keysig" -font $df -command show_rmaj
   label .info.timesig -text "time signature: $timesig" -font $df
   label .info.ntimesig -text "$ntimesig time signatures" -font $df -fg darkblue
-  label .info.nkeysig -text "$nkeysig key signatures" -font $df -fg darkblue
+  label .info.nkeysig -text "$nkeysig key signature " -font $df -fg darkblue
   label .info.lyrics -text "Has lyrics" -fg darkblue -font $df
   label .info.notQuantized -text "Not quantized" -fg darkblue -font $df
   label .info.triplets -text "Has triplets" -fg darkblue -font $df
@@ -2072,7 +2073,7 @@ proc interpretMidi {} {
      }
   grid .info.input -columnspan 5
   grid .info.genre -sticky w  
-  grid .info.tracks .info.ppqn .info.size -sticky w
+  grid .info.tracks .info.ppqn .info.size .info.help -sticky w
   grid .info.tempo .info.timesig .info.keysig -sticky w
   set gridcmd "grid "
   if {$ntimesig > 1} {append gridcmd ".info.ntimesig "}
@@ -2091,6 +2092,61 @@ proc interpretMidi {} {
     }
 }
 
+set hlp_trackInfo "   Track Info
+
+When you click on the button on the left listing the number of\
+tracks a new window labeled tinfo is exposed listing the characteristics\
+of the midi tracks (or channels). You can select a track by clicking\
+on the line displaying the track. (Holding the control button or shift\
+button gives you other options.) Pressing control-b will play the\
+selected tracks or channels.
+
+Different statistical properties are given in the different labeled\
+columns.
+
+notes n/m where n is the number of notes or chords and m is the total\
+number of notes including those in the chords. If m=n there are no\
+chords.
+
+spread ranging for 0 to 1.0 indicates how the notes are distributed in\
+the track. Small values indicate large silent gaps where the channel\
+is not active. Thus a value of 0.5 means that half of the time the\
+track is quiet.
+
+pavg is the average midi pitch of the notes in that track or channel.\
+Middle C has a value of 50.
+
+duration is the average length of the note where a quarter note has a\
+value of 1.0.
+
+rpat is the number of distinct rhythms in the bars assuming a bar has\
+4 quarter note beats. Melodic lines usually vary in rhythm and have\
+larger values while lines providing rhythmic support are more monotonous\
+and have lower values.
+ 
+The next three columns indicate the relationship of the note (or\
+highest note in the chord with the previous note.) These values\
+or used to identify melodic music lines.
+
+zero is the number of notes which have the same pitch value as the\
+previous note. High values suggest that the line is used more for\
+rhythmic support.
+
+step is the number of notes with a positive or negative  pitch shift\
+of one or two semitones. Singeable music moves more in steps rather\
+than jumps.
+
+jump is the number of notes which shift up or down by more than two\
+semitones.
+
+melcr (melodic criterion) is a computed value which reflects the melodic\
+(singable) degree of the line. With few exceptions the melodic line\
+with the highest melcr is shown in dark green.
+ 
+bends is the number of channel pitch bends that were applied.
+
+controls is the number of midi control commands that have been applied.
+"
 
 proc tinfoSelect {} {
 global midi
@@ -2571,10 +2627,11 @@ set progMel { 3 10 13 14 4 9 5 8 3 0 5 45 3 8 2 8\
 
 # ldaCoef and ldaIntercept are the linear discriminant model
 # computed by the Jupyter Notebook stepLinearDiscriminant.ipynb
-set ldaCoef  { 0.06707022  0.07036973 -0.00266632  0.01274548 -0.00551999}
-set ldaIntercept -3.141108303
+set ldaCoef  { 0.06638838  0.07071302 -0.00137857  0.01247864 -0.00597411  0.04258056}
 
-proc melodyLogProbability {program rpat zeros steps jumps} {
+set ldaIntercept -6.206599
+
+proc melodyLogProbability {program rpat zeros steps jumps pavg } {
 global ldaCoef
 global ldaIntercept
 global progMel
@@ -2584,6 +2641,7 @@ set p [expr $p + $rpat * [lindex $ldaCoef 1]]
 set p [expr $p + $zeros * [lindex $ldaCoef 2]]
 set p [expr $p +  $steps * [lindex $ldaCoef 3]]
 set p [expr $p +  $jumps * [lindex $ldaCoef 4]]
+set p [expr $p +  $pavg * [lindex $ldaCoef 5]]
 set p [expr round($p * 100)/100.0]
 return $p
 }
@@ -2640,7 +2698,7 @@ for {set i 1} {$i <= $ntrks} {incr i} {
       } else {
         set prog $channel2program($channel)
         set prog [lindex $mlist $prog]
-        set  melprob  [melodyLogProbability $p $rhythmpatterns $nzeros $nsteps $njumps] 
+        set  melprob  [melodyLogProbability $p $rhythmpatterns $nzeros $nsteps $njumps $pmean] 
       }
       set outline "$i $channel [list $prog ]"
       #set outline "$i $channel [list $prog ] $vol"
@@ -2651,7 +2709,9 @@ for {set i 1} {$i <= $ntrks} {incr i} {
       }
       #append outline " $nnotes/$totalnotes $chan_spread $pmean $duration $pitchbendCount $cntlparamCount $pressureCount"
       set id [$w.tree insert {} end -values $outline -tag fnt]
-      if {$channel != 10} {lappend itemMelProb [list $melprob $id]} 
+      if {$channel != 10} {lappend itemMelProb [list $melprob $id $pmean $chan_spread]
+                          #puts "pmean for $id = $pmean" 
+                          }
       incr nlines
 # Focus on selected channels or tracks
       if {$midi(midishow_sep) == "track"} {
@@ -2672,13 +2732,24 @@ for {set i 1} {$i <= $ntrks} {incr i} {
 #     }
    }
  } 
+
+# highlight melody line and others
 set sortedItemMelProb [lsort -decreasing -command compareOnset $itemMelProb]
 #puts "sortedItemMelProb = $sortedItemMelProb"
 # highlight largest MelProb item
-set bestItem [lindex $sortedItemMelProb 0]
-#puts "bestItem = $bestItem" 
-set id [lindex $bestItem 1]
-$w.tree item $id -tag green 
+
+for {set i 0} {$i < 3} {incr i} {
+  set bestItem [lindex $sortedItemMelProb $i]
+  #puts "bestItem = $bestItem"
+  set id [lindex $bestItem 1]
+  set pavg [lindex $bestItem 2] 
+  set chan_spread [lindex $bestItem 3]
+  #not a melody line if average pitch is less than 45
+  if {$pavg < 45} continue
+  if {$chan_spread < 0.3} continue
+  $w.tree item $id -tag green 
+  break
+  }
 
 if {$nlines > 16} {set nlines 16}
 $w.tree configure -height $nlines 

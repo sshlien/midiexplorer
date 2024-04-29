@@ -472,7 +472,6 @@ set fullfilename [file join "../../clean_midi/" $filename]
 set cmd "exec ../midistats [list $fullfilename]" 
 catch {eval $cmd} output
 set output [split $output '\n]
-set at "@"
 #puts $output
 foreach line $output {
   set line [split $line " "]
@@ -502,7 +501,7 @@ foreach line $output {
      set steps [lindex $line 18]
      set jumps [lindex $line 19]
 
-     puts \"$filename$at$chn\",$melody,$prgProb,$rpat,$zeros,$steps,$jumps,$pavg
+     puts \"$filename\",$chn,$melody,$prgProb,$rpat,$zeros,$steps,$jumps,$pavg
    }
  }
 }
@@ -511,7 +510,7 @@ proc extract_melody_step_parameters {} {
 load_progMelProb
 set melodyhandle [open "/home/seymour/abc/midiexplorer/melody.txt" r]
 set i 0
-puts "file,ismelody,prgP,rpat,zeros,steps,jumps,pavg"
+puts "file,chn,ismelody,prgP,rpat,zeros,steps,jumps,pavg"
 while {[gets $melodyhandle line] >= 0} {
   set linedata [split $line \t]
   set filename [lindex $linedata 0]
