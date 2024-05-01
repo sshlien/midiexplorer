@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.51 2024-04-29 14:40" 
+set midiexplorer_version "MidiExplorer version 4.52 2024-05-01 08:45" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -1291,9 +1291,12 @@ menu $ww -tearoff 0
        $ww add command -label "pitch class entropy distribution" -command pitchEntropyDistribution -font $df
 
 
-button $w.menuline.abc -text abc -font $df -command {create_abc_file none} -state disabled
+button $w.menuline.abc -text abc -font $df -command {create_abc_file none "edit"} -state disabled
 tooltip::tooltip $w.menuline.abc "Convert the selected tracks (channels) or entire\nmidi file to abc notation and open an abc editor."
 
+button $w.menuline.display -text display -font $df -command {create_abc_file none "display"} -state disabled
+
+tooltip::tooltip .treebrowser.menuline.display "Display the music notation of the selected channels or tracks"
 #        find title 
 button .treebrowser.menuline2.jump -text find -command {findChildInTree .treebrowser $findname} -font $df
 
@@ -1396,7 +1399,7 @@ is still exposed when you exit midiexplorer.
 
 # pack everything and set binding to quick keys
 set ww $w.menuline
-pack $ww.file  $ww.view $ww.play $ww.rhythm $ww.pitch  $ww.database $ww.abc $ww.settings $ww.internals $ww.help -anchor w -side left
+pack $ww.file  $ww.view $ww.play $ww.display $ww.rhythm $ww.pitch  $ww.database $ww.abc $ww.settings $ww.internals $ww.help -anchor w -side left
 pack .treebrowser.menuline2.jump .treebrowser.menuline2.name .treebrowser.menuline2.random .treebrowser.menuline2.restore -side left
 pack .treebrowser.menuline -anchor w
 pack .treebrowser.menuline2 -anchor w
@@ -2225,6 +2228,7 @@ proc selected_midi {} {
    .treebrowser.menuline.rhythm configure -state normal
    .treebrowser.menuline.pitch configure -state normal
    .treebrowser.menuline.abc configure -state normal
+   .treebrowser.menuline.display configure -state normal
    set midi(midifilein) $f
    updateHistory [file dirname $f]
    clearMidiTracksAndChannels
@@ -2255,6 +2259,7 @@ proc load_last_midi_file {} {
  .treebrowser.menuline.rhythm configure -state normal
  .treebrowser.menuline.pitch configure -state normal
  .treebrowser.menuline.abc configure -state normal
+ .treebrowser.menuline.display configure -state normal
  set midi_info [get_midi_info_for]
  if {$midi_info == ""} return
  parse_midi_info $midi_info
@@ -6204,7 +6209,7 @@ function"
  tooltip::tooltip $wm.plot "Various plots including chordgram and notegram"
 
 
-  button $wm.abc -text abc -font $df -command {create_abc_file midistructure}
+  button $wm.abc -text abc -font $df -command {create_abc_file midistructure "edit"}
   tooltip::tooltip $wm.abc "Convert the selected tracks (channels) or entire\nmidi file to abc notation and open an abc editor."
 
   button $wm.help -text help -font $df -command {show_message_page $hlp_midistructure word}
@@ -13553,7 +13558,7 @@ speakers and follow the score.\n\n\
 "
 
 
-proc create_abc_file {source} {
+proc create_abc_file {source action} {
 global midi
 global exec_out
 set exec_out "create_abc_file $source\n\n"
@@ -13568,7 +13573,8 @@ set cmd "exec [list $midi(path_midi2abc)] [list $midi(outfilename)] $options -no
 catch {eval $cmd} result
 #puts $result
 set exec_out $exec_out\n$cmd
-edit_abc_output $result
+if {$action == "edit"} {edit_abc_output $result}
+if {$action == "display"} {display_abc_output $result}
 update_console_page
 }
 
@@ -13830,6 +13836,32 @@ append scriptlist $styleblock
 return $scriptlist
 }
 
+
+proc display_abc_output {result} {
+global midi
+global exec_out
+set ext ".abc"
+if {![file exist $midi(path_abcm2ps)]} {
+  set msg "To use this function you require the executable abcm2ps. Place it\
+  in the directory midiexplorer_home."
+  tk_messageBox -message $msg  -type ok
+  return
+  }
+set abcdata $result
+set outhandle [open X.tmp w]
+puts $outhandle $abcdata
+close $outhandle
+set cmd "exec [list $midi(path_abcm2ps)] -j 1 X.tmp"
+catch {eval $cmd} exec_out
+set exec_out $cmd\n\n$exec_out
+set cmd "exec [list $midi(path_gs)] -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -q -sOutputFile=Out.pdf Out.ps"
+catch {eval $cmd} result
+append exec_out "\n$cmd\n$result"
+set cmd "exec [list $midi(browser)] file:[file join [pwd] Out.pdf] &"
+append exec_out \n$cmd
+catch {eval $cmd} result
+append exec_out \n$result
+}
 
 proc display_abc_file {} {
 global midi
