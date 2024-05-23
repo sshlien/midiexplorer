@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.52 2024-05-01 08:45" 
+set midiexplorer_version "MidiExplorer version 4.55 2024-05-23 11:30" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -1190,7 +1190,7 @@ menu $ww -tearoff 0
             -command simple_tableau
 	$ww add command -label chordgram -font $df -command {chordgram_plot none}
 #	$ww add command -label "chord histogram" -font $df -command chord_histogram
-#        $ww add command -label "chordtext" -font $df -command chordtext_window
+        $ww add command -label "chordtext" -font $df -command {chordtext_window .tinfo}
         $ww add command -label notegram -font $df -command {notegram_plot none}
         $ww add command -label keymap -font $df -command {keymap none}
 	$ww add command -label "entropy analysis" -font $df -command analyze_note_patterns
@@ -2667,7 +2667,6 @@ global track2channel
 global lastpulse
 global chanvol
 global df
-
 #puts "miditracks [array get miditracks]"
 #puts "midichannels [array get midichannels]"
 
@@ -5179,9 +5178,8 @@ proc reorganize_pianoresult {source} {
     global midi
     global trksel
     set midiactions {}
-    set tsel [count_selected_midi_tracks]
-    if {$source == "none"} {set tsel 0}
-    #puts "reorganize_pianoresult for [llength $pianoresult] records"
+    #set tsel [count_selected_midi_tracks]
+    set tsel [channelsOrTracks_to_trksel] 
     foreach cmd $pianoresult {
         if {[llength $cmd] < 5} continue
         set onset [lindex $cmd 0]
@@ -5269,6 +5267,8 @@ proc make_and_display_chords {source} {
     set nbeats [expr ($stop - $start)]
     #puts "make_and_display_chords: nbeats = $nbeats" 
     
+    loadMidiFile
+
     set v .chordview.2.txt
     $v delete 0.0 end
     
@@ -5297,8 +5297,11 @@ proc make_and_display_chords {source} {
         set beat_number [expr int($beat_time)]
         if {$last_beat_number != $beat_number} {
             set chordstring [label_notelist [list_on_notes_in_beat]]
-            set name [chordname $chordstring [root_of $chordstring]]
-            $v insert insert "$last_beat_number  $name   $chordstring \n"
+            set root [root_of $chordstring]
+            set chordElements [chordComposition $chordstring $root]
+            set name [chordname $chordElements $root]
+            set chordE [listToWord $chordElements]
+            $v insert insert "$last_beat_number  $name   $chordstring   $chordE\n"
             reset_beat_notestatus
             set last_beat_number $beat_number
             } 
@@ -5349,16 +5352,11 @@ for {set shift 0} {$shift < 7} {incr shift} {
   return $bass
 }  
 
-
-proc chordname {chordstring root} {
-  # remove numbers from chordstring
-  regsub -all -line {\d} $chordstring "" clean_notes
+proc chordComposition {chordstring root} {
   set sharpmapper {C# 1 C 0 D# 3 D 2 E 4 F# 6 F 5 G# 8 G 7 A# 10 A 9 B 11}
   set flatmapper {C 0 Db 1 D 2 Eb 3 E 4 F 5 Gb 6 G 7 Ab 8 A 9 Bb 10 B 11}
-  set maj "maj"
-  set min "min"
-  set aug "aug"
-  set dim "dim"
+  # remove numbers from chordstring
+  regsub -all -line {\d} $chordstring "" clean_notes
   if {[string first # $chordstring] > -1} {
      set notevals [string map $sharpmapper $clean_notes]
      set rootval [string map $sharpmapper $root]
@@ -5366,11 +5364,36 @@ proc chordname {chordstring root} {
      set notevals [string map $flatmapper $clean_notes]
      set rootval [string map $flatmapper $root]
      }
-  #puts $clean_notes
+  #puts "\nchordstring = $chordstring"
+  #puts "clean_notes = $clean_notes notevals = $notevals rootval = $rootval"
   for {set i 0} {$i < [llength $notevals]} {incr i} {
     lset notevals $i [expr ([lindex $notevals $i] - $rootval) % 12]
     }
+  #puts "modifiled notevals = $notevals"
   set notevals [lsort -increasing -unique -integer $notevals]
+  #puts "sorted notevals = $notevals"
+  return $notevals
+  }
+
+
+proc listToWord {c} {
+  set w ""
+  foreach item $c {
+    append w $item
+    append w :
+    }
+   set w [string range $w 0 end-1]
+   return $w
+   }
+
+    
+
+proc chordname {notevals root} {
+  set maj "maj"
+  set min "min"
+  set aug "aug"
+  set dim "dim"
+  #puts [listToWord $notevals]
   if {[lsearch $notevals 3] > 0} {
     if {[lsearch $notevals 6] > 0} {
       set key $root$dim
@@ -5474,7 +5497,9 @@ proc determineChordSequence {source} {
             reset_beat_notestatus
             set last_beat_number $beat_number
             set chordstring [label_notelist $onlist]
-            set chordname [chordname $chordstring [root_of $chordstring]]
+            set root [root_of $chordstring]
+            set chordElements [chordComposition $chordstring $root]
+            set chordname [chordname $chordElements $root]
             dict set list_of_chords $beat_number $chordname
             set last_time $present_time
         }
@@ -7107,6 +7132,8 @@ proc midi_limits {can} {
 
 
 proc count_selected_midi_tracks {} {
+#trksel is used to select the track or channel for
+#only the pianoroll
     set tsel 0
     global trksel
     for {set i 0} {$i <32} {incr i} {
@@ -7117,6 +7144,31 @@ proc count_selected_midi_tracks {} {
     return $tsel
 }
 
+proc channelsOrTracks_to_trksel {} {
+global midi
+global midichannels
+global miditracks
+global lasttrack
+global trksel
+# only the pianoroll uses trksel, all other interfaces
+# uses miditracks or midichannels.
+set tsel 0
+for {set i 0} {$i < 32} {incr i} {set trksel($i) 0}
+if {$midi(midishow_sep) == "track"} {
+  set n $lasttrack
+  if {$n > 39} {set n 39}
+  for {set i 0} {$i <= $n} {incr i} {
+     if {$miditracks($i)} {set trksel($i) 1
+                           incr tsel}
+     }
+  } else {
+  for {set i 0} {$i <= 16} {incr i} {
+     if {$midichannels($i)} {set trksel($i) 1
+                             incr tsel}
+     }
+  }
+return $tsel
+}  
 
 
 proc midi_to_midi {sel} {
@@ -13847,20 +13899,20 @@ if {![file exist $midi(path_abcm2ps)]} {
   tk_messageBox -message $msg  -type ok
   return
   }
+
 set abcdata $result
 set outhandle [open X.tmp w]
 puts $outhandle $abcdata
 close $outhandle
 set cmd "exec [list $midi(path_abcm2ps)] -j 1 X.tmp"
-catch {eval $cmd} exec_out
-set exec_out $cmd\n\n$exec_out
+catch {eval $cmd} exec_output
+set exec_out $exec_out\n$exec_output$\n$cmd\n
 set cmd "exec [list $midi(path_gs)] -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -q -sOutputFile=Out.pdf Out.ps"
 catch {eval $cmd} result
 append exec_out "\n$cmd\n$result"
 set cmd "exec [list $midi(browser)] file:[file join [pwd] Out.pdf] &"
-append exec_out \n$cmd
 catch {eval $cmd} result
-append exec_out \n$result
+append exec_out \n$cmd\n$result
 }
 
 proc display_abc_file {} {
