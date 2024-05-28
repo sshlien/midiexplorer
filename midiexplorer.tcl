@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.55 2024-05-23 11:30" 
+set midiexplorer_version "MidiExplorer version 4.55 2024-05-28 06:30" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -5109,6 +5109,24 @@ proc midi_to_pitchclass {midipitch} {
 }
 
 
+array set chordtypeRef {0:4:7     maj 
+                     0:3:7     min 
+                     0:3:6     dim
+                     0:4:9     aug
+                     0:7       5
+                     0:4:7:10  7
+                     0:3:7:10  m7
+                     0:3:6:10  m7b5
+                     0:4:7:11  maj7
+                     0:4:7:9   6
+                     0:3:7:9   m6
+                     0:4:8:10  aug7
+                     0:3:6:9   dim7
+                     0:5:7     sus
+}
+ 
+#puts [array get chordtypeRef]
+
 
 proc label_notelist {notelist} {
     set labeled_list ""
@@ -5125,6 +5143,51 @@ proc label_pitchlist {pitchlist} {
     }
     return $labeled_list
 }
+
+proc notelistToString {notelist} {
+set str ""
+foreach elem $notelist {
+  append str "$elem:"
+  }
+set str [string range $str 0 end-1]
+return $str
+}
+
+proc compress_notelist {notelist} {
+puts "notelist = $notelist"
+set nnotelist [list]
+foreach elem $notelist {
+  append str "[expr $elem % 12] :"
+  lappend nnotelist [expr $elem % 12]
+  }
+puts "  nnotelist = $nnotelist"
+return $nnotelist
+}
+
+proc try_route {route notelist} {
+global chordtypeRef
+set nnotelist [compress_notelist $notelist]
+
+set inverse [expr 12 - $route] 
+
+set  n [addConstantToVectorModulo $nnotelist $inverse 12]
+puts "n =  $n"
+set code  [notelistToString $n]
+puts "code = $code"
+set matchingcode [array names chordtypeRef $code]
+if {[string length $matchingcode] > 2} {puts $chordtypeRef($matchingcode)}
+}
+
+proc addConstantToVectorModulo {invector constant mod} {
+set outvector [list]
+foreach elem $invector {
+  set value [expr ($elem + $constant) % $mod]
+  lappend outvector $value 
+  }
+return $outvector
+}
+ 
+
 
 set notelist {}
 
@@ -5251,6 +5314,10 @@ proc switch_note_status {midicmd} {
       } 
 }
 
+proc id_chord_and_root {midiChordNotes} {
+   try_route 7 $midiChordNotes
+}
+
 
 proc make_and_display_chords {source} {
     global midi
@@ -5297,6 +5364,10 @@ proc make_and_display_chords {source} {
         set beat_number [expr int($beat_time)]
         if {$last_beat_number != $beat_number} {
             set chordstring [label_notelist [list_on_notes_in_beat]]
+            #set midiChordNotes [list_on_notes_in_beat]
+            #puts "midiChordNotes = $midiChordNotes"
+            #id_chord_and_root $midiChordNotes 
+            #set chordstring [label_notelist $midiChordNotes]
             set root [root_of $chordstring]
             set chordElements [chordComposition $chordstring $root]
             set name [chordname $chordElements $root]
@@ -5333,6 +5404,7 @@ set k {C D E F G A B}
 set sharp #
 set flat b
 set minsum 500
+set rootcriterion {}
 for {set shift 0} {$shift < 7} {incr shift} {
   set sum 0
   foreach note $chordstring {
@@ -5345,7 +5417,10 @@ for {set shift 0} {$shift < 7} {incr shift} {
     set bestshift $shift
     set minsum $sum
     }
+  lappend rootcriterion [list $shift $sum]
   }
+  #puts "rootcriterion = $rootcriterion"
+  #puts "bestshift = $bestshift"
   set bass  [lindex $k $bestshift]
   if {[string first $bass$sharp $chordstring] > -1} {set bass $bass$sharp}
   if {[string first $bass$flat $chordstring] > -1} {set bass $bass$flat}
@@ -5364,8 +5439,11 @@ proc chordComposition {chordstring root} {
      set notevals [string map $flatmapper $clean_notes]
      set rootval [string map $flatmapper $root]
      }
+
   #puts "\nchordstring = $chordstring"
   #puts "clean_notes = $clean_notes notevals = $notevals rootval = $rootval"
+  #puts "clean_notes = $clean_notes"
+  #puts "notevals = $notevals"
   for {set i 0} {$i < [llength $notevals]} {incr i} {
     lset notevals $i [expr ([lindex $notevals $i] - $rootval) % 12]
     }
