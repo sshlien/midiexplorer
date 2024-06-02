@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.55 2024-05-28 06:30" 
+set midiexplorer_version "MidiExplorer version 4.57 2024-06-02 15:35" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -2309,6 +2309,7 @@ proc get_midi_info_for {} {
  global midilength
  set midilength 0
  set fileexist [file exist $midi(midifilein)]
+ puts "get_midi_info_for: midifilein = $midi(midifilein) filexist = $fileexist"
  if {$fileexist} {
    set exec_options "[list $midi(midifilein) ]"
    set cmd "exec [list $midi(path_midistats)]  $exec_options"
@@ -4583,6 +4584,9 @@ proc piano_window {} {
             -command {chord_histogram pianoroll}
     $p.action.items add command  -label "chordgram" -font $df \
             -command {chordgram_plot pianoroll}
+    $p.action.items add command -label "save midi file region" -font $df \
+            -command {saveMidiTmpFile pianoroll}
+
     $p.action.items add command -label "help" -font $df\
             -command {show_message_page $hlp_pianoroll_actions word}
     
@@ -5112,7 +5116,7 @@ proc midi_to_pitchclass {midipitch} {
 array set chordtypeRef {0:4:7     maj 
                      0:3:7     min 
                      0:3:6     dim
-                     0:4:9     aug
+                     0:4:8     aug
                      0:7       5
                      0:4:7:10  7
                      0:3:7:10  m7
@@ -5144,9 +5148,15 @@ proc label_pitchlist {pitchlist} {
     return $labeled_list
 }
 
-proc notelistToString {notelist} {
+proc notelistToString {notelist offset} {
+# represents the contents of notelist beginning from
+# notelist(offset) and wrapping around.
 set str ""
-foreach elem $notelist {
+set l [llength $notelist]
+#puts "input notelist = $notelist"
+for {set i 0} {$i < $l} {incr i} {
+  set j [expr ($i + $offset) % $l]
+  set elem [lindex $notelist $j]
   append str "$elem:"
   }
 set str [string range $str 0 end-1]
@@ -5154,28 +5164,80 @@ return $str
 }
 
 proc compress_notelist {notelist} {
-puts "notelist = $notelist"
+# The type of chord does not depend on the octave
+# of the tones; so the pitches of all the tones
+# are projected into the range 0 to 12.
+#puts "notelist = $notelist"
 set nnotelist [list]
 foreach elem $notelist {
-  append str "[expr $elem % 12] :"
-  lappend nnotelist [expr $elem % 12]
+  set key [expr $elem % 12]
+  if {[lsearch $nnotelist $key] != -1} continue
+  append str "$key :"
+  lappend nnotelist $key
   }
-puts "  nnotelist = $nnotelist"
+#puts "  nnotelist = $nnotelist"
 return $nnotelist
 }
 
-proc try_route {route notelist} {
+proc minimumPitch {notelist} {
+set minPitch 128
+foreach elem $notelist {
+  if {$elem < $minPitch} {
+      set minPitch $elem
+      }
+  }
+return $minPitch
+}
+
+
+# Once the root of the chord is established, it is easy to identify
+# the chord type by the spacing of the notes (major thirds, minor thirds,
+# ... Determining the root of the chord is not easy, since the root
+# is not necessarily the lowest pitch. Inversion may push the pitch
+# of the root an octave higher and above the other chordal tones.
+# Some of the chord roots can be eliminated since the pitch spacing
+# of the other chodal tones may not match any of the chord types.
+# The function find_root looks for the root by determining whether
+# the other note pitches are consistent with any of the chord types.
+# Note pitch spacing in the augmented chord divide the octave in
+# exactly 3 equal intervals; so we do not know the root of the chord 
+# if the chord has been inverted.
+
+array set flatkeys {0 C 1  Db 2 D 3  Eb 4 E 5 F 6 Gb 7 G 8 Ab 9 A 10 Bb 11 B}
+
+proc find_root {notelist} {
 global chordtypeRef
+global flatkeys
+set pitch0 [minimumPitch $notelist]
+set lowestNote $flatkeys([expr $pitch0 % 12])
+#puts "lowestNote =  $lowestNote" 
 set nnotelist [compress_notelist $notelist]
+#puts "nnotelist = $nnotelist"
+set l [llength $nnotelist] 
 
-set inverse [expr 12 - $route] 
-
-set  n [addConstantToVectorModulo $nnotelist $inverse 12]
-puts "n =  $n"
-set code  [notelistToString $n]
-puts "code = $code"
-set matchingcode [array names chordtypeRef $code]
-if {[string length $matchingcode] > 2} {puts $chordtypeRef($matchingcode)}
+set lastchordname ""
+set chordid [list]
+for {set i 0} {$i < $l} {incr i} {
+  set root [lindex $nnotelist $i]
+  set inverse [expr 12 - $root] 
+  set keyroot $flatkeys($root)
+  set  n [addConstantToVectorModulo $nnotelist $inverse 12]
+  set code  [notelistToString $n $i]
+  #puts "n = $n code = $code"
+  set matchingcode [array names chordtypeRef $code]
+  if {[string length $matchingcode] > 2} {
+    #puts "nnotelist = $nnotelist root = $root  n = $n code = $code $chordtypeRef($code)"
+   if {$keyroot == $lowestNote} {
+        set chordname "$keyroot$chordtypeRef($matchingcode)"
+        } else {
+        set chordname  "$keyroot$chordtypeRef($matchingcode)/$lowestNote"
+        }
+   }
+   if {[info exist chordname] && $chordname != $lastchordname} {
+    lappend chordid $chordname
+    set lastchordname $chordname}
+ }
+ return $chordid
 }
 
 proc addConstantToVectorModulo {invector constant mod} {
@@ -5314,10 +5376,6 @@ proc switch_note_status {midicmd} {
       } 
 }
 
-proc id_chord_and_root {midiChordNotes} {
-   try_route 7 $midiChordNotes
-}
-
 
 proc make_and_display_chords {source} {
     global midi
@@ -5364,15 +5422,17 @@ proc make_and_display_chords {source} {
         set beat_number [expr int($beat_time)]
         if {$last_beat_number != $beat_number} {
             set chordstring [label_notelist [list_on_notes_in_beat]]
-            #set midiChordNotes [list_on_notes_in_beat]
+            set midiChordNotes [list_on_notes_in_beat]
             #puts "midiChordNotes = $midiChordNotes"
-            #id_chord_and_root $midiChordNotes 
+            set chordid [find_root $midiChordNotes]
+            #puts $chordid
+
             #set chordstring [label_notelist $midiChordNotes]
             set root [root_of $chordstring]
             set chordElements [chordComposition $chordstring $root]
             set name [chordname $chordElements $root]
             set chordE [listToWord $chordElements]
-            $v insert insert "$last_beat_number  $name   $chordstring   $chordE\n"
+            $v insert insert "$last_beat_number  $name   $chordstring   $chordE $chordid\n"
             reset_beat_notestatus
             set last_beat_number $beat_number
             } 
@@ -7419,7 +7479,7 @@ global fbeat
 global tbeat
 global exec_out
 set limits [getCanvasLimits $source]
-#puts "copyMidiToTmp $source: limits = $limits"
+puts "copyMidiToTmp $source: limits = $limits"
 #puts "miditracks [array get miditracks]"
 #puts "midichannels [array get midichannels]"
 
@@ -7470,6 +7530,13 @@ if {[string length $option] > 0} {
   update_console_page
 }
 
+proc saveMidiTmpFile {source} {
+ global midi
+ copyMidiToTmp $source 
+ set midifilename [tk_getSaveFile ]
+ puts "renaming $midi(outfilename) to $midifilename"
+ file rename -force $midi(outfilename) $midifilename
+}
 
 proc play_and_exclude_selected_lines {} {
 global trksel
