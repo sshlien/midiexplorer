@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.57 2024-06-02 15:35" 
+set midiexplorer_version "MidiExplorer version 4.57 2024-06-03 19:10" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -2309,7 +2309,6 @@ proc get_midi_info_for {} {
  global midilength
  set midilength 0
  set fileexist [file exist $midi(midifilein)]
- puts "get_midi_info_for: midifilein = $midi(midifilein) filexist = $fileexist"
  if {$fileexist} {
    set exec_options "[list $midi(midifilein) ]"
    set cmd "exec [list $midi(path_midistats)]  $exec_options"
@@ -4397,8 +4396,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.91} {
-         appendInfoError "You need midistats.exe version 0.91 or higher."
+    if {$err == 0 || $ver < 0.92} {
+         appendInfoError "You need midistats.exe version 0.92 or higher."
          }
     return pass
 }
@@ -5069,7 +5068,23 @@ proc chord_histogram_window {source} {
 
 
 
+set hlp_chordtext "  Chordtext window
 
+This window displays the pitches of all the notes that are active\
+in each beat of the midi file. You can filter the notes to those\
+belonging to particular channels or tracks by selecting them in\
+one of the windows (pianoroll, chordgram, midistructure,  track (channel)\
+descriptions). You can also limit the beats to particular beats.\n\
+
+The function attempts to identify the type of chord that are\
+formed by these pitches using two methods. The main difficulty is\
+determining the root of the chord. Since the chord can be inverted\
+the root is not necessarily the lowest pitch. Craig Sapp's algorithm\
+works well in most cases. A second method involves identifying\
+the chord and root at the same time using template matching.\
+
+
+"
 
 proc chordtext_window {source} {
    global df
@@ -5080,7 +5095,9 @@ proc chordtext_window {source} {
      positionWindow $f
      frame $f.1 
      frame $f.2
-     pack $f.1 $f.2 -side top
+     pack $f.1 $f.2 -side top -anchor w
+     button $f.1.help -text help -font $df -command {show_message_page $hlp_chordtext word}
+     pack $f.1.help -side left -anchor w
      text $f.2.txt -yscrollcommand {.chordview.2.scroll set} -width 64 -font $df
      scrollbar .chordview.2.scroll -orient vertical -command {.chordview.2.txt yview}
      pack $f.2.txt $f.2.scroll -side left -fill y
@@ -5127,6 +5144,9 @@ array set chordtypeRef {0:4:7     maj
                      0:4:8:10  aug7
                      0:3:6:9   dim7
                      0:5:7     sus
+                     0:2:7     sus9
+                     0:5:7:10  7sus4
+                     0:2:7:10  7sus9
 }
  
 #puts [array get chordtypeRef]
@@ -5376,6 +5396,17 @@ proc switch_note_status {midicmd} {
       } 
 }
 
+proc scaleDegree {key} {
+global keysig
+set k {C D E F G A B}
+set keyLetter [string index $key 0]
+set keysigLetter [string index $keysig  0]
+set keynumber [lsearch $k $keyLetter]
+set keysignumber [lsearch $k $keysigLetter] 
+puts "kegsigLetter = $keysigLetter $keysignumber keyLetter = $keyLetter $keynumber"
+}
+
+
 
 proc make_and_display_chords {source} {
     global midi
@@ -5390,7 +5421,6 @@ proc make_and_display_chords {source} {
     set start [lindex $limits 0]
     set stop  [lindex $limits 1]
     set nbeats [expr ($stop - $start)]
-    #puts "make_and_display_chords: nbeats = $nbeats" 
     
     loadMidiFile
 
@@ -12116,7 +12146,7 @@ global desc
 global midi
 load_desc
 set descsize [array size desc]
-set csvfile [file join $midi(rootfolder) info.tsv]
+set csvfile [file join $midi(rootfolder) info.csv]
 set outhandle [open $csvfile w]
 #set outhandle stdout
 puts $outhandle "i\tnbeats\ttempo\tpitchbend\tpitchentropy\tndrums\tfile"
@@ -15262,7 +15292,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 4.85\
             path_midi2abc 3.59\
             path_midicopy 1.39\
-	    path_midistats 0.91\
+	    path_midistats 0.92\
             path_abcm2ps 8.14.6}
 
 
