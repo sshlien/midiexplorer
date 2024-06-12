@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.57 2024-06-03 19:10" 
+set midiexplorer_version "MidiExplorer version 4.60 2024-06-11 09:45" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -1249,7 +1249,7 @@ tooltip::tooltip $ww -index 2 "List the midi files which were
 found to have some problems"
 
 menu $ww.export -tearoff 0
-$ww.export add command -label "info data" -font $df -command export_info_to_tsv
+$ww.export add command -label "info data" -font $df -command export_info_to_csv
 $ww.export add command -label "file index" -font $df -command export_fileindex
 $ww.export add command -label "progcolor data" -font $df -command export_progcolor_to_csv
 $ww.export add command -label "prog data" -font $df -command "export_progs_to_csv 0"
@@ -1449,11 +1449,12 @@ Control-w\tplay midi file
 
 
 #        message line
-label .treebrowser.menuline2.messageline -fg red
-pack .treebrowser.menuline2.messageline 
+label .treebrowser.menuline2.messageline -fg red 
+pack .treebrowser.menuline2.messageline -side left
 
 proc clearMessageLine {} {
 .treebrowser.menuline2.messageline configure -text ""
+destroy .treebrowser.menuline2.stop
 }
 
 proc messagetxt {txt} {
@@ -1697,11 +1698,24 @@ proc formatSize {size} {
 return $size
 }
 
+proc abortScan {} {
+global stopScan
+set stopScan 1
+}
+
+proc makeAbortButton {} {
+global df
+global stopScan
+button .treebrowser.menuline2.stop -text stop -font $df -command abortScan
+pack .treebrowser.menuline2.stop -side left
+set stopScan 0
+}
 
 ## Code to populate a node of the tree
 proc populateTree {tree node} {
     global df
     global midi
+    global stopScan
     if {[$tree set $node type] ne "directory"} {
 	return
     }
@@ -1712,8 +1726,10 @@ proc populateTree {tree node} {
     set i 0
     set filelist [lsort -dictionary [glob -nocomplain -dir $path *]] 
     set nfiles [llength $filelist]
-    messagetxt "scanning $nfiles files. Could take a while."
+    makeAbortButton
+    messagetxt "scanning $nfiles files."
     foreach f $filelist {
+        if {$stopScan} break
 	set type [file type $f]
 	if {$type eq "directory"} {
 	    ## Make it so that this node is openable
@@ -1755,7 +1771,7 @@ proc populateTree {tree node} {
 	}
     incr i
     if {[expr $i % 50] == 0} {
-         messagetxt "scanning [expr $nfiles -$i] files. Could take a while."
+         messagetxt "scanning [expr $nfiles -$i] files."
 	  update}
     }
 
@@ -2309,6 +2325,7 @@ proc get_midi_info_for {} {
  global midilength
  set midilength 0
  set fileexist [file exist $midi(midifilein)]
+ #puts "get_midi_info_for: midifilein = $midi(midifilein) filexist = $fileexist"
  if {$fileexist} {
    set exec_options "[list $midi(midifilein) ]"
    set cmd "exec [list $midi(path_midistats)]  $exec_options"
@@ -4396,8 +4413,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.92} {
-         appendInfoError "You need midistats.exe version 0.92 or higher."
+    if {$err == 0 || $ver < 0.93} {
+         appendInfoError "You need midistats.exe version 0.93 or higher."
          }
     return pass
 }
@@ -5068,23 +5085,7 @@ proc chord_histogram_window {source} {
 
 
 
-set hlp_chordtext "  Chordtext window
 
-This window displays the pitches of all the notes that are active\
-in each beat of the midi file. You can filter the notes to those\
-belonging to particular channels or tracks by selecting them in\
-one of the windows (pianoroll, chordgram, midistructure,  track (channel)\
-descriptions). You can also limit the beats to particular beats.\n\
-
-The function attempts to identify the type of chord that are\
-formed by these pitches using two methods. The main difficulty is\
-determining the root of the chord. Since the chord can be inverted\
-the root is not necessarily the lowest pitch. Craig Sapp's algorithm\
-works well in most cases. A second method involves identifying\
-the chord and root at the same time using template matching.\
-
-
-"
 
 proc chordtext_window {source} {
    global df
@@ -5095,9 +5096,7 @@ proc chordtext_window {source} {
      positionWindow $f
      frame $f.1 
      frame $f.2
-     pack $f.1 $f.2 -side top -anchor w
-     button $f.1.help -text help -font $df -command {show_message_page $hlp_chordtext word}
-     pack $f.1.help -side left -anchor w
+     pack $f.1 $f.2 -side top
      text $f.2.txt -yscrollcommand {.chordview.2.scroll set} -width 64 -font $df
      scrollbar .chordview.2.scroll -orient vertical -command {.chordview.2.txt yview}
      pack $f.2.txt $f.2.scroll -side left -fill y
@@ -5144,9 +5143,13 @@ array set chordtypeRef {0:4:7     maj
                      0:4:8:10  aug7
                      0:3:6:9   dim7
                      0:5:7     sus
-                     0:2:7     sus9
-                     0:5:7:10  7sus4
+                     0:3:5     sus4
+                     0:5:7:10  7sus5
                      0:2:7:10  7sus9
+                     0:2:4:7:10 9
+                     0:2:3:7:10 m9
+                     0:2:4:7:11 maj9
+                     0:1:3:6:9 dim9
 }
  
 #puts [array get chordtypeRef]
@@ -5242,8 +5245,9 @@ for {set i 0} {$i < $l} {incr i} {
   set inverse [expr 12 - $root] 
   set keyroot $flatkeys($root)
   set  n [addConstantToVectorModulo $nnotelist $inverse 12]
-  set code  [notelistToString $n $i]
-  #puts "n = $n code = $code"
+  set nsorted [lsort -integer $n]
+  set code  [notelistToString $nsorted 0]
+  #puts "nnotelist = $nnotelist inverse = $inverse n = $n nsorted = $nsorted code = $code"
   set matchingcode [array names chordtypeRef $code]
   if {[string length $matchingcode] > 2} {
     #puts "nnotelist = $nnotelist root = $root  n = $n code = $code $chordtypeRef($code)"
@@ -5396,17 +5400,6 @@ proc switch_note_status {midicmd} {
       } 
 }
 
-proc scaleDegree {key} {
-global keysig
-set k {C D E F G A B}
-set keyLetter [string index $key 0]
-set keysigLetter [string index $keysig  0]
-set keynumber [lsearch $k $keyLetter]
-set keysignumber [lsearch $k $keysigLetter] 
-puts "kegsigLetter = $keysigLetter $keysignumber keyLetter = $keyLetter $keynumber"
-}
-
-
 
 proc make_and_display_chords {source} {
     global midi
@@ -5421,6 +5414,7 @@ proc make_and_display_chords {source} {
     set start [lindex $limits 0]
     set stop  [lindex $limits 1]
     set nbeats [expr ($stop - $start)]
+    #puts "make_and_display_chords: nbeats = $nbeats" 
     
     loadMidiFile
 
@@ -5462,18 +5456,20 @@ proc make_and_display_chords {source} {
             set chordElements [chordComposition $chordstring $root]
             set name [chordname $chordElements $root]
             set chordE [listToWord $chordElements]
-            $v insert insert "$last_beat_number  $name   $chordstring   $chordE $chordid\n"
+            #$v insert insert "$last_beat_number  $name   $chordstring   $chordE $chordid\n"
+            $v insert insert "$last_beat_number	$chordE	$chordid	$chordstring\n"
             reset_beat_notestatus
             set last_beat_number $beat_number
             } 
 
          # detailed list if less than 20 beats were selected
+         # This code is now blocked 2024.06.11
          if {$nbeats < 20.1} { 
-           if {[expr $present_time - $last_time] > 0.2} {
-             set onlist [list_on_notes]
-             set chordstring [label_notelist $onlist]
-             $v insert end "   $beat_time $chordstring\n"
-            }
+           #if {[expr $present_time - $last_time] > 0.2} {
+            # set onlist [list_on_notes]
+            # set chordstring [label_notelist $onlist]
+            # $v insert end "   $beat_time $chordstring\n"
+            #}
           }
 
             
@@ -7509,7 +7505,7 @@ global fbeat
 global tbeat
 global exec_out
 set limits [getCanvasLimits $source]
-puts "copyMidiToTmp $source: limits = $limits"
+#puts "copyMidiToTmp $source: limits = $limits"
 #puts "miditracks [array get miditracks]"
 #puts "midichannels [array get midichannels]"
 
@@ -7564,7 +7560,7 @@ proc saveMidiTmpFile {source} {
  global midi
  copyMidiToTmp $source 
  set midifilename [tk_getSaveFile ]
- puts "renaming $midi(outfilename) to $midifilename"
+ #puts "renaming $midi(outfilename) to $midifilename"
  file rename -force $midi(outfilename) $midifilename
 }
 
@@ -10801,6 +10797,7 @@ proc mfcntlcmd {} {
 proc make_midi_database {} {
 global midi
 global tcl_platform
+global stopCreation
 set outfile [file join $midi(rootfolder) MidiDescriptors.txt]
 if {[file exist $outfile]} {
   set choice [tk_messageBox -type yesno -default no \
@@ -10810,9 +10807,9 @@ if {[file exist $outfile]} {
      return}
   }
 set i 0
-set stop 0
+set stopCreation 0
 set sizelimit 20000
-presentInfoMessage "finding all midi files...\n"
+presentInfoMessage "finding all midi files..."
 update
 set filelist [rglob $midi(rootfolder) *.mid ] 
 # Linux is sensitive to case of file names. Other operating systems
@@ -10821,8 +10818,8 @@ if {$tcl_platform(platform) == "unix"} {
    set filelist [concat $filelist [rglob $midi(rootfolder) *.MID]]}
 set nfiles [llength $filelist]
 set sizelimit [expr min($sizelimit,$nfiles)]
-appendInfoMessage "$nfiles midi files were found\n"
-appendInfoMessage "sorting the midi files...\n"
+appendInfoMessage "$nfiles midi files were found"
+appendInfoMessage "sorting the midi files..."
 if {[winfo exists .csettings]} {
    getAllControlSettings
    }
@@ -10833,8 +10830,9 @@ frame .status
 label .status.msg -text ""
 ttk::progressbar .status.progress -mode determinate -length 200 \
  -value 0 -maximum 1.0
+button .status.abort -text stop -command abortDatabaseCreation
 pack .status
-grid .status.progress .status.msg
+grid .status.progress .status.msg .status.abort
 .status.progress start
 set starttime [clock seconds]
 #fconfigure stdin -blocking 0 -buffering none
@@ -10843,7 +10841,7 @@ foreach midifile $filelist {
   incr i
   #if {![eof stdin]} break
   #fileevent stdin readable exit
-  if {$stop == 1} break
+  if {$stopCreation == 1} break
   puts $outhandle "index $i"
   if {[expr $i % 100] == 0} {
         set value [expr double($i)/$sizelimit]
@@ -10858,16 +10856,22 @@ foreach midifile $filelist {
   get_midi_features $midifile $midi_info $outhandle $i
   if {$i > $sizelimit} break
   }
-appendInfoMessage "\ncreated file MidiDescriptors.txt\n"
+appendInfoMessage "created file MidiDescriptors.txt"
 set elapsedtime [expr [clock seconds] - $starttime]
 appendInfoMessage "elapsed time = $elapsedtime seconds\n"
 close $outhandle
 .status.progress stop
 destroy .status.progress
+destroy .status.abort
 destroy .status
 load_desc
 }
   
+proc abortDatabaseCreation {} {
+global stopCreation
+set stopCreation 1
+}
+
 
 proc get_midi_features {midifile midi_info outhandle index} {
 global cprogsact
@@ -10882,6 +10886,7 @@ set drums {}
 set pcolor {}
 set programlist {}
 set progsact {}
+set lyrics 0
 foreach line [split $midi_info '\n'] {
   #puts $line
   #remove any embedded double quotes and braces if present
@@ -10907,6 +10912,8 @@ foreach line [split $midi_info '\n'] {
     progs {set progs [lrange $line 1 end]}
     progsact {set pprogsact [lrange $line 1 end]}
     pitchentropy {set pitchentropy [lindex $line 1]}
+    key {set key [lindex $line 1]}
+    Lyrics {set lyrics 1}
     Error: {
             #appendInfoMessage "Defective file $midifile"
             puts $outhandle "damaged midifile"
@@ -10932,6 +10939,7 @@ set pcolor [normalize_vectorlist $progcolor]
 set pitches [normalize_vectorlist $pitches]
 #puts "pcolor    = $pcolor"
 puts $outhandle "file  [list $midifile]"
+puts $outhandle "filesize [file size $midifile]"
 puts $outhandle "tempo $tempo"
 puts $outhandle "midilength $midilength"
 puts $outhandle "pitchbend $pitchbends"
@@ -10944,6 +10952,8 @@ puts $outhandle "drumhits $drumhits"
 puts $outhandle "progcolor $pcolor"
 puts $outhandle "pitches $pitches"
 puts $outhandle "pitchentropy $pitchentropy"
+puts $outhandle "key $key"
+puts $outhandle "lyrics $lyrics"
 }
 
 
@@ -12141,24 +12151,29 @@ close $outhandle
 appendInfoMessage "\ndata stored in $csvfile"
 }
 
-proc export_info_to_tsv {} {
+proc export_info_to_csv {} {
 global desc
 global midi
 load_desc
+
 set descsize [array size desc]
 set csvfile [file join $midi(rootfolder) info.csv]
 set outhandle [open $csvfile w]
 #set outhandle stdout
-puts $outhandle "i\tnbeats\ttempo\tpitchbend\tpitchentropy\tndrums\tfile"
+puts $outhandle "i\tfilesize\tnbeats\ttempo\tkey\tpitchbend\tpitchentropy\tndrums\tlyrics\tfile"
 for {set i 1} {$i < $descsize} {incr i} {
   if {[dict exists $desc($i) damaged]} continue
+  set filesize [dict get $desc($i) filesize]
   set tempo [dict get $desc($i) tempo]
+  set tempo [expr round($tempo)]
   set pitchbends [dict get $desc($i) pitchbend]
   set pitchentropy [dict get $desc($i) pitchentropy]
   set filepath [dict get $desc($i) file]
   set ndrums [llength [dict get $desc($i) drums]]
   set nbeats [dict get $desc($i) midilength]
-  puts $outhandle "$i\t$nbeats\t$tempo\t$pitchbends\t$pitchentropy\t$ndrums\t$filepath"
+  set key [dict get $desc($i) key] 
+  set lyrics [dict get $desc($i) lyrics]
+  puts $outhandle "$i\t$filesize\t$nbeats\t$tempo\t$key\t$pitchbends\t$pitchentropy\t$ndrums\t$lyrics\t$filepath"
   }
 close $outhandle
 appendInfoMessage "\ndata stored in $csvfile"
@@ -15292,7 +15307,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 4.85\
             path_midi2abc 3.59\
             path_midicopy 1.39\
-	    path_midistats 0.92\
+	    path_midistats 0.93\
             path_abcm2ps 8.14.6}
 
 
