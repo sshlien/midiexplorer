@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.60 2024-06-11 09:45" 
+set midiexplorer_version "MidiExplorer version 4.61 2024-06-18 13:20" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -806,6 +806,8 @@ proc midiInit {} {
    set midi(speed) 0.5
    set midi(tplotWidth) 600
    set midi(tres) 50
+# chordtext
+   set midi(openChords) 1
 }
 
 set genreUpdated 0
@@ -4413,8 +4415,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.93} {
-         appendInfoError "You need midistats.exe version 0.93 or higher."
+    if {$err == 0 || $ver < 0.95} {
+         appendInfoError "You need midistats.exe version 0.95 or higher."
          }
     return pass
 }
@@ -5086,24 +5088,57 @@ proc chord_histogram_window {source} {
 
 
 
+set hlp_chordtext "Chordtext
+
+Chordal analysis is the first step in determining the chordal compression\
+in a music composition.\n
+This function performs a chordal analysis of all the selected tracks\
+or channels in the midi file. It is best to perform it on the acoustic\
+or electric guitar line containing the chordal ostenato.\n
+The function identifies all the notes being played in a quarter note beat,\
+and considers them as a chord whether or not they are played at the\
+same time.\n\n
+In each line of the output, the first column is the beat number, the\
+second column is a list of note pitches, the third column is the\
+interpretation of the pitch sequence that is used to identify the\
+chord name in the last column.
+
+If the option/open chords is not ticked, then the octaves of the note
+pitches are ignored and the chord notes is more compact.
+
+"
 
 proc chordtext_window {source} {
    global df
+   global hlp_chordtext
 
    if {[winfo exist .chordview] == 0} {
      set f .chordview
      toplevel $f
      positionWindow $f
      frame $f.1 
+     button $f.1.help -text help -font $df -command {show_message_page $hlp_chordtext word}
+     button $f.1.histogram -text "chord histogram" -font $df
+     menubutton $f.1.options -text options -font $df -menu $f.1.options.items
+     menu $f.1.options.items 
+     $f.1.options.items add checkbutton  -label "open chords" -font $df -variable midi(openChords) -command "openClosedChords $source"
+     $f.1.options.items add checkbutton  -label "sapp's method" -font $df
+     pack $f.1.help $f.1.histogram $f.1.options -side left -anchor w
      frame $f.2
-     pack $f.1 $f.2 -side top
+     pack $f.1 $f.2 -side top -anchor w
      text $f.2.txt -yscrollcommand {.chordview.2.scroll set} -width 64 -font $df
      scrollbar .chordview.2.scroll -orient vertical -command {.chordview.2.txt yview}
      pack $f.2.txt $f.2.scroll -side left -fill y
      }
    make_and_display_chords $source
+   #my_make_and_display_chords $source
 }
 
+proc openClosedChords {source} {
+global midi
+#my_make_and_display_chords $source
+chordtext_window $source
+}
 
 proc compare_onset {a b} {
     set a_onset [lindex $a 0]
@@ -5354,7 +5389,8 @@ proc reorganize_pianoresult {source} {
 proc turn_off_all_notes {} {
     global notestatus
     for {set i 0} {$i < 128} {incr i } {
-        set notestatus($i) 0 }
+        set notestatus($i) 0
+        }
 }
 
 
@@ -5400,6 +5436,98 @@ proc switch_note_status {midicmd} {
       } 
 }
 
+proc my_make_and_display_chords {source} {
+    global midi
+    global sorted_midiactions
+    global total_chordcount
+    global chordcount
+    global ppqn
+    global pianoresult
+    global useflats
+    global flatkeys
+    global chordtypeRef
+    
+    set limits [getCanvasLimits $source] 
+    set start [lindex $limits 0]
+    set stop  [lindex $limits 1]
+    set nbeats [expr ($stop - $start)]
+    #puts "my_make_and_display_chords: nbeats = $nbeats" 
+    
+    loadMidiFile
+
+    set v .chordview.2.txt
+    $v delete 0.0 end
+    
+    reorganize_pianoresult $source
+    turn_off_all_notes
+    reset_beat_notestatus
+    
+    set last_time 0.0
+    set last_beat_number 0
+    set i 0
+   
+    set start [expr $start*$ppqn]
+    set stop   [expr $stop  *$ppqn]
+ 
+    foreach midiunit $sorted_midiactions {
+        set begin [lindex $midiunit 0]
+        #if {[string is double $begin] != 1} continue
+        if {$begin < $start} continue
+        set end [lindex $midiunit 0]
+        if {$end   > $stop}  continue
+        
+        #  if {$i > 40} break
+        incr i
+        set present_time [lindex $midiunit 0]
+        set beat_time [format %5.2f [expr double($present_time)/$ppqn]]
+        set beat_number [expr int($beat_time)]
+        if {$last_beat_number != $beat_number} {
+            set chordstring [label_notelist [list_on_notes_in_beat]]
+            set midiChordNotes [list_on_notes_in_beat]
+            set pitch0 [minimumPitch $midiChordNotes]
+            set lowestNote $flatkeys([expr $pitch0 % 12])
+            #puts "lowestNote =  $lowestNote" 
+            set nnotelist [compress_notelist $midiChordNotes]
+            #puts "$beat_number nnotelist = $nnotelist"
+            set l [llength $nnotelist] 
+            set lastchordname ""
+            set chordid [list]
+            for {set i 0} {$i < $l} {incr i}  {
+                set root [lindex $nnotelist $i]
+                set inverse [expr 12 - $root] 
+                set keyroot $flatkeys($root)
+                set  n [addConstantToVectorModulo $nnotelist $inverse 12]
+                set nsorted [lsort -integer $n]
+                set code  [notelistToString $nsorted 0]
+                set matchingcode [array names chordtypeRef $code]
+                #puts "matchingcode for $code = $matchingcode"
+                if {[info exist chordname]} {unset chordname}
+                if {[string length $matchingcode] > 2} {
+                   if {$keyroot == $lowestNote} {
+                       set chordname "$keyroot$chordtypeRef($matchingcode)"
+                   } else {
+                      set chordname  "$keyroot$chordtypeRef($matchingcode)/$lowestNote"
+                   }
+                }
+               if {[info exist chordname] && $chordname != $lastchordname} {
+                  if {$midi(openChords)} {
+                      $v insert insert "$last_beat_number  $chordstring    $code	$chordname\n"
+                  } else {
+                      $v insert insert "$last_beat_number    [label_pitchlist $nnotelist]   $code	$chordname\n"
+                  }
+ 
+                  set lastchordname $chordname
+                  }
+               }
+          reset_beat_notestatus
+          set last_beat_number $beat_number
+          }
+
+            
+          set last_time $present_time
+          switch_note_status $midiunit
+          }
+   }
 
 proc make_and_display_chords {source} {
     global midi
@@ -5445,7 +5573,9 @@ proc make_and_display_chords {source} {
         set beat_time [format %5.2f [expr double($present_time)/$ppqn]]
         set beat_number [expr int($beat_time)]
         if {$last_beat_number != $beat_number} {
-            set chordstring [label_notelist [list_on_notes_in_beat]]
+            set notelist [list_on_notes_in_beat]
+            set chordstring [label_notelist $notelist]
+            set nnotelist [compress_notelist [list_on_notes_in_beat]]
             set midiChordNotes [list_on_notes_in_beat]
             #puts "midiChordNotes = $midiChordNotes"
             set chordid [find_root $midiChordNotes]
@@ -5456,8 +5586,11 @@ proc make_and_display_chords {source} {
             set chordElements [chordComposition $chordstring $root]
             set name [chordname $chordElements $root]
             set chordE [listToWord $chordElements]
-            #$v insert insert "$last_beat_number  $name   $chordstring   $chordE $chordid\n"
-            $v insert insert "$last_beat_number	$chordE	$chordid	$chordstring\n"
+            if {$midi(openChords)} {
+               $v insert insert "$last_beat_number	$chordstring   $chordE	$chordid\n"
+               } else {
+               $v insert insert "$last_beat_number    [label_pitchlist $nnotelist]	   $chordE     $chordid\n"
+               }
             reset_beat_notestatus
             set last_beat_number $beat_number
             } 
@@ -5477,6 +5610,7 @@ proc make_and_display_chords {source} {
          switch_note_status $midiunit
          }
     }
+
 
 proc root_of {chordstring} {
 # Using Craig Stuart Sapp's algorithm described in
@@ -10808,7 +10942,7 @@ if {[file exist $outfile]} {
   }
 set i 0
 set stopCreation 0
-set sizelimit 20000
+set sizelimit 200000
 presentInfoMessage "finding all midi files..."
 update
 set filelist [rglob $midi(rootfolder) *.mid ] 
@@ -10839,6 +10973,7 @@ set starttime [clock seconds]
 puts $outhandle "database_version 11"
 foreach midifile $filelist {
   incr i
+  #puts "$i $midifile"
   #if {![eof stdin]} break
   #fileevent stdin readable exit
   if {$stopCreation == 1} break
@@ -15307,7 +15442,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 4.85\
             path_midi2abc 3.59\
             path_midicopy 1.39\
-	    path_midistats 0.93\
+	    path_midistats 0.95\
             path_abcm2ps 8.14.6}
 
 
