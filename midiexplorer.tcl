@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.61 2024-06-18 13:20" 
+set midiexplorer_version "MidiExplorer version 4.62 2024-06-24 08:55" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -1191,7 +1191,7 @@ menu $ww -tearoff 0
         $ww add command  -label "pitch class map" -font $df \
             -command simple_tableau
 	$ww add command -label chordgram -font $df -command {chordgram_plot none}
-#	$ww add command -label "chord histogram" -font $df -command chord_histogram
+	$ww add command -label "chord histogram" -font $df -command {chord_histogram .tinfo}
         $ww add command -label "chordtext" -font $df -command {chordtext_window .tinfo}
         $ww add command -label notegram -font $df -command {notegram_plot none}
         $ww add command -label keymap -font $df -command {keymap none}
@@ -3113,7 +3113,8 @@ global chanprog
 global cleanData
 global exec_out
 
-append exec_out "\nloadMidiFile : extracting info from $midi(midifilein)"
+#puts "loadingMidi $midi(midifilein)"
+append exec_out "\n\nloadMidiFile : extracting info from $midi(midifilein)"
 
 if {$cleanData} return
 if {![file exist $midi(midifilein)]} {
@@ -3143,10 +3144,6 @@ if {![string is integer $midilength]} {
 	label .info.error -text  "cannot process this file" -fg red -font $df
         }
 	return
-#except for midi2abc -mftext, all other functions will fail.
-#midi2abc -midigram does not return midilength and midicopy
-#also fails. Midifile.c exits the application when it encounters
-#an error.
         }
 set pianoresult [split $pianoresult \n]
 
@@ -5058,12 +5055,10 @@ proc chord_histogram_window {source} {
     positionWindow .chordstats
     
     frame $w.head
-    label $w.head.lab -text "sort by" -font $df
-    radiobutton $w.head.key -text key -font $df -variable midi(sortchordnames) -value key -command "chord_histogram $source"
-    radiobutton $w.head.freq -text frequency -font $df -variable midi(sortchordnames) -value freq -command "chord_histogram $source"
     radiobutton $w.head.txt -text list -font $df -variable midi(chordhist) -value txt -command switch_text_barchart
     radiobutton $w.head.bar -text barchart -font $df -variable midi(chordhist) -value bar -command switch_text_barchart
-    pack $w.head.lab $w.head.key $w.head.freq $w.head.txt $w.head.bar -side left -anchor w
+#    pack $w.head.lab $w.head.key $w.head.freq $w.head.txt $w.head.bar -side left -anchor w
+    pack  $w.head.txt $w.head.bar -side left -anchor w
     pack $w.head -anchor w
     
     frame $w.chords
@@ -5118,7 +5113,7 @@ proc chordtext_window {source} {
      positionWindow $f
      frame $f.1 
      button $f.1.help -text help -font $df -command {show_message_page $hlp_chordtext word}
-     button $f.1.histogram -text "chord histogram" -font $df
+     button $f.1.histogram -text "chord histogram" -font $df -command "chord_histogram $source"
      menubutton $f.1.options -text options -font $df -menu $f.1.options.items
      menu $f.1.options.items 
      $f.1.options.items add checkbutton  -label "open chords" -font $df -variable midi(openChords) -command "openClosedChords $source"
@@ -5130,13 +5125,13 @@ proc chordtext_window {source} {
      scrollbar .chordview.2.scroll -orient vertical -command {.chordview.2.txt yview}
      pack $f.2.txt $f.2.scroll -side left -fill y
      }
-   make_and_display_chords $source
-   #my_make_and_display_chords $source
+   #make_and_display_chords $source
+   #my_make_and_display_chords $source 1
+   my_determineChordSequence $source 1
 }
 
 proc openClosedChords {source} {
 global midi
-#my_make_and_display_chords $source
 chordtext_window $source
 }
 
@@ -5436,7 +5431,7 @@ proc switch_note_status {midicmd} {
       } 
 }
 
-proc my_make_and_display_chords {source} {
+proc my_determineChordSequence {source miditextOutput} {
     global midi
     global sorted_midiactions
     global total_chordcount
@@ -5447,6 +5442,8 @@ proc my_make_and_display_chords {source} {
     global flatkeys
     global chordtypeRef
     
+    set list_of_chords [dict create]
+
     set limits [getCanvasLimits $source] 
     set start [lindex $limits 0]
     set stop  [lindex $limits 1]
@@ -5455,8 +5452,10 @@ proc my_make_and_display_chords {source} {
     
     loadMidiFile
 
-    set v .chordview.2.txt
-    $v delete 0.0 end
+    if {$miditextOutput} {
+      set v .chordview.2.txt
+      $v delete 0.0 end
+      }
     
     reorganize_pianoresult $source
     turn_off_all_notes
@@ -5482,8 +5481,8 @@ proc my_make_and_display_chords {source} {
         set beat_time [format %5.2f [expr double($present_time)/$ppqn]]
         set beat_number [expr int($beat_time)]
         if {$last_beat_number != $beat_number} {
-            set chordstring [label_notelist [list_on_notes_in_beat]]
             set midiChordNotes [list_on_notes_in_beat]
+            set chordstring [label_notelist $midiChordNotes]
             set pitch0 [minimumPitch $midiChordNotes]
             set lowestNote $flatkeys([expr $pitch0 % 12])
             #puts "lowestNote =  $lowestNote" 
@@ -5510,12 +5509,17 @@ proc my_make_and_display_chords {source} {
                    }
                 }
                if {[info exist chordname] && $chordname != $lastchordname} {
-                  if {$midi(openChords)} {
+                  if {$miditextOutput} {
+                    if {$midi(openChords)} {
                       $v insert insert "$last_beat_number  $chordstring    $code	$chordname\n"
-                  } else {
+                    } else {
                       $v insert insert "$last_beat_number    [label_pitchlist $nnotelist]   $code	$chordname\n"
+                    }
                   }
  
+                  dict set list_of_chords $beat_number $chordname
+                  #puts "set list_of_chords $beat_number $chordname"
+                  #puts "[dict get $list_of_chords $beat_number]"
                   set lastchordname $chordname
                   }
                }
@@ -5527,6 +5531,7 @@ proc my_make_and_display_chords {source} {
           set last_time $present_time
           switch_note_status $midiunit
           }
+   return $list_of_chords
    }
 
 proc make_and_display_chords {source} {
@@ -5813,11 +5818,12 @@ global total_chordcount
 global chordcount
 set total_chordcount 0
 array unset chordcount
-set chord_sequence [determineChordSequence $source]
-set last_beat [dict size $chord_sequence]
-for {set beat 0} {$beat < $last_beat} {incr beat} {
-     set chord [dict get  $chord_sequence $beat]
-     count_chords $chord}
+set chord_sequence [my_determineChordSequence $source 0]
+#set chord_sequence [determineChordSequence $source]
+foreach key [dict keys $chord_sequence] {
+  set chord [dict get $chord_sequence $key]
+  count_chords $chord
+  }
 set w .chordstats
 $w.chords.t delete 0.0 end
 $w.bar delete all
@@ -5835,13 +5841,14 @@ set chordcountlist {}
   foreach {elem1 elem2} [array get chordcount] {
      lappend chordcountlist [list $elem1 $elem2]
      }
+if {[llength $chordcountlist] < 1} return
 set sortedcountlist [lsort -index 1 -integer -decreasing $chordcountlist]
-.chordstats.bar create rectangle 50 20 420 230 -outline black\
+.chordstats.bar create rectangle 90 20 420 230 -outline black\
             -width 2 -fill white
 set i 0
 set maxcount [lindex [lindex $sortedcountlist 0] 1]
 set maxcount [expr $maxcount*1.2]
-Graph::alter_transformation 50 420 230 20 0.0 $maxcount 8.0 0.0
+Graph::alter_transformation 90 420 230 20 0.0 $maxcount 8.0 0.0
 while {$i < [llength $sortedcountlist]} {
   set chorddata [lindex $sortedcountlist $i]
   set chord [lindex $chorddata 0]
@@ -5851,7 +5858,7 @@ while {$i < [llength $sortedcountlist]} {
   set iy2 [expr [Graph::iypos [incr i]] - 4]
   set ix1 [Graph::ixpos $count]
   .chordstats.bar create rectangle $ix $iy1 $ix1 $iy2 -fill blue -stipple gray12
-  .chordstats.bar create text 20 [expr $iy1 + 10] -text $chord
+  .chordstats.bar create text 40 [expr $iy1 + 10] -text $chord
   if {$i > 7} break
   }
 set spacing [best_grid_spacing $maxcount]
@@ -5929,7 +5936,7 @@ proc chordgram_plot {source} {
      bind .chordgram.can <ButtonRelease-1> chordgram_Button1Release
      bind .chordgram.can <Double-Button-1> chordgram_ClearMark
      }
-   set chord_sequence [determineChordSequence $source]
+   set chord_sequence [my_determineChordSequence $source 0]
    set last_beat [dict size $chord_sequence]
    set seqlength $last_beat
    call_compute_chordgram $source
@@ -5943,6 +5950,7 @@ global tbeat
 global ppqn
 set start -1
 set stop $lastbeat
+#puts "getCanvasLimits $source"
 switch $source {
   chordgram {
     set co [.chordgram.can coords mark]
@@ -6113,8 +6121,9 @@ proc compute_chordgram {start stop} {
    set pixelsperbeat [expr ($xrbx - $xlbx) / double($stop - $start)]
    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx $start $stop 0.0 200.0 
    set chordgram_xfm [Graph::save_transform] 
-   for {set j 0} {$j <$seqlength} {incr j} {
+   foreach  j [dict keys $chord_sequence] {
      if {$j < $start || $j > $stop} continue
+     if {![dict exist $chord_sequence $j]} continue
      set chord [dict get $chord_sequence $j]
      if {$chord == ""} continue
      if {[string index $chord 1] == "#"} {
