@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.62 2024-06-24 08:55" 
+set midiexplorer_version "MidiExplorer version 4.64 2024-06-30 08:20" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -2544,31 +2544,6 @@ proc list_tempomod {} {
   popMessage $msg
   }  
   
-# not used
-proc list_timesigmod {} {
-  global timesigmod
-  set msg ""
-  append msg "time sig\tbeat number\n"
-  foreach tsigcmd $timesigmod {
-    set t [lindex $tsigcmd 0]
-    set b [lindex $tsigcmd 1]
-    append msg "$t\t$b\n"
-    }
-  popMessage $msg
-  }  
-
-# not used
-proc list_keysigmod {} {
-  global keysigmod
-  set msg ""
-  append msg "key sig\tbeat number\n"
-  foreach ksigcmd $keysigmod {
-    set k [lindex $ksigcmd 0]
-    set b [lindex $ksigcmd 1]
-    append msg "$k\t$b\n"
-    }
-  popMessage $msg
-  }  
  
 
 
@@ -2694,6 +2669,7 @@ set w .tinfo
 if {![winfo exist $w]} {expose_tinfo}
 $w.tree delete [$w.tree children {}]
 $w.tree tag  configure green -foreground darkgreen -font $df
+$w.tree tag  configure purple -foreground purple -font $df
 set itemMelProb {}
 
 set nlines 0
@@ -2747,6 +2723,13 @@ for {set i 1} {$i <= $ntrks} {incr i} {
               } 
  #end of midishow_sep
        }
+ # test for chordal ostinato
+   set chordRatio [expr $totalnotes/$nnotes]
+   if {$channel != 10 && $chordRatio >1 && $rhythmpatterns < 20 && [expr $nzeros - $nsteps] > 100} {
+      $w.tree item $id -tag  purple
+      }
+        
+
  # end of trkinfo
       } 
  # end of line
@@ -2773,6 +2756,8 @@ for {set i 0} {$i < 3} {incr i} {
   $w.tree item $id -tag green 
   break
   }
+
+
 
 if {$nlines > 16} {set nlines 16}
 $w.tree configure -height $nlines 
@@ -4651,12 +4636,8 @@ proc piano_window {} {
     grid .piano.trkchn -columnspan 3 -sticky nw
     
     for {set i 0} {$i < 32} {incr i} {
-        if {$midi(trackSelector) == "static"} {
-          checkbutton .piano.trkchn.$i -text $i -variable trksel($i) -font $df
-         } else {
           checkbutton .piano.trkchn.$i -text $i -variable trksel($i) -font $df
         }
-    }
 
     configureTrackSelector
     button .piano.trkchn.play -relief raised -padx 1 -pady 1
@@ -4692,12 +4673,23 @@ proc piano_window {} {
 proc highlight_track {num} {
 global trksel
 global last_checked_button
+global midichannels
+global miditracks
+global midi
 if {$trksel($num)} {
   .piano.can itemconfigure trk$num -fill blue -width 4
   } else {
   .piano.can itemconfigure trk$num -fill black -width 2
   }
 update_displayed_pdf_windows .piano.can
+if {$midi(midishow_sep) == "track"} {
+  set miditracks($num) $trksel($num)
+  } else {
+  set midichannels($num) $trksel($num)
+  }
+if {[winfo exists .tinfo]} {
+   midiType1Table
+   }
 }
 
 
@@ -4705,10 +4697,13 @@ update_displayed_pdf_windows .piano.can
 proc highlightTrackStatic {num} {
 global trksel
 global last_checked_button
+global midichannels
+global miditracks
+global midi
 
 set nselected [count_trksel]
 if {$nselected == 0} {hideExposeSomePianoRollTracksChannels 0
-	             return}
+	             }
 
 if {$trksel($num)} {
   hideExposeSomePianoRollTracksChannels 1 
@@ -4716,7 +4711,15 @@ if {$trksel($num)} {
   } else {
   .piano.can itemconfigure trk$num -fill "" -width 4
   }
+if {$midi(midishow_sep) == "track"} {
+  set miditracks($num) $trksel($num)
+  } else {
+  set midichannels($num) $trksel($num)
+  }
 update_displayed_pdf_windows .piano.can
+if {[winfo exists .tinfo]} {
+   midiType1Table
+   }
 }
 
 proc applyHighlightTrackStatic {} {
@@ -5117,7 +5120,6 @@ proc chordtext_window {source} {
      menubutton $f.1.options -text options -font $df -menu $f.1.options.items
      menu $f.1.options.items 
      $f.1.options.items add checkbutton  -label "open chords" -font $df -variable midi(openChords) -command "openClosedChords $source"
-     $f.1.options.items add checkbutton  -label "sapp's method" -font $df
      pack $f.1.help $f.1.histogram $f.1.options -side left -anchor w
      frame $f.2
      pack $f.1 $f.2 -side top -anchor w
@@ -5125,9 +5127,7 @@ proc chordtext_window {source} {
      scrollbar .chordview.2.scroll -orient vertical -command {.chordview.2.txt yview}
      pack $f.2.txt $f.2.scroll -side left -fill y
      }
-   #make_and_display_chords $source
-   #my_make_and_display_chords $source 1
-   my_determineChordSequence $source 1
+   determineChordSequence $source 1
 }
 
 proc openClosedChords {source} {
@@ -5257,6 +5257,7 @@ return $minPitch
 # if the chord has been inverted.
 
 array set flatkeys {0 C 1  Db 2 D 3  Eb 4 E 5 F 6 Gb 7 G 8 Ab 9 A 10 Bb 11 B}
+array set sharpkeys {0 C 1  C# 2 D 3  D# 4 E 5 F 6 F# 7 G 8 G# 9 A 10 A# 11 B}
 
 proc find_root {notelist} {
 global chordtypeRef
@@ -5431,7 +5432,7 @@ proc switch_note_status {midicmd} {
       } 
 }
 
-proc my_determineChordSequence {source miditextOutput} {
+proc determineChordSequence {source miditextOutput} {
     global midi
     global sorted_midiactions
     global total_chordcount
@@ -5440,6 +5441,7 @@ proc my_determineChordSequence {source miditextOutput} {
     global pianoresult
     global useflats
     global flatkeys
+    global sharpkeys
     global chordtypeRef
     
     set list_of_chords [dict create]
@@ -5484,7 +5486,12 @@ proc my_determineChordSequence {source miditextOutput} {
             set midiChordNotes [list_on_notes_in_beat]
             set chordstring [label_notelist $midiChordNotes]
             set pitch0 [minimumPitch $midiChordNotes]
-            set lowestNote $flatkeys([expr $pitch0 % 12])
+            if {$useflats} {
+              set lowestNote $flatkeys([expr $pitch0 % 12])
+            } else {
+              set lowestNote $sharpkeys([expr $pitch0 % 12])
+            } 
+
             #puts "lowestNote =  $lowestNote" 
             set nnotelist [compress_notelist $midiChordNotes]
             #puts "$beat_number nnotelist = $nnotelist"
@@ -5494,7 +5501,11 @@ proc my_determineChordSequence {source miditextOutput} {
             for {set i 0} {$i < $l} {incr i}  {
                 set root [lindex $nnotelist $i]
                 set inverse [expr 12 - $root] 
-                set keyroot $flatkeys($root)
+                if {$useflats} {
+                  set keyroot $flatkeys($root)
+                } else {
+                  set keyroot $sharpkeys($root)
+                }
                 set  n [addConstantToVectorModulo $nnotelist $inverse 12]
                 set nsorted [lsort -integer $n]
                 set code  [notelistToString $nsorted 0]
@@ -5534,150 +5545,6 @@ proc my_determineChordSequence {source miditextOutput} {
    return $list_of_chords
    }
 
-proc make_and_display_chords {source} {
-    global midi
-    global sorted_midiactions
-    global total_chordcount
-    global chordcount
-    global ppqn
-    global pianoresult
-    global useflats
-    
-    set limits [getCanvasLimits $source] 
-    set start [lindex $limits 0]
-    set stop  [lindex $limits 1]
-    set nbeats [expr ($stop - $start)]
-    #puts "make_and_display_chords: nbeats = $nbeats" 
-    
-    loadMidiFile
-
-    set v .chordview.2.txt
-    $v delete 0.0 end
-    
-    reorganize_pianoresult $source
-    turn_off_all_notes
-    reset_beat_notestatus
-    
-    set last_time 0.0
-    set last_beat_number 0
-    set i 0
-   
-    set start [expr $start*$ppqn]
-    set stop   [expr $stop  *$ppqn]
- 
-    foreach midiunit $sorted_midiactions {
-        set begin [lindex $midiunit 0]
-        if {[string is double $begin] != 1} continue
-        if {$begin < $start} continue
-        set end [lindex $midiunit 0]
-        if {$end   > $stop}  continue
-        
-        #  if {$i > 40} break
-        incr i
-        set present_time [lindex $midiunit 0]
-        set beat_time [format %5.2f [expr double($present_time)/$ppqn]]
-        set beat_number [expr int($beat_time)]
-        if {$last_beat_number != $beat_number} {
-            set notelist [list_on_notes_in_beat]
-            set chordstring [label_notelist $notelist]
-            set nnotelist [compress_notelist [list_on_notes_in_beat]]
-            set midiChordNotes [list_on_notes_in_beat]
-            #puts "midiChordNotes = $midiChordNotes"
-            set chordid [find_root $midiChordNotes]
-            #puts $chordid
-
-            #set chordstring [label_notelist $midiChordNotes]
-            set root [root_of $chordstring]
-            set chordElements [chordComposition $chordstring $root]
-            set name [chordname $chordElements $root]
-            set chordE [listToWord $chordElements]
-            if {$midi(openChords)} {
-               $v insert insert "$last_beat_number	$chordstring   $chordE	$chordid\n"
-               } else {
-               $v insert insert "$last_beat_number    [label_pitchlist $nnotelist]	   $chordE     $chordid\n"
-               }
-            reset_beat_notestatus
-            set last_beat_number $beat_number
-            } 
-
-         # detailed list if less than 20 beats were selected
-         # This code is now blocked 2024.06.11
-         if {$nbeats < 20.1} { 
-           #if {[expr $present_time - $last_time] > 0.2} {
-            # set onlist [list_on_notes]
-            # set chordstring [label_notelist $onlist]
-            # $v insert end "   $beat_time $chordstring\n"
-            #}
-          }
-
-            
-         set last_time $present_time
-         switch_note_status $midiunit
-         }
-    }
-
-
-proc root_of {chordstring} {
-# Using Craig Stuart Sapp's algorithm described in
-# Computational Chord-Root Identification in Symbolic Musical
-# Data: Rationale, Methods and Applications
-# Published in "Tonal Theory for the Digital Age" (Computing
-# in Musicology 15, 2007) pp 99-119.
-# http://www.ccarh.org/publications/books/cm/
-set w {0 4 1 5 2 6 3}
-set k {C D E F G A B}
-set sharp #
-set flat b
-set minsum 500
-set rootcriterion {}
-for {set shift 0} {$shift < 7} {incr shift} {
-  set sum 0
-  foreach note $chordstring {
-    set key [string index $note 0]
-    set keyloc [lsearch $k $key]
-    set v [lindex $w [expr ($keyloc - $shift) % 7]]
-    incr sum $v
-    }
-  if {$sum < $minsum} {
-    set bestshift $shift
-    set minsum $sum
-    }
-  lappend rootcriterion [list $shift $sum]
-  }
-  #puts "rootcriterion = $rootcriterion"
-  #puts "bestshift = $bestshift"
-  set bass  [lindex $k $bestshift]
-  if {[string first $bass$sharp $chordstring] > -1} {set bass $bass$sharp}
-  if {[string first $bass$flat $chordstring] > -1} {set bass $bass$flat}
-  return $bass
-}  
-
-proc chordComposition {chordstring root} {
-  set sharpmapper {C# 1 C 0 D# 3 D 2 E 4 F# 6 F 5 G# 8 G 7 A# 10 A 9 B 11}
-  set flatmapper {C 0 Db 1 D 2 Eb 3 E 4 F 5 Gb 6 G 7 Ab 8 A 9 Bb 10 B 11}
-  # remove numbers from chordstring
-  regsub -all -line {\d} $chordstring "" clean_notes
-  if {[string first # $chordstring] > -1} {
-     set notevals [string map $sharpmapper $clean_notes]
-     set rootval [string map $sharpmapper $root]
-     } else {
-     set notevals [string map $flatmapper $clean_notes]
-     set rootval [string map $flatmapper $root]
-     }
-
-  #puts "\nchordstring = $chordstring"
-  #puts "clean_notes = $clean_notes notevals = $notevals rootval = $rootval"
-  #puts "clean_notes = $clean_notes"
-  #puts "notevals = $notevals"
-  for {set i 0} {$i < [llength $notevals]} {incr i} {
-    lset notevals $i [expr ([lindex $notevals $i] - $rootval) % 12]
-    }
-  #puts "modifiled notevals = $notevals"
-  set notevals [lsort -increasing -unique -integer $notevals]
-  #puts "sorted notevals = $notevals"
-  return $notevals
-  }
-
 
 proc listToWord {c} {
   set w ""
@@ -5716,110 +5583,12 @@ proc chordname {notevals root} {
   }
 
 
-proc determineChordSequence {source} {
-    global midi
-    global sorted_midiactions
-    global ppqn
-    global pianoresult
-    global midilength
-    global exec_out
-    global cleanData
-    global briefconsole
-
-    append exec_out "determineChordSequence $source\n"
-    set list_of_chords [dict create]
-    #Force loadMidiFile in case notegram alters pianoresult
-    set midilength 0
-    set cleanData 0
-    if {$source == "pianoroll"} {
-      set limits [midi_limits .piano.can]
-      set start [lindex $limits 0]
-      set stop  [lindex $limits 1]
-      if {$midilength == 0} loadMidiFile
-      set cleanData 1
-      } elseif {$source == "tableau"} {
-      set limits [midi_limits .ptableau.frm.can]
-      set start [lindex $limits 0]
-      set stop  [lindex $limits 1]
-      if {$midilength == 0} loadMidiFile
-      set cleanData 1
-      } elseif {$source == "midistructure"} {
-      set limits [midi_limits .midistructure.can]
-      set start [lindex $limits 0]
-      set stop  [lindex $limits 1]
-      if {$midilength == 0} loadMidiFile
-      set cleanData 1
-      } else {
-# if not called from .piano window
-      copyMidiToTmp $source
-      set cleanData 0
-      set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
-      catch {eval $cmd} pianoresult
-      if {$briefconsole} {
-         append exec_out "\n\n$cmd\n\n [string range $pianoresult 0 200]..."
-      } else {
-         append exec_out "\n\n$cmd\n\n $pianoresult"
-      }
-      set nrec [llength $pianoresult]
-      set midilength [lindex $pianoresult [expr $nrec -1]]
-      set pianoresult [split $pianoresult \n]
-      set start 0
-      set stop $midilength
-      }
-
-
-    reorganize_pianoresult $source
-    
-    set tsel [count_selected_midi_tracks]
-    
-    
-    turn_off_all_notes
-    reset_beat_notestatus
-    
-    set last_time 0.0
-    set last_beat_number 0
-
-    set last_beat [expr int($midilength/$ppqn)]
-    for {set i 0} {$i <$last_beat} {incr i} {
-       dict set list_of_chords $i ""
-       }
-    set i 0
-    
-    foreach midiunit $sorted_midiactions {
-        set begin [lindex $midiunit 0]
-        if {[string is double $begin] != 1} continue
-        if {$begin < $start} continue
-        set end [lindex $midiunit 0]
-        if {$end   > $stop}  continue
-        
-        set present_time [lindex $midiunit 0]
-        set beat_time [format %5.2f [expr double($present_time)/$ppqn]]
-        set beat_number [expr int($beat_time)]
-        if {$last_beat_number != $beat_number} {
-            set onlist [list_on_notes_in_beat]
-            reset_beat_notestatus
-            set last_beat_number $beat_number
-            set chordstring [label_notelist $onlist]
-            set root [root_of $chordstring]
-            set chordElements [chordComposition $chordstring $root]
-            set chordname [chordname $chordElements $root]
-            dict set list_of_chords $beat_number $chordname
-            set last_time $present_time
-        }
-        
-        switch_note_status $midiunit
-    }
-    dict set list_of_chord size $last_beat
-    return $list_of_chords
-}
-
 proc make_chord_histogram {source} {
 global total_chordcount
 global chordcount
 set total_chordcount 0
 array unset chordcount
-set chord_sequence [my_determineChordSequence $source 0]
-#set chord_sequence [determineChordSequence $source]
+set chord_sequence [determineChordSequence $source 0]
 foreach key [dict keys $chord_sequence] {
   set chord [dict get $chord_sequence $key]
   count_chords $chord
@@ -5889,17 +5658,14 @@ proc chord_histogram {source} {
 set hlp_chordgram "Chordgram
 
 Plots the predominant chord for each beat. The chord root is\
-determined using Craig Sapp's algorithm, and then the type of chord\
-is determined by looking at the spaces between the pitches. Major\
+determined by looking at the spaces between the pitches. Major\
 chords are in red, minor blue, diminished green and augmented in\
 purple. The vertical scale is either sequential or follows the circle\
 of fifths.\n\n
 To zoom into an area, sweep the mouse pointer over the region holding\
 the left mouse button down. Then press the zoom button. The chordgram\
 may be linked to the midi structure window or the piano roll window\
-if they are exposed.\n\n
-Clicking the save data button will record the plotted results in the\
-file chordgram.txt which can be found in the midiexplorer_home folder.
+if they are exposed.\n
 
 "
 
@@ -5915,7 +5681,7 @@ proc chordgram_plot {source} {
      toplevel .chordgram
      positionWindow .chordgram
      frame .chordgram.head
-     checkbutton .chordgram.head.2 -text "circle of fifths" -variable midi(chordgram) -font $df -command "call_compute_chordgram $source"
+     checkbutton .chordgram.head.2 -text "circle of fifths" -variable midi(chordgram) -font $df -command "call_compute_chordgram chordgram"
      button .chordgram.head.play -text play -font $df -command {playExposed chordgram}
   tooltip::tooltip .chordgram.head.play "play the highlighted area or
  the exposed plot."
@@ -5923,10 +5689,10 @@ proc chordgram_plot {source} {
   tooltip::tooltip .chordgram.head.zoom  "zooms into the region that you highlighted."
      button .chordgram.head.unzoom -text unzoom -command unzoom_chordgram -font $df 
   tooltip::tooltip .chordgram.head.unzoom  "zooms out to the full midi file."
-     button .chordgram.head.save -text "save data" -font $df -command saveChordgramData
-  tooltip::tooltip .chordgram.head.save  "Save chords list in\n midiexplorer_home/chordgram.txt"
+#     button .chordgram.head.save -text "save data" -font $df -command saveChordgramData
+#  tooltip::tooltip .chordgram.head.save  "Save chords list in\n midiexplorer_home/chordgram.txt"
      button .chordgram.head.help -text help -font $df -command {show_message_page $hlp_chordgram word}
-     pack  .chordgram.head.2 .chordgram.head.play .chordgram.head.zoom .chordgram.head.unzoom .chordgram.head.save .chordgram.head.help -side left -anchor w
+     pack  .chordgram.head.2 .chordgram.head.play .chordgram.head.zoom .chordgram.head.unzoom .chordgram.head.help -side left -anchor w
      pack  .chordgram.head -side top -anchor w 
      set c .chordgram.can
      canvas $c -width $pianorollwidth -height 250 -border 3 -relief sunken
@@ -5936,7 +5702,7 @@ proc chordgram_plot {source} {
      bind .chordgram.can <ButtonRelease-1> chordgram_Button1Release
      bind .chordgram.can <Double-Button-1> chordgram_ClearMark
      }
-   set chord_sequence [my_determineChordSequence $source 0]
+   set chord_sequence [determineChordSequence $source 0]
    set last_beat [dict size $chord_sequence]
    set seqlength $last_beat
    call_compute_chordgram $source
@@ -6096,7 +5862,6 @@ proc compute_chordgram {start stop} {
    global midi
    global chordgram_xfm
    global chord_sequence
-   global seqlength
    global chordgramLimits
    global fbeat
    global tbeat
@@ -6136,6 +5901,7 @@ proc compute_chordgram {start stop} {
         set key [string index $chord 0]
         set chordtype [string range $chord 1 end]
         }
+     #puts "compute_chordgram chord = $chord key = $key"
      if {$midi(chordgram) == 1} {
        if {$useflats == 1} {
          set loc [lsearch $flatnotes5 $key]
@@ -6206,6 +5972,7 @@ proc compute_chordgram {start stop} {
    .chordgram.can create rect -1 -1 -1 -1 -tags mark -fill yellow -stipple gray25
 }
 
+# not used anymore 2024.06.24
 proc saveChordgramData {} {
 global midi
 global chord_sequence
@@ -6287,7 +6054,6 @@ compute_notegram notegram
 }
 
 proc unzoom_notegram {} {
-global seqlength
 compute_notegram none
 }
 
@@ -9818,7 +9584,6 @@ proc plotmidi_duration_pdf {} {
 
 
 proc update_displayed_pdf_windows {canvs} {
-#puts "update_displayed_pdf_windows $canvs"
 if {$canvs == ".drumroll.can"} {
    update_drumroll_pdfs
    return
