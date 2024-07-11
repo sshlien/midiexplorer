@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.64 2024-06-30 08:20" 
+set midiexplorer_version "MidiExplorer version 4.66 2024-07-11 13:40" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -50,10 +50,12 @@ set briefconsole 1
 #   Part 6.0 Midi file selection support
 #        selected_midi,  readMidiFileHeader,
 #        get_midi_info_for, parse_midi_info, get_trkinfo,
-#        midiType1Table
+#        midiTable
 #   Part 7.0 Program selector and support
 #   Part 8.0 Piano Roll window
 #         beat graph
+#         chordtext
+#         makeNoteListForKeySig 
 #         chord histogram
 #         chordgram plot 
 #         notegram plot
@@ -808,6 +810,7 @@ proc midiInit {} {
    set midi(tres) 50
 # chordtext
    set midi(openChords) 1
+   set midi(showUnidentifiedChords) 0
 }
 
 set genreUpdated 0
@@ -1116,7 +1119,7 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
 	    -command "google_search genre"
 	$ww add command -label "duckduckgo search" -font $df -accelerator "ctrl-u"\
 	    -command duckduckgo_search
-        $ww add command -label "track info" -font $df -command midiType1Table
+        $ww add command -label "track info" -font $df -command midiTable
         $ww add command -label "detailed track info" -font $df\
              -accelerator "ctrl-j" -command  {
              set midi_info [get_midi_info_for]
@@ -1844,7 +1847,7 @@ foreach col {trk chn program notes spread pavg duration rpat zero step jump melc
   }
 
 $w.tree column program -width [font measure $df "WWWWWWWWWWWW"]
-$w.tree column notes -width [font measure $df "WWWWW"]
+$w.tree column notes -width [font measure $df "WWWWWW"]
 $w.tree tag configure fnt -font $df
 pack $w.tree $w.vsb -side left -expand 1 -fill both 
 bind $w.tree <<TreeviewSelect>> {tinfoSelect}
@@ -2061,7 +2064,7 @@ proc interpretMidi {} {
 
   set genre [search_genre_database]
   label .info.input -text $midi(midifilein) 
-  button .info.tracks -text "$ntrks tracks" -font $df -command midiType1Table
+  button .info.tracks -text "$ntrks tracks" -font $df -command midiTable
   label .info.ppqn -text "$ppqn pulses/beat" -font $df
   label .info.genre -text "genre: $genre" -font $df
   button .info.help -text help -font $df -command {show_message_page $hlp_trackInfo w}
@@ -2162,11 +2165,20 @@ semitones.
 
 melcr (melodic criterion) is a computed value which reflects the melodic\
 (singable) degree of the line. With few exceptions the melodic line\
-with the highest melcr is shown in dark green.
- 
-bends is the number of channel pitch bends that were applied.
+with the highest melcr is shown in dark green.\
 
-controls is the number of midi control commands that have been applied.
+ 
+bends is the number of channel pitch bends that were applied.\
+
+
+controls is the number of midi control commands that have been applied.\
+
+
+Some of the lines may be colored in dark green, dark blue,  maroon, or purple. These\
+colors are used to identify the tracks or channels may contain the\
+melody line (dark green), or the chordal-rhythmic accompaniment (purple) or\
+bass line (maroon).
+Dark blue is used to identify tracks with many chords.
 "
 
 proc tinfoSelect {} {
@@ -2646,7 +2658,7 @@ return $p
 }
 
 
-proc midiType1Table {} {
+proc midiTable {} {
 global trkinfo
 global mlist
 global midi
@@ -2670,6 +2682,8 @@ if {![winfo exist $w]} {expose_tinfo}
 $w.tree delete [$w.tree children {}]
 $w.tree tag  configure green -foreground darkgreen -font $df
 $w.tree tag  configure purple -foreground purple -font $df
+$w.tree tag  configure maroon -foreground maroon -font $df
+$w.tree tag  configure blue -foreground darkblue -font $df
 set itemMelProb {}
 
 set nlines 0
@@ -2724,18 +2738,22 @@ for {set i 1} {$i <= $ntrks} {incr i} {
  #end of midishow_sep
        }
  # test for chordal ostinato
-   set chordRatio [expr $totalnotes/$nnotes]
-   if {$channel != 10 && $chordRatio >1 && $rhythmpatterns < 20 && [expr $nzeros - $nsteps] > 100} {
-      $w.tree item $id -tag  purple
-      }
+   set chordRatio [expr $totalnotes/($nnotes+1)]
+   if {$channel != 10 && $nnotes > 50} {
+     if {$chordRatio > 2} {
+        $w.tree item $id -tag  blue}
+     if {$chordRatio >1 && $rhythmpatterns < 20 && [expr double($nzeros)/($nsteps+1)] > 2} {
+        $w.tree item $id -tag  purple
+        }
+     if {$pmean < 45} {
+        $w.tree item $id -tag maroon
+        }
+   }
         
 
  # end of trkinfo
       } 
  # end of line
-#if {$channel != 10} {
-#   puts "$channel prob = [melodyLogProbability $p $rhythmpatterns $nzeros $nsteps $njumps]" 
-#     }
    }
  } 
 
@@ -4471,7 +4489,7 @@ proc play_midi_file {name} {
 }
 
 
-set pianorollwidth 500
+set pianorollwidth 540
 
 proc piano_roll_display {} {
    global cleanData
@@ -4688,7 +4706,7 @@ if {$midi(midishow_sep) == "track"} {
   set midichannels($num) $trksel($num)
   }
 if {[winfo exists .tinfo]} {
-   midiType1Table
+   midiTable
    }
 }
 
@@ -4718,7 +4736,7 @@ if {$midi(midishow_sep) == "track"} {
   }
 update_displayed_pdf_windows .piano.can
 if {[winfo exists .tinfo]} {
-   midiType1Table
+   midiTable
    }
 }
 
@@ -5120,6 +5138,7 @@ proc chordtext_window {source} {
      menubutton $f.1.options -text options -font $df -menu $f.1.options.items
      menu $f.1.options.items 
      $f.1.options.items add checkbutton  -label "open chords" -font $df -variable midi(openChords) -command "openClosedChords $source"
+     $f.1.options.items add checkbutton -label "show unidentified chords" -font $df -variable midi(showUnidentifiedChords) -command "openClosedChords $source"
      pack $f.1.help $f.1.histogram $f.1.options -side left -anchor w
      frame $f.2
      pack $f.1 $f.2 -side top -anchor w
@@ -5306,9 +5325,6 @@ return $outvector
  
 
 
-set notelist {}
-
-
 
 proc count_chords {chord} {
     global chordcount
@@ -5350,6 +5366,101 @@ proc print_chordcount {w} {
         incr i
     }
 }
+
+
+#These functions return the notes for a specific key signature
+#for example: G, Ab Edor Gmin etc.
+
+set keyorder CDEFGABCDEFGAB
+#global keyorder
+
+proc setkeymap {sf} {
+    # based on the number of flats or sharps in the key
+    # signature, the function creates a keymap which
+    # maps the note to the sharpen or flatten note.
+    global keymap
+    array set keymap {C C D D E E F F G G A A B B}
+    if {$sf >= 1} {set keymap(F) F# }
+    if {$sf >= 2} {set keymap(C) C# }
+    if {$sf >= 3} {set keymap(G) G# }
+    if {$sf >= 4} {set keymap(D) D# }
+    if {$sf >= 5} {set keymap(A) A# }
+    if {$sf >= 6} {set keymap(E) E# }
+    if {$sf >= 7} {set keymap(B) B# }
+    if {$sf <= -1} {set keymap(B) Bb }
+    if {$sf <= -2} {set keymap(E) Eb }
+    if {$sf <= -3} {set keymap(A) Ab }
+    if {$sf <= -4} {set keymap(D) Db }
+    if {$sf <= -5} {set keymap(G) Gb }
+    if {$sf <= -6} {set keymap(C) Cb }
+    if {$sf <= -7} {set keymap(F) Fb }
+}
+
+
+proc keytosf {keysig} {
+    #from key signature, the function the number of sharps/flats
+    #positive numbers are sharps, and negative numbers are flats.
+    global mode tonic modename
+    set s [regexp {([A-G]|none)(#*|b*)(.*)} $keysig match tonic sub2 modename]
+    if {$s < 1} {puts "can't understand key signature $keysig"
+        return}
+    #puts "$tonic $sub2 $modename"
+    if {[string compare $tonic "none"] == 0} {set tonic C}
+    set sf [expr [string first $tonic FCGDAEB] -1]
+    if {$sub2 == "#"} {set sf [expr $sf + 7]}
+    if {$sub2 == "b"} {set sf [expr $sf - 7]}
+    if {[string length $modename] > 0} {set modename [string tolower $modename]} else {
+        set modename "maj"
+        }
+    if {[string length $modename] > 3} {set modename [string range $modename 0 2 ]}
+    if {$modename == "m"} {set modename "min"}
+    set mode [lsearch -exact "maj min m aeo loc ion dor phr lyd mix" $modename]
+    if {$mode == -1} {set mode 0}
+    if {$mode >= 0} {set sf \
+                [expr $sf - [lindex "0 3 3 3 5 0 2 4 -1 1" $mode]]}
+    return $sf
+}
+
+
+proc makeNoteListForKeySig {keysig} {
+    global keyorder
+    global keymap
+    puts "makeNoteListForKeySig $keysig"
+    set k [keytosf $keysig]
+    setkeymap $k
+    set note [string index $keysig 0]
+    set from [string first  $note  $keyorder]
+    set keynotelist [list]
+    for {set i 0} {$i < 7} {incr i} {
+        set key [string index $keyorder [expr $i +$from]]
+        set key $keymap($key)
+        lappend keynotelist $key
+        }
+return $keynotelist
+}
+
+proc romanSymbolsForChords {keynotelist majmin} {
+ set romanMaj {M m m M M m dim}
+ set romanMin {m m M M m dim M}
+ set roman {i ii iii iv v vi vii}
+ set note2roman [dict create]
+ for {set i 0} {$i < 7} {incr i} {
+   set key [lindex $keynotelist $i] 
+   set majmin [lindex $romanMaj $i]
+   set romanSymbol [lindex $roman $i]
+   if {$majmin == "M"} {
+      set romanSymbol [string toupper $romanSymbol]
+      }
+   #puts "$key $romanSymbol"
+   dict set note2roman $key $romanSymbol
+   }
+return $note2roman
+}
+
+
+
+
+
 
 
 proc reorganize_pianoresult {source} {
@@ -5498,6 +5609,7 @@ proc determineChordSequence {source miditextOutput} {
             set l [llength $nnotelist] 
             set lastchordname ""
             set chordid [list]
+            set succeeded 0
             for {set i 0} {$i < $l} {incr i}  {
                 set root [lindex $nnotelist $i]
                 set inverse [expr 12 - $root] 
@@ -5528,12 +5640,21 @@ proc determineChordSequence {source miditextOutput} {
                     }
                   }
  
+                  set succeeded 1
                   dict set list_of_chords $beat_number $chordname
                   #puts "set list_of_chords $beat_number $chordname"
                   #puts "[dict get $list_of_chords $beat_number]"
                   set lastchordname $chordname
                   }
                }
+               if {$succeeded == 0 && $miditextOutput && $midi(showUnidentifiedChords)} {
+                    if {$midi(openChords)} {
+                      $v insert insert "$last_beat_number  $chordstring\n"
+                    } else {
+                      $v insert insert "$last_beat_number    [label_pitchlist $nnotelist]\n"
+                  }
+              }
+                 
           reset_beat_notestatus
           set last_beat_number $beat_number
           }
@@ -5660,12 +5781,26 @@ set hlp_chordgram "Chordgram
 Plots the predominant chord for each beat. The chord root is\
 determined by looking at the spaces between the pitches. Major\
 chords are in red, minor blue, diminished green and augmented in\
-purple. The vertical scale is either sequential or follows the circle\
-of fifths.\n\n
+purple. Other colors are used for 7ths, m7, dim7 etc.\
+Black indicates that a color has not yet been assigned to that\
+chord type (eg. sus4, 7sus5, m7b5 ...).\
+Inversions are indicated with a white center.  The vertical scale\
+is either sequential or follows the circle of fifths.\n
 To zoom into an area, sweep the mouse pointer over the region holding\
 the left mouse button down. Then press the zoom button. The chordgram\
 may be linked to the midi structure window or the piano roll window\
 if they are exposed.\n
+Once you have zoomed into a small time interval, you may scroll left\
+or right using the <- or -> buttons.\n
+The analysis menu button provides other options for deeper analysis.\n
+chord histogram item will open a separate window displaying\
+the chord counts for all the chords displayed in the selected region (or\
+zoomed area) of the chordgram window.\n
+text list will open a separate window listing\
+the information for identifiying the chords.\n
+pitch class histogram will display the pitch class histogram\
+for the selected area in chordgram. This may be useful if there is\
+a key modulation.
 
 "
 
@@ -5689,13 +5824,30 @@ proc chordgram_plot {source} {
   tooltip::tooltip .chordgram.head.zoom  "zooms into the region that you highlighted."
      button .chordgram.head.unzoom -text unzoom -command unzoom_chordgram -font $df 
   tooltip::tooltip .chordgram.head.unzoom  "zooms out to the full midi file."
-#     button .chordgram.head.save -text "save data" -font $df -command saveChordgramData
-#  tooltip::tooltip .chordgram.head.save  "Save chords list in\n midiexplorer_home/chordgram.txt"
+     set menuitems .chordgram.head.menu.items
+     button .chordgram.head.left -text "<-" -font $df -command {chordgram_left chordgram}
+     button .chordgram.head.right -text "->" -font $df -command {chordgram_right chordgram}
+ 
+     menubutton .chordgram.head.menu -text analysis -font $df -menu .chordgram.head.menu.items
+    menu .chordgram.head.menu.items -tearoff 0
+    $menuitems add command -label "chord histogram" -font $df\
+            -command {chord_histogram chordgram}
+    $menuitems add command -label "text list" -font $df\
+            -command {chordtext_window chordgram}
+    $menuitems add command -label "pitch class histogram" -font $df\
+            -command {midi_statistics pitch chordgram
+                     show_note_distribution
+                     }
+
+#     button .chordgram.head.pitch -text "pitch class" -font $df -command {midi_statistics pitch chordgram
+#show_note_distribution}
+#  tooltip::tooltip .chordgram.head.pitch  "Show pitch class histogram"
+
      button .chordgram.head.help -text help -font $df -command {show_message_page $hlp_chordgram word}
-     pack  .chordgram.head.2 .chordgram.head.play .chordgram.head.zoom .chordgram.head.unzoom .chordgram.head.help -side left -anchor w
+     pack  .chordgram.head.2 .chordgram.head.play .chordgram.head.zoom .chordgram.head.unzoom .chordgram.head.left .chordgram.head.right .chordgram.head.menu   .chordgram.head.help -side left -anchor w
      pack  .chordgram.head -side top -anchor w 
      set c .chordgram.can
-     canvas $c -width $pianorollwidth -height 250 -border 3 -relief sunken
+     canvas $c -width [expr $pianorollwidth+10] -height 250 -border 3 -relief sunken
      pack $c
 
      bind .chordgram.can <ButtonPress-1> {chordgram_Button1Press %x %y}
@@ -5790,6 +5942,42 @@ set stop  [lindex $limits 1]
 compute_chordgram $start $stop
 }
 
+proc chordgram_left {source} {
+global exec_out
+global seqlength
+append exec_out "\ncall_compute_chordgram\n"
+set limits [getCanvasLimits $source]
+set start [lindex $limits 0]
+set stop  [lindex $limits 1]
+set dif [expr $stop - $start]
+if {$dif > [expr $seqlength/2]} {
+  set start 0
+  set stop [expr $dif/5]
+ } else {
+  set start [expr $start - $dif]
+  set stop [expr $stop - $dif]
+ }
+compute_chordgram $start $stop
+}
+
+proc chordgram_right {source} {
+global exec_out
+global seqlength
+append exec_out "\ncall_compute_chordgram\n"
+set limits [getCanvasLimits $source]
+set start [lindex $limits 0]
+set stop  [lindex $limits 1]
+set dif [expr $stop - $start]
+if {$dif > [expr $seqlength/2]} {
+  set stop [expr $seqlength]
+  set start [expr $seqlength - 20]
+  } else {
+  set start [expr $start + $dif]
+  set stop [expr $stop + $dif]
+  }
+compute_chordgram $start $stop
+}
+
 proc chordgram_Button1Press {x y} {
     set xc [.chordgram.can canvasx $x]
     .chordgram.can raise mark
@@ -5865,14 +6053,24 @@ proc compute_chordgram {start stop} {
    global chordgramLimits
    global fbeat
    global tbeat
+   global keysig
    global exec_out
    append exec_out "compute_chordgram $start $stop\n"
+   #puts "key siganature = $keysig"
+   set keynotelist [list]
+   if {$keysig != "unknown"} {
+     set keynotelist [makeNoteListForKeySig $keysig]
+   #puts "keynotelist = $keynotelist"
+     }     
+   set romanSymbols [romanSymbolsForChords $keynotelist maj]
+   puts "romanSymbols keys = [dict keys $romanSymbols]"
+   
    set fbeat $start
    set tbeat $stop
    set chordgramLimits [list $start $stop]
    # useflats is set by plot_pitch_class_histogram
    set xrbx [expr $pianorollwidth - 3]
-   set xlbx  40
+   set xlbx  60
    set ytbx 20
    set ybbx 220 
    set c .chordgram.can
@@ -5916,35 +6114,62 @@ proc compute_chordgram {start stop} {
          }
      }
      #puts "chord = $key $chordtype $loc"
+     set inverse [llength [split $chordtype /]]
+     set chordtype [lindex [split $chordtype /] 0]
+     #puts "chordtype = $chordtype"
      set ix [Graph::ixpos [expr double($j)]]
      set iy [Graph::iypos [expr double($loc*16) + 7 ]]
-     set iy1 [expr $iy - 3]
-     set iy2 [expr $iy + 3]
-     set ix1 [expr $ix - 3]
-     set ix2 [expr $ix + 3]
+     set iy1 [expr $iy - 5]
+     set iy2 [expr $iy + 5]
+     set ix1 [expr $ix - 5]
+     set ix2 [expr $ix + 5]
      switch $chordtype {
+       6   {$c create oval $ix1 $iy1 $ix2 $iy2 -fill pink}
+       7   {$c create oval $ix1 $iy1 $ix2 $iy2 -fill red}
        maj {$c create oval $ix1 $iy1 $ix2 $iy2 -fill darkred}
-       min {$c create oval $ix1 $iy1 $ix2 $iy2 -fill blue}
+       maj9 {$c create oval $ix1 $iy1 $ix2 $iy2 -fill orange}
+       m7 {$c create oval $ix1 $iy1 $ix2 $iy2 -fill blue}
+       min {$c create oval $ix1 $iy1 $ix2 $iy2 -fill darkblue}
        dim {$c create oval $ix1 $iy1 $ix2 $iy2 -fill darkgreen}
+       dim7 {$c create oval $ix1 $iy1 $ix2 $iy2 -fill green}
        aug {$c create oval $ix1 $iy1 $ix2 $iy2 -fill purple}
        default {$c create oval $ix1 $iy1 $ix2 $iy2 -fill black}
        }
+     if {$inverse > 1} {
+       set ix1 [expr $ix-2]
+       set ix2 [expr $ix+2]
+       set iy1 [expr $iy-2]
+       set iy2 [expr $iy+2]
+       $c create rect $ix1 $iy1 $ix2 $iy2 -fill white
+       }
+
      }
   set i 0
-  set ix 15 
+  set ix 25 
   if {$midi(chordgram) == 1} {
+    # in steps of fifths
     if {$useflats} {
       foreach name $flatnotes5 {
          set iy [Graph::iypos [expr double($i * 16)]] 
          set iy [expr $iy - 5]
-         $c create text $ix $iy -text $name -fill $colfg
+         set notename $name 
+         if {[dict exists $romanSymbols $name]} {
+           set symbol [dict get $romanSymbols $name]
+           set notename  "$name $symbol"
+           }
+         $c create text $ix $iy -text $notename -fill $colfg
          incr i
          }
       } else {
       foreach name $sharpnotes5 {
          set iy [Graph::iypos [expr double($i * 16)]] 
          set iy [expr $iy - 5]
-         $c create text $ix $iy -text $name -fill $colfg
+         set notename $name 
+         if {[dict exists $romanSymbols $name]} {
+           set symbol [dict get $romanSymbols $name]
+           set notename  "$name $symbol"
+           }
+         $c create text $ix $iy -text $notename -fill $colfg
          incr i
          }
      }
@@ -5953,14 +6178,24 @@ proc compute_chordgram {start stop} {
       foreach name $flatnotes {
          set iy [Graph::iypos [expr double($i * 16)]] 
          set iy [expr $iy - 5]
-         $c create text $ix $iy -text $name -fill $colfg
+         set notename $name 
+         if {[dict exists $romanSymbols $name]} {
+           set symbol [dict get $romanSymbols $name]
+           set notename  "$name $symbol"
+           }
+         $c create text $ix $iy -text $notename -fill $colfg
          incr i
          }
       } else {
       foreach name $sharpnotes {
          set iy [Graph::iypos [expr double($i * 16)]] 
          set iy [expr $iy - 5]
-         $c create text $ix $iy -text $name -fill $colfg
+         set notename $name 
+         if {[dict exists $romanSymbols $name]} {
+           set symbol [dict get $romanSymbols $name]
+           set notename  "$name $symbol"
+           }
+         $c create text $ix $iy -text $notename -fill $colfg
          incr i
          }
       }
@@ -9727,7 +9962,7 @@ if {[winfo exists .genrewindow]} {
    update_genre_window
    }
 if {[winfo exists .tinfo] && $source != "tinfo"} {
-   midiType1Table
+   midiTable
    }
 if {[winfo exists .ftable]} {
    set midi_info [get_midi_info_for]
@@ -9989,13 +10224,13 @@ proc plot_pitch_class_histogram {} {
     bind .pitchclass <Alt-p> {histogram_ps_output .pitchclass.c}
 }
 
-proc annotate_group {g} {
+proc ms_annotate_group {g} {
   global groupnames
   global df
   .midistructure.txt configure -text [lindex $groupnames $g] -font $df
 }
 
-proc un_annotate_group {} {
+proc ms_un_annotate_group {} {
    global df
   .midistructure.txt configure -text "" -font $df
 }
@@ -10003,8 +10238,8 @@ proc un_annotate_group {} {
 proc bind_program_groups {} {
   set pc .midistructure.programcolor.c
   for {set i 0} {$i < 17} {incr i} {
-    $pc bind prog$i <Enter> "annotate_group $i"
-    $pc bind prog$i <Leave> "un_annotate_group"
+    $pc bind prog$i <Enter> "ms_annotate_group $i"
+    $pc bind prog$i <Leave> "ms_un_annotate_group"
     }
   }
 
