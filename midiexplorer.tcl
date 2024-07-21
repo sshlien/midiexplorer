@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.66 2024-07-11 13:40" 
+set midiexplorer_version "MidiExplorer version 4.69 2024-07-21 15:20" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -2073,7 +2073,7 @@ proc interpretMidi {} {
   if {![info exist keysig]} {set keysig C}
   #if {$nkeysig < 1} {set keysig C}
   if {[info exist keyconfidence]} {
-    if {$keyconfidence < 0.4} {set keysig "unknown"}
+    if {$keyconfidence < 0.4} {set keysig "ambiguous"}
     }
   if {![info exist tempo]} {set tempo 120}
   label .info.tempo -text "$tempo beats/minute" -font $df
@@ -5076,7 +5076,7 @@ proc chord_histogram_window {source} {
     positionWindow .chordstats
     
     frame $w.head
-    radiobutton $w.head.txt -text list -font $df -variable midi(chordhist) -value txt -command switch_text_barchart
+    radiobutton $w.head.txt -chord list -font $df -variable midi(chordhist) -value txt -command switch_text_barchart
     radiobutton $w.head.bar -text barchart -font $df -variable midi(chordhist) -value bar -command switch_text_barchart
 #    pack $w.head.lab $w.head.key $w.head.freq $w.head.txt $w.head.bar -side left -anchor w
     pack  $w.head.txt $w.head.bar -side left -anchor w
@@ -5425,7 +5425,7 @@ proc keytosf {keysig} {
 proc makeNoteListForKeySig {keysig} {
     global keyorder
     global keymap
-    puts "makeNoteListForKeySig $keysig"
+    #puts "makeNoteListForKeySig $keysig"
     set k [keytosf $keysig]
     setkeymap $k
     set note [string index $keysig 0]
@@ -5439,14 +5439,18 @@ proc makeNoteListForKeySig {keysig} {
 return $keynotelist
 }
 
-proc romanSymbolsForChords {keynotelist majmin} {
+proc romanSymbolsForChords {keynotelist mode} {
  set romanMaj {M m m M M m dim}
  set romanMin {m m M M m dim M}
  set roman {i ii iii iv v vi vii}
  set note2roman [dict create]
  for {set i 0} {$i < 7} {incr i} {
    set key [lindex $keynotelist $i] 
-   set majmin [lindex $romanMaj $i]
+   if {$mode == "min"} {
+      set majmin [lindex $romanMin $i]
+   } else {
+      set majmin [lindex $romanMaj $i]
+   }
    set romanSymbol [lindex $roman $i]
    if {$majmin == "M"} {
       set romanSymbol [string toupper $romanSymbol]
@@ -5554,7 +5558,9 @@ proc determineChordSequence {source miditextOutput} {
     global flatkeys
     global sharpkeys
     global chordtypeRef
-    
+    global beatsplitter
+    global last_beat_number
+
     set list_of_chords [dict create]
 
     set limits [getCanvasLimits $source] 
@@ -5576,6 +5582,7 @@ proc determineChordSequence {source miditextOutput} {
     
     set last_time 0.0
     set last_beat_number 0
+    set last_beatDivision 0
     set i 0
    
     set start [expr $start*$ppqn]
@@ -5593,7 +5600,8 @@ proc determineChordSequence {source miditextOutput} {
         set present_time [lindex $midiunit 0]
         set beat_time [format %5.2f [expr double($present_time)/$ppqn]]
         set beat_number [expr int($beat_time)]
-        if {$last_beat_number != $beat_number} {
+        set beatDivision [expr int($beat_time * $beatsplitter)]
+        if {$last_beatDivision != $beatDivision} {
             set midiChordNotes [list_on_notes_in_beat]
             set chordstring [label_notelist $midiChordNotes]
             set pitch0 [minimumPitch $midiChordNotes]
@@ -5634,9 +5642,9 @@ proc determineChordSequence {source miditextOutput} {
                if {[info exist chordname] && $chordname != $lastchordname} {
                   if {$miditextOutput} {
                     if {$midi(openChords)} {
-                      $v insert insert "$last_beat_number  $chordstring    $code	$chordname\n"
+                      $v insert insert "$beat_time  $chordstring    $code	$chordname\n"
                     } else {
-                      $v insert insert "$last_beat_number    [label_pitchlist $nnotelist]   $code	$chordname\n"
+                      $v insert insert "$beat_time    [label_pitchlist $nnotelist]   $code	$chordname\n"
                     }
                   }
  
@@ -5657,6 +5665,7 @@ proc determineChordSequence {source miditextOutput} {
                  
           reset_beat_notestatus
           set last_beat_number $beat_number
+          set last_beatDivision $beatDivision
           }
 
             
@@ -5780,10 +5789,10 @@ set hlp_chordgram "Chordgram
 
 Plots the predominant chord for each beat. The chord root is\
 determined by looking at the spaces between the pitches. Major\
-chords are in red, minor blue, diminished green and augmented in\
-purple. Other colors are used for 7ths, m7, dim7 etc.\
-Black indicates that a color has not yet been assigned to that\
-chord type (eg. sus4, 7sus5, m7b5 ...).\
+chords are in red, minor blue, diminished green, augmented in\
+purple, and power chord violet. Other colors are used for 7ths,\
+m7, dim7 etc.\ Black indicates that a color has not yet been assigned\
+to that chord type (eg. sus4, 7sus5, m7b5 ...).\
 Inversions are indicated with a white center.  The vertical scale\
 is either sequential or follows the circle of fifths.\n
 To zoom into an area, sweep the mouse pointer over the region holding\
@@ -5792,6 +5801,18 @@ may be linked to the midi structure window or the piano roll window\
 if they are exposed.\n
 Once you have zoomed into a small time interval, you may scroll left\
 or right using the <- or -> buttons.\n
+The left vertical axis is labeled with the root pitch of the chord\
+and possibly the roman numerals of the chord may be included.\
+The roman numeral representation is dependent on the key\
+signature of the displayed segment. If this\
+is incorrect, you can change the key signature in the entry box\
+next to the help button.\n 
+Many of the midi files have a bass line which provides the foundation\
+to the chord progressions. The bass line may contain the chordal notes\
+but not necessarily in the form of chords. If you select a resolution\
+of 1 per 4 beats, chordgram will consider all the notes in the 4 beats\
+or bar as one chord. This may be a useful method for following the\
+chord progression.\n
 The analysis menu button provides other options for deeper analysis.\n
 chord histogram item will open a separate window displaying\
 the chord counts for all the chords displayed in the selected region (or\
@@ -5810,42 +5831,55 @@ proc chordgram_plot {source} {
    global df
    global chord_sequence
    global seqlength
+   global keysig
+   global beatsplitter
    global exec_out
    set exec_out "chordgram_plot\n"
+   set beatsplitter 1
    if {![winfo exist .chordgram]} {
      toplevel .chordgram
      positionWindow .chordgram
-     frame .chordgram.head
-     checkbutton .chordgram.head.2 -text "circle of fifths" -variable midi(chordgram) -font $df -command "call_compute_chordgram chordgram"
-     button .chordgram.head.play -text play -font $df -command {playExposed chordgram}
-  tooltip::tooltip .chordgram.head.play "play the highlighted area or
+     set ch .chordgram.head
+     frame $ch 
+     checkbutton $ch.2 -text "circle of fifths" -variable midi(chordgram) -font $df -padx 1  -command "call_compute_chordgram chordgram"
+     button $ch.play -text play -font $df -padx 1 -command {playExposed chordgram}
+  tooltip::tooltip $ch.play "play the highlighted area or
  the exposed plot."
-     button .chordgram.head.zoom -text zoom -command zoom_chordgram -font $df
-  tooltip::tooltip .chordgram.head.zoom  "zooms into the region that you highlighted."
-     button .chordgram.head.unzoom -text unzoom -command unzoom_chordgram -font $df 
-  tooltip::tooltip .chordgram.head.unzoom  "zooms out to the full midi file."
-     set menuitems .chordgram.head.menu.items
-     button .chordgram.head.left -text "<-" -font $df -command {chordgram_left chordgram}
-     button .chordgram.head.right -text "->" -font $df -command {chordgram_right chordgram}
+     button $ch.zoom -text zoom -command zoom_chordgram -font $df -padx 1
+  tooltip::tooltip $ch.zoom  "zooms into the region that you highlighted."
+     button $ch.unzoom -text unzoom -command unzoom_chordgram -font $df -padx 1
+  tooltip::tooltip $ch.unzoom  "zooms out to the full midi file."
+     set menuitems $ch.menu.items
+     button $ch.left -text "<-" -font $df -padx 1 -command {chordgram_left chordgram}
+     button $ch.right -text "->" -font $df -padx 1 -command {chordgram_right chordgram}
  
-     menubutton .chordgram.head.menu -text analysis -font $df -menu .chordgram.head.menu.items
-    menu .chordgram.head.menu.items -tearoff 0
-    $menuitems add command -label "chord histogram" -font $df\
+    menubutton $ch.res -text resolution -font $df -padx 1 -menu $ch.res.items -relief sunken 
+    menu $ch.res.items -tearoff 0
+    set resitems $ch.res.items
+    $resitems add radiobutton -label "per beat (default)" -font $df -variable beatsplitter -value 1.0 -command "make_chordgram chordgram"
+    $resitems add radiobutton -label "2 per beat" -font $df -variable beatsplitter -value 2.0 -command "make_chordgram chordgram"
+    $resitems add radiobutton -label "3 per beat" -font $df -variable beatsplitter -value 3.0 -command "make_chordgram chordgram"
+    $resitems add radiobutton -label "1 per 2 beats" -font $df -variable beatsplitter -value 0.5 -command "make_chordgram chordgram"
+    $resitems add radiobutton -label "1 per 3 beats" -font $df -variable beatsplitter -value 0.33 -command "make_chordgram chordgram"
+    $resitems add radiobutton -label "1 per 4 beats" -font $df -variable beatsplitter -value 0.25 -command "make_chordgram chordgram"
+
+    menubutton $ch.ana -text analysis -font $df -padx 1 -menu $ch.ana.items -relief sunken
+    menu $ch.ana.items -tearoff 0
+    set anaitems $ch.ana.items
+    $anaitems add command -label "chord histogram" -font $df\
             -command {chord_histogram chordgram}
-    $menuitems add command -label "text list" -font $df\
+    $anaitems add command -label "text list" -font $df\
             -command {chordtext_window chordgram}
-    $menuitems add command -label "pitch class histogram" -font $df\
+    $anaitems add command -label "pitch class histogram" -font $df\
             -command {midi_statistics pitch chordgram
                      show_note_distribution
                      }
 
-#     button .chordgram.head.pitch -text "pitch class" -font $df -command {midi_statistics pitch chordgram
-#show_note_distribution}
-#  tooltip::tooltip .chordgram.head.pitch  "Show pitch class histogram"
-
-     button .chordgram.head.help -text help -font $df -command {show_message_page $hlp_chordgram word}
-     pack  .chordgram.head.2 .chordgram.head.play .chordgram.head.zoom .chordgram.head.unzoom .chordgram.head.left .chordgram.head.right .chordgram.head.menu   .chordgram.head.help -side left -anchor w
-     pack  .chordgram.head -side top -anchor w 
+     entry $ch.key -width 7 -textvariable keysig -font $df  
+     bind $ch.key  <Return> {call_compute_chordgram chordgram}
+     button $ch.help -text help -font $df -padx 1 -command {show_message_page $hlp_chordgram word}
+     pack  $ch.2 $ch.play $ch.zoom $ch.unzoom $ch.left $ch.right $ch.res $ch.ana $ch.key $ch.help -side left -anchor w
+     pack  $ch -side top -anchor w 
      set c .chordgram.can
      canvas $c -width [expr $pianorollwidth+10] -height 250 -border 3 -relief sunken
      pack $c
@@ -5854,10 +5888,7 @@ proc chordgram_plot {source} {
      bind .chordgram.can <ButtonRelease-1> chordgram_Button1Release
      bind .chordgram.can <Double-Button-1> chordgram_ClearMark
      }
-   set chord_sequence [determineChordSequence $source 0]
-   set last_beat [dict size $chord_sequence]
-   set seqlength $last_beat
-   call_compute_chordgram $source
+   make_chordgram $source
    update_console_page
 }
 
@@ -5936,10 +5967,24 @@ return [list $start $stop]
 proc call_compute_chordgram {source} {
 global exec_out
 append exec_out "\ncall_compute_chordgram\n"
-set limits [getCanvasLimits $source]
+#puts "call_compute_chordgram $source"
+if {$source == "tinfo"} {
+  set limits [getCanvasLimits chordgram]
+} else {  
+  set limits [getCanvasLimits $source]
+  }
 set start [lindex $limits 0]
 set stop  [lindex $limits 1]
 compute_chordgram $start $stop
+}
+
+proc make_chordgram {source} {
+global chord_sequence
+global seqlength
+set chord_sequence [determineChordSequence $source 0]
+set last_beat [dict size $chord_sequence]
+set seqlength $last_beat
+call_compute_chordgram $source
 }
 
 proc chordgram_left {source} {
@@ -6019,6 +6064,8 @@ call_compute_chordgram chordgram
 
 proc unzoom_chordgram {} {
 global seqlength
+global last_beat_number
+set seqlength $last_beat_number
 set start -1
 set stop $seqlength
 compute_chordgram $start $stop
@@ -6062,8 +6109,10 @@ proc compute_chordgram {start stop} {
      set keynotelist [makeNoteListForKeySig $keysig]
    #puts "keynotelist = $keynotelist"
      }     
-   set romanSymbols [romanSymbolsForChords $keynotelist maj]
-   puts "romanSymbols keys = [dict keys $romanSymbols]"
+   set majmin maj
+   if {[string range $keysig end-2 end] == "min"} {set majmin min}
+   set romanSymbols [romanSymbolsForChords $keynotelist $majmin]
+   #puts "romanSymbols keys = [dict keys $romanSymbols]"
    
    set fbeat $start
    set tbeat $stop
@@ -6124,6 +6173,7 @@ proc compute_chordgram {start stop} {
      set ix1 [expr $ix - 5]
      set ix2 [expr $ix + 5]
      switch $chordtype {
+       5   {$c create oval $ix1 $iy1 $ix2 $iy2 -fill violet}
        6   {$c create oval $ix1 $iy1 $ix2 $iy2 -fill pink}
        7   {$c create oval $ix1 $iy1 $ix2 $iy2 -fill red}
        maj {$c create oval $ix1 $iy1 $ix2 $iy2 -fill darkred}
@@ -11180,9 +11230,58 @@ while {![eof $inhandle]} {
      dict set desc($index) $var1 $var2
      }
   }
+#puts "desc($index) = [dict get $desc($index)]"
 close $inhandle
 appendInfoMessage "There are $index midi file descriptors"
 }
+
+proc sftotext {sf} {
+if {$sf == 0} {
+  return ""
+} elseif {$sf < 0} {
+  return " [expr 0 - $sf] flats"
+} else {
+  return " $sf sharps"
+  }
+}
+
+proc select_keysig {} {
+global sharpflatnotes
+global keysearch
+global df
+set sharpflatnotes  {C C# D Eb E F F# G G# A Bb B}
+set majmin maj
+toplevel .key
+set keysearch Cmaj
+frame .key.majmin
+radiobutton .key.majmin.min -text "minor" -font $df -value min -variable majmin -command {switch_majmin min}
+radiobutton .key.majmin.maj -text "major" -font $df -value maj -variable majmin -command {switch_majmin maj}
+pack .key.majmin.maj .key.majmin.min -side left
+pack .key.majmin
+label .key.lab -width 10 -text Cmaj -font $df
+pack .key.lab
+listbox .key.box  -width 8 -height 13 -selectmode single
+switch_majmin $majmin
+pack .key.box
+bind .key.box <Button> {
+           set i  [.key.box nearest %y]
+           set keysearch [.key.box get $i]
+           set sf [keytosf $keysearch]
+           #puts [sftotext $sf]
+           .key.lab configure -text $keysearch
+           .searchbox.keysignature configure -text $keysearch[sftotext $sf]
+           }
+}
+
+proc switch_majmin {majmin} {
+global sharpflatnotes
+set keysigs .key.box
+$keysigs delete 0 end
+foreach key $sharpflatnotes {
+  $keysigs insert end $key$majmin
+  }
+}
+
 
 proc search_window {} {
 global searchstate
@@ -11281,6 +11380,15 @@ label $w.labpitche -text "pitch entropy" -font $df
 scale $w.scapitche -length 150 -from 1.6 -to 3.8 -orient horizontal\
   -resolution 0.05 -width 9 -variable midi(pitche) -font $df
 grid $w.checkpitchentropy $w.labpitche $w.scapitche
+
+checkbutton $w.checkkeysignature -variable searchstate(keysig)
+button $w.choosekey -text "choose key signature" -font $df -command select_keysig
+label $w.keysignature -text Cmaj -font $df
+grid $w.checkkeysignature $w.choosekey $w.keysignature
+
+checkbutton $w.checklyrics -variable searchstate(lyrics)
+label $w.haslyrics -text "has lyrics" -font $df
+grid $w.checklyrics $w.haslyrics
 
 set state {{cname sname} {ctempo tempo} {checkprogs proglist} {cbends nbends} {cndrums ndrums} {cpcol pcolthr} {cpitch pitchthr} {cpitche pitche}}
 
@@ -11477,6 +11585,7 @@ if {$searchstate(cpitche)} {
    }
 }
 
+set keysearch Cmaj
 set filter_code(cname) "if \{\[match_title \$item\] < 0\} \{return 0\}"
 set filter_code(ctempo) "if \{\[match_tempo \$item\] == -1\} \{return 0\}"
 set filter_code(checkprogs) "if \{\[dict exists \$desc(\$item) progs] && \[list_in_list \$midi(proglist) \[dict get \$desc(\$item) progs\]\] == 0\} \{return 0\}"
@@ -11493,6 +11602,9 @@ return 0\}"
 set filter_code(cpitch) "if \{\[match_pitchclass \$item\] > \$midi(pcolthr) \} \{
 return 0\}"
 set filter_code(cpitche) "if \{\[match_pitch_entropy \$item\] == -1\} \{return 0\}"
+set filter_code(lyrics) "if \{\[dict get \$desc(\$item) lyrics\] < 1} \{return 0\}"
+set filter_code(keysig) "if \{\[string equal \[dict get \$desc(\$item) key\]  \$keysearch\] != 1}  \{return 0\}"
+
 
 
 proc expand_proglist {proglist} {
@@ -11607,19 +11719,20 @@ proc prepare_filter {} {
 global searchstate
 global filter_code
 global desc
+global keysearch
 
 if {$searchstate(cpcol)} {init_match_histogram}
 if {$searchstate(cpitch)} {init_match_histogram}
 if {$searchstate(cprog)} {init_match_histogram}
 
-set revised_procedure "proc filter_files {item} \{\n"
+set revised_procedure "proc filter_files {item} \{\nglobal keysearch\n"
 
 append  revised_procedure "global searchstate desc midi\n"
 append revised_procedure "if \{\[dict exists \$desc(\$item) damaged\]\} \{return 0\}"
 
 
 set i 0
-foreach item {cname ctempo checkprogs checkperc checkexclude cbends cndrums cpcol cpitch  cpitche cprog1 cprog2} {
+foreach item {cname ctempo checkprogs checkperc checkexclude cbends cndrums cpcol cpitch  cpitche cprog1 cprog2 lyrics keysig} {
   if {$searchstate($item) > 0} {
      append revised_procedure "\n$filter_code($item)"
      incr i
@@ -11628,6 +11741,7 @@ foreach item {cname ctempo checkprogs checkperc checkexclude cbends cndrums cpco
  append revised_procedure "\nreturn 1\}"
 if {$i == 0} {return 0}
 
+#puts "revised_procedure = \n$revised_procedure"
 eval $revised_procedure
 #puts [info body filter_files]
 return $i
@@ -15104,7 +15218,7 @@ set the path to a midi file."
         .keystrip.c bind $keysig <Enter> "keyDescriptor $keysig %W %x %y"
         bind .keystrip.c  <1> "show_histogram %W %x %y"
          }
-  puts "sflist = $sflist"
+  #puts "sflist = $sflist"
   update_console_page
   }
 
