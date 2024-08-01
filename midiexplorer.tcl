@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.69 2024-07-21 15:20" 
+set midiexplorer_version "MidiExplorer version 4.73 2024-08-01 14:00" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -1648,32 +1648,33 @@ grid columnconfigure $w.dummy 0 -weight 1
 grid rowconfigure $w.dummy 0 -weight 1
 
 
-proc rglob { basedir pattern } {
-  # Fix the directory name, this ensures the directory name is in the
-  # native format for the platform and contains a final directory seperator
-  set basedir [string trimright [file join [file normalize $basedir] { }]]
-  set fileList {}
-
-  # Look in the current directory for matching files, -type {f r}
-  # means ony readable normal files are looked at, -nocomplain stops
-  # an error being thrown if the returned list is empty
-  foreach fileName [glob -nocomplain -type {f r} -path $basedir $pattern] {
-                        lappend fileList $fileName
+proc rglob {dirlist globlist} {
+        set result {}
+        set recurse {}
+        foreach dir $dirlist {
+                if ![file isdirectory $dir] {
+                        return -code error "'$dir' is not a directory"
                 }
-
-  # Now look for any sub direcories in the current directory
-  foreach dirName [glob -nocomplain -type {d  r} -path $basedir *] {
-       # Recusively call the routine on the sub directory and append any
-       # new files to the results
-       set subDirList [rglob $dirName $pattern]
-       if { [llength $subDirList] > 0 } {
-               foreach subDirFile $subDirList {
-                        lappend fileList $subDirFile
+                foreach pattern $globlist {
+                        lappend result {*}[glob -nocomplain -directory $dir -- $pattern]
+                }
+                foreach file [glob -nocomplain -directory $dir -- *] {
+                        set file [file join $dir $file]
+                        if [file isdirectory $file] {
+                                set fileTail [file tail $file]
+                                if {!($fileTail eq "." || $fileTail eq "..")} {
+                                        lappend recurse $file
+                                }
                         }
-          }
-       }
-  return $fileList
-  }
+                }
+        }
+        if {[llength $recurse] > 0} {
+                lappend result {*}[rglob $recurse $globlist]
+        }
+        return $result
+}
+
+
 
 
 proc populatedir {tree root} {
@@ -1875,6 +1876,7 @@ set idlist {}
 
 proc FillFolderInTree {x y} {
 global idlist
+set miditype {*.mid *.MID *.kar *.KAR}
 if {[llength $idlist] > 0} {
   .treebrowser.tree delete $idlist
   }
@@ -1889,11 +1891,7 @@ if {$p == ""} {return}
 if {[lindex $c 1] == "file"} {
   set f [lindex $c 0]
   set f [file dirname $f]
-  set filelist [rglob $f *.mid]
-# Linux is sensitive to the case of file names. Other operating systems
-# like windows are case insensitive.
-  if {$tcl_platform(platform) == "unix"} {
-     set filelist [concat $filelist [rglob $f *.MID]]}
+  set filelist [rglob $f $miditype]
   foreach f $filelist {
      set id [.treebrowser.tree insert {} $p -text $f -tag green -values [list $f "file"]]
      lappend idlist $id
@@ -2561,7 +2559,6 @@ proc list_tempomod {} {
 
 proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax prng duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy nzeros nsteps njumps line} {
  global ppqn
- #global pitchbendsplit
  upvar 1 $channel c
  upvar 1 $prog p
  upvar 1 $nnotes n
@@ -2587,24 +2584,25 @@ proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax prng duration du
  set p [lindex $line 2]
  set n [lindex $line 3]
  set h [lindex $line 4]
- set qtime [lindex $line 9]
- set ngap [lindex $line 15]
- set rpat [lindex $line 10]
+ set qtime [lindex $line 10]
+ set ngap [lindex $line 16]
+ set rpat [lindex $line 11]
  set pavg [lindex $line 5]
  set pavg [expr $pavg/($n +$h)]
  set dur [lindex $line 6]
  set dur [expr $dur / ($n + $h)]
  set dur [expr double($dur) / $ppqn]
  set dur [format %5.3f $dur]
- set cntlCount [lindex $line 7]
- set pressCount [lindex $line 8]
- set pitchmin [lindex $line 11]
- set pitchmax [lindex $line 12]
+ set pbend [lindex $line 7]
+ set cntlCount [lindex $line 8]
+ set pressCount [lindex $line 9]
+ set pitchmin [lindex $line 12]
+ set pitchmax [lindex $line 13]
  set pitchrange [expr $pitchmax - $pitchmin]
  if {$c != 10} {
    #puts "line list = $line"
-   set fnotedurmin [expr [lindex $line 13] /double($ppqn)]
-   set fnotedurmax [expr [lindex $line 14] /double($ppqn)]
+   set fnotedurmin [expr [lindex $line 14] /double($ppqn)]
+   set fnotedurmax [expr [lindex $line 15] /double($ppqn)]
    set fnotedurmin [format %6.3f $fnotedurmin]
    set fnotedurmax [format %6.3f $fnotedurmax] 
    } else {
@@ -2612,16 +2610,11 @@ proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax prng duration du
    set fnotedurmax 0
    set dur 0
    } 
- set pentropy [lindex $line 16]
- set zeros [lindex $line 17]
- set steps [lindex $line 18]
- set jumps [lindex $line 19]
+ set pentropy [lindex $line 17]
+ set zeros [lindex $line 18]
+ set steps [lindex $line 19]
+ set jumps [lindex $line 20]
  if {[string length $pentropy] > 1} {set pentropy [format %4.2f $pentropy]}
- if {[info exist pitchbendsplit($c)]} {
-       set pbend $pitchbendsplit($c)
-   } else {
-       set pbend 0
-   }
 }
 
 # progMel maps the midi program number 0 to 127 to
@@ -3947,22 +3940,29 @@ bind $w.abcmidient <Return> {focus .support.header
                              set_abcmidi_executables 
 		            }
 
+button $w.abcm2psbut -text "abcm2ps" -width 14 -command {locate_abcm2ps} -font $df
+entry $w.abcm2ps -width 64 -relief sunken -textvariable midi(path_abcm2ps) -font $df
+grid $w.abcm2psbut -row 2 -column 1
+grid $w.abcm2ps -row 2 -column 2
+bind $w.abcm2ps <Return> {focus .support.header
+                         }
+
 button $w.browserbut -text "internet browser" -width 14 -command {locate_browser} -font $df
 entry $w.browserent -width 64 -relief sunken -textvariable midi(browser) -font $df
-grid $w.browserbut -row 2 -column 1
-grid $w.browserent -row 2 -column 2
+grid $w.browserbut -row 3 -column 1
+grid $w.browserent -row 3 -column 2
 bind $w.browserent <Return> {focus .support.header}
 
 button $w.gsbut -text "ghostscript" -width 14 -command {locate_ghostscript} -font $df
 entry $w.gsent -width 64 -relief sunken -textvariable midi(path_gs) -font $df
-grid $w.gsbut -row 3 -column 1
-grid $w.gsent -row 3 -column 2
+grid $w.gsbut -row 4 -column 1
+grid $w.gsent -row 4 -column 2
 bind $w.gsent <Return> {focus .support.header}
 
 button $w.edbut -text "editor" -width 14 -font $df -command {locate_editor}
 entry $w.edent -textvariable midi(path_editor) -font $df -width 64
-grid $w.edbut -row 4 -column 1
-grid $w.edent -row 4 -column 2
+grid $w.edbut -row 5 -column 1
+grid $w.edent -row 5 -column 2
 bind $w.edent <Return> {focus .support.header}
 }
 
@@ -4127,7 +4127,7 @@ global midi
 global exec_out
 set exec_out ""
 set dirname $midi(dir_abcmidi)
-foreach exec {midi2abc midicopy} {
+foreach exec {abc2midi midi2abc midicopy midistats} {
     if {[file exist $dirname/$exec.exe]} {
         set midi(path_$exec) $dirname/$exec.exe
 	append exec_out "midi(path_$exec) = $midi(path_$exec)\n"
@@ -4141,7 +4141,10 @@ foreach exec {midi2abc midicopy} {
 	show_console_page $exec_out char
 }
 
-
+proc locate_abcm2ps {} {
+    global midi
+    set midi(path_abcm2ps) [tk_getOpenFile]
+    }
 
 
 proc locate_browser {} {
@@ -4415,8 +4418,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.95} {
-         appendInfoError "You need midistats.exe version 0.95 or higher."
+    if {$err == 0 || $ver < 0.96} {
+         appendInfoError "You need midistats.exe version 0.96 or higher."
          }
     return pass
 }
@@ -5076,7 +5079,7 @@ proc chord_histogram_window {source} {
     positionWindow .chordstats
     
     frame $w.head
-    radiobutton $w.head.txt -chord list -font $df -variable midi(chordhist) -value txt -command switch_text_barchart
+    radiobutton $w.head.txt -text "chord list" -font $df -variable midi(chordhist) -value txt -command switch_text_barchart
     radiobutton $w.head.bar -text barchart -font $df -variable midi(chordhist) -value bar -command switch_text_barchart
 #    pack $w.head.lab $w.head.key $w.head.freq $w.head.txt $w.head.bar -side left -anchor w
     pack  $w.head.txt $w.head.bar -side left -anchor w
@@ -5127,6 +5130,8 @@ pitches are ignored and the chord notes is more compact.
 proc chordtext_window {source} {
    global df
    global hlp_chordtext
+   global beatsplitter
+   if {![info exist beatsplitter]} {set beatsplitter 1}
 
    if {[winfo exist .chordview] == 0} {
      set f .chordview
@@ -5716,8 +5721,10 @@ proc chordname {notevals root} {
 proc make_chord_histogram {source} {
 global total_chordcount
 global chordcount
+global beatsplitter
 set total_chordcount 0
 array unset chordcount
+if {![info exist beatsplitter]} {set beatsplitter 1}
 set chord_sequence [determineChordSequence $source 0]
 foreach key [dict keys $chord_sequence] {
   set chord [dict get $chord_sequence $key]
@@ -5875,7 +5882,7 @@ proc chordgram_plot {source} {
                      show_note_distribution
                      }
 
-     entry $ch.key -width 7 -textvariable keysig -font $df  
+     entry $ch.key -width 10 -textvariable keysig -font $df  
      bind $ch.key  <Return> {call_compute_chordgram chordgram}
      button $ch.help -text help -font $df -padx 1 -command {show_message_page $hlp_chordgram word}
      pack  $ch.2 $ch.play $ch.zoom $ch.unzoom $ch.left $ch.right $ch.res $ch.ana $ch.key $ch.help -side left -anchor w
@@ -6105,7 +6112,7 @@ proc compute_chordgram {start stop} {
    append exec_out "compute_chordgram $start $stop\n"
    #puts "key siganature = $keysig"
    set keynotelist [list]
-   if {$keysig != "unknown"} {
+   if {$keysig != "ambiguous"} {
      set keynotelist [makeNoteListForKeySig $keysig]
    #puts "keynotelist = $keynotelist"
      }     
@@ -10991,6 +10998,11 @@ proc make_midi_database {} {
 global midi
 global tcl_platform
 global stopCreation
+if {$tcl_platform(platform) == "windows"} {
+   set miditype {*.mid *.kar}
+} else {
+   set miditype {*.mid *.MID *.kar *.KAR}
+   }
 set outfile [file join $midi(rootfolder) MidiDescriptors.txt]
 if {[file exist $outfile]} {
   set choice [tk_messageBox -type yesno -default no \
@@ -11004,11 +11016,7 @@ set stopCreation 0
 set sizelimit 200000
 presentInfoMessage "finding all midi files..."
 update
-set filelist [rglob $midi(rootfolder) *.mid ] 
-# Linux is sensitive to case of file names. Other operating systems
-# like windows are case insensitive.
-if {$tcl_platform(platform) == "unix"} {
-   set filelist [concat $filelist [rglob $midi(rootfolder) *.MID]]}
+set filelist [rglob [list $midi(rootfolder)] $miditype ] 
 set nfiles [llength $filelist]
 set sizelimit [expr min($sizelimit,$nfiles)]
 appendInfoMessage "$nfiles midi files were found"
@@ -14342,8 +14350,8 @@ global midi
 global exec_out
 set ext ".abc"
 if {![file exist $midi(path_abcm2ps)]} {
-  set msg "To use this function you require the executable abcm2ps. Place it\
-  in the directory midiexplorer_home."
+  set msg "To use this function you require the executable abcm2ps. Please\
+  indicate the path to this file in settings/supporting executables."
   tk_messageBox -message $msg  -type ok
   return
   }
@@ -15565,7 +15573,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 4.85\
             path_midi2abc 3.59\
             path_midicopy 1.39\
-	    path_midistats 0.95\
+	    path_midistats 0.96\
             path_abcm2ps 8.14.6}
 
 
