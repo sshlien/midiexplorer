@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.73 2024-08-01 14:00" 
+set midiexplorer_version "MidiExplorer version 4.75 2024-08-08 09:20" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -616,11 +616,12 @@ proc midiInit {} {
             -weight $midi(font_weight)]
     set midi(dir_abcmidi) .
     if {$tcl_platform(platform) == "windows"} {
-        set midi(path_midi2abc) midi2abc.exe
-	set midi(path_midistats) midistats.exe
-        set midi(path_midicopy) midicopy.exe
-	set midi(path_abc2midi) abc2midi.exe
-	set midi(path_abcm2ps)  abcm2ps.exe
+        set x86 "C:/Program Files (x86)/midiexplorer"
+        set midi(path_midi2abc) [file join $x86 midi2abc.exe]
+	set midi(path_midistats) [file join $x86 midistats.exe]
+        set midi(path_midicopy) [file join $x86 midicopy.exe]
+	set midi(path_abc2midi) [file join $x86 abc2midi.exe]
+	set midi(path_abcm2ps)  [file join $x86 abcm2ps.exe]
         set midi(path_editor) "C:/Windows/System32/notepad.exe"
         set midi(path_gs) ""
 
@@ -695,6 +696,7 @@ proc midiInit {} {
     set midi(.tinfo) ""
     set midi(.ftable) ""
     set midi(.rminmaj) ""
+    set midi(.genremanager) ""
 
     
     set midi(player1) ""
@@ -896,7 +898,7 @@ proc readMidiexplorerIni {} {
 proc findLinuxExecutables {} {
 global midi
 global execpath
-set execlist "abc2midi abc2abc abcm2ps midi2abc midicopy"
+set execlist "abc2midi abc2abc abcm2ps midi2abc midicopy midistats"
 puts "findLinuxExecutables in [pwd]"
 foreach ex  $execlist {
   set cmd "exec which $ex"
@@ -919,14 +921,17 @@ if {[file exists midiexplorer.ini]} {
 	readMidiexplorerIni
 } else {
   if {$tcl_platform(platform) == "windows"} {
-      set midi(dir_abcmidi) $install_folder
-      set midi(path_abc2midi) [file join $install_folder abc2midi.exe]
-      set midi(path_abcm2ps) [file join $install_folder abcm2ps.exe]
-      set midi(path_midi2abc) [file join $install_folder midi2abc.exe]
-      set midi(path_midistats) [file join $install_folder midistats.exe]
-      set midi(path_midicopy) [file join $install_folder midicopy.exe]
-      set midi(path_gs) ""
+     ### not used
+     ####was already set in midiInit 2024-08-02
+     # set midi(dir_abcmidi) $install_folder
+     # set midi(path_abc2midi) [file join $install_folder abc2midi.exe]
+     # set midi(path_abcm2ps) [file join $install_folder abcm2ps.exe]
+     # set midi(path_midi2abc) [file join $install_folder midi2abc.exe]
+     # set midi(path_midistats) [file join $install_folder midistats.exe]
+     # set midi(path_midicopy) [file join $install_folder midicopy.exe]
+     # set midi(path_gs) ""
   } elseif {$tcl_platform(platform) == "unix"} {
+      # this is necessary 2024-08-02
       findLinuxExecutables
        }
 }
@@ -997,7 +1002,9 @@ set ww $w.menuline.file.items
 menubutton $w.menuline.file -text file -menu $w.menuline.file.items -font $df
 menu $ww -tearoff 0
 $ww add command -label "root directory" -font $df -command {
-    set midi(rootfolder) [tk_chooseDirectory -title "Choose the directory containing the midi files or folders"]
+    set rootfolder [tk_chooseDirectory -title "Choose the directory containing the midi files or folders"]
+    if {[string length $rootfolder] > 0} {set midi(rootfolder) $rootfolder}
+
     if {[file exist $midi(rootfolder)]}  {populatedir .treebrowser.tree $midi(rootfolder)
     }
     if {[info exist desc]} {unset desc}
@@ -2070,13 +2077,17 @@ proc interpretMidi {} {
 #update_table_header
   if {![info exist keysig]} {set keysig C}
   #if {$nkeysig < 1} {set keysig C}
-  if {[info exist keyconfidence]} {
-    if {$keyconfidence < 0.4} {set keysig "ambiguous"}
-    }
+  if {[info exist keyconfidence] && $keysig < 0.4} {
+    set keysig "ambiguous"
+    set keyInfo $keysig
+  } else {
+  set sf [keytosf $keysig]
+  set keyInfo  "$keysig [sftotext $sf]"
+  }
   if {![info exist tempo]} {set tempo 120}
   label .info.tempo -text "$tempo beats/minute" -font $df
   label .info.size -text "$lastbeat beats"  -font $df
-  button .info.keysig -text "key: $keysig" -font $df -command show_rmaj
+  button .info.keysig -text "key: $keyInfo" -font $df -command show_rmaj
   label .info.timesig -text "time signature: $timesig" -font $df
   label .info.ntimesig -text "$ntimesig time signatures" -font $df -fg darkblue
   label .info.nkeysig -text "$nkeysig key signature " -font $df -fg darkblue
@@ -13048,7 +13059,7 @@ proc getGeometryOfAllToplevels {} {
                ".midiplayer" ".tmpfile" ".cfgmidi2abc" ".pgram" ".keystrip"
                ".keypitchclass" ".channel9" ".ribbon" ".ptableau"
                ".touchplot" ".effect" ".csettings" ".drummap" ".programcolor"
-               ".tinfo" ".ftable" ".rminmaj"}
+               ".tinfo" ".ftable" ".rminmaj" ".genremanager"}
   foreach top $toplevellist {
     if {[winfo exist $top]} {
       set g [wm geometry $top]"
@@ -13841,8 +13852,10 @@ one of the items in the right box, will insert the artists name\
 in the find entry box near the top of the main window, and the\
 artist folder will positioned in the tree browser.\n\n\
 
-Sample playlist files for the lakh clean database will be made
-available with the online documentation.
+Sample playlist files for the lakh clean database are\
+available in the midiexplorer source zip file. Copy the\
+lakh_playlist folder to the root folder of the lakh_clean\
+directory. Also copy definitions.text to the same folder.\
 "
 
 proc load_genre_definitions {playlistfolder} {
@@ -13866,10 +13879,11 @@ set genreDef(none) "These definitions were obtained by googling 'What are\
 proc make_playlist_manager {} {
   global midi
   global playlistfiles
-  global lastplayfile_item
+  global lastplayloc
   global font df
   global selectedGenre
   global exec_out
+  set lastplayloc -1
 
   set selectedGenre none
   if {![winfo exist .playmanage]} {
@@ -13890,7 +13904,15 @@ proc make_playlist_manager {} {
     pack $f.ysbar -side right -fill y -in $f
     pack $f.list -fill both -expand y -in $f
 
-    bind .playmanage.frm.left.list <Button> {playlist_file_update [.playmanage.frm.left.list nearest %y]}
+    bind .playmanage.frm.left.list <Button> {
+      set loc [.playmanage.frm.left.list nearest %y]
+      playlist_file_update $loc
+      .playmanage.frm.left.list  itemconfigure $loc -fg red
+      if {$lastplayloc >= 0} {
+        .playmanage.frm.left.list  itemconfigure $lastplayloc -fg black
+        }
+      set lastplayloc $loc
+      }
 
     set f .playmanage.frm.right
     frame $f
@@ -13942,17 +13964,11 @@ proc show_genre_info {genreText} {
 
 proc playlist_file_update {loc} {
 global playlistfiles
-global lastplayfile_item
 global midi
 global selectedGenre
 set selectedGenre [.playmanage.frm.left.list get $loc $loc]
 set filepath [lindex $playlistfiles $loc]
 set inhandle [open $filepath r]
-.playmanage.frm.left.list itemconfigure $loc -fg red
-if {$lastplayfile_item >= 0} {
-  .playmanage.frm.left.list itemconfigure $lastplayfile_item -fg black
-  }
-set lastplayfile_item $loc
 
 #puts $filepath
 set line ""
@@ -14363,6 +14379,13 @@ close $outhandle
 set cmd "exec [list $midi(path_abcm2ps)] -j 1 X.tmp"
 catch {eval $cmd} exec_output
 set exec_out $exec_out\n$exec_output$\n$cmd\n
+
+if {![file exist $midi(path_gs)]} {
+  set msg "You require ghostscript. Please indicate the\
+  path to ghostscript executable in the settings/supporting executables." 
+  tk_messageBox -message $msg -type ok
+  return
+  }
 set cmd "exec [list $midi(path_gs)] -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -q -sOutputFile=Out.pdf Out.ps"
 catch {eval $cmd} result
 append exec_out "\n$cmd\n$result"
@@ -16965,11 +16988,11 @@ set rootfolderbytes [string length $midi(rootfolder)]
 
 set hlp_genremanager "Genre Finder
 
-Click on any genre in the left frame. The right frame will list
-the file names associated with that genre. Clicking on one of the
-files in the right frame, will load all the files with that name.
-(There may be several different versions for that file if you
-are using the Lakh clean midi database.)
+Click on any genre in the left frame. The right frame will list\
+the file names associated with that genre. Clicking on one of the\
+files in the right frame, will load all the files with that name.\
+(There may be several different versions for that file if you\
+are using the Lakh clean midi database.
 
 The genres were determined manually by asking Google.\
 For the 10,000 or so distinct midi files this was quite labour intensive.\
@@ -16980,7 +17003,7 @@ rather than leaving the information blank. I am not an expert\
 in popular music so there may be errors in my judgement.
 
 The genre assignments are stored in a file called genre.tsv that should\
-be placed in the lakh_clean directory which comes with the midiexplorer\
+be placed in the lakh_clean directory. This file comes with the midiexplorer\
 source code. You have permission to edit this file.
 "
 
@@ -16991,6 +17014,7 @@ proc make_genre_manager {} {
   global selectedGenre
   global genrecount
   global gcounts
+  global lastGenreLoc
 
   set selectedGenre none
   set genrefile $midi(rootfolder)/genre.tsv
@@ -16998,7 +17022,7 @@ proc make_genre_manager {} {
     load_genre_database
     count_genres
     toplevel .genremanager
-    #positionWindow .genremanager
+    positionWindow .genremanager
     frame .genremanager.menus
     pack .genremanager.menus
     button .genremanager.menus.help -font $df -text help -command {show_message_page $hlp_genremanager word}
@@ -17024,6 +17048,11 @@ proc make_genre_manager {} {
     bind .genremanager.frm.left.list <Button> {
            set i  [.genremanager.frm.left.list nearest %y]
            genre_file_list [.genremanager.frm.left.list get $i]
+           .genremanager.frm.left.list itemconfigure $i -fg red
+           if {$lastGenreLoc >= 0} {
+              .genremanager.frm.left.list itemconfigure $lastGenreLoc -fg black
+              }
+           set lastGenreLoc $i
            }
 
     set f .genremanager.frm.right
@@ -17040,6 +17069,7 @@ proc make_genre_manager {} {
 
   }
   sortGenreList a
+  set lastGenreLoc -1
 }
 
 
