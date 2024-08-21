@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.75 2024-08-08 09:20" 
+set midiexplorer_version "MidiExplorer version 4.77 2024-08-21 15:20" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -813,6 +813,7 @@ proc midiInit {} {
 # chordtext
    set midi(openChords) 1
    set midi(showUnidentifiedChords) 0
+#
 }
 
 set genreUpdated 0
@@ -936,6 +937,8 @@ if {[file exists midiexplorer.ini]} {
        }
 }
 
+set midi(semitones) 0
+
 
 
 
@@ -1018,7 +1021,11 @@ $ww add cascade -label "recent" -font $df -menu $ww.recent
 $ww add command -label "playlist manager" -font $df -command make_playlist_manager
 
 $ww add command -label "genre finder" -font $df -command {
-    make_genre_manager
+    make_genre_manager genre.tsv
+    }
+
+$ww add command -label "top hits" -font $df -command {
+    make_genre_manager toppops.csv
     }
 
 $ww add command -label "quit" -font $df -command {
@@ -1320,6 +1327,11 @@ button .treebrowser.menuline2.random -text "random pick" -font $df -command {ran
 
 button .treebrowser.menuline2.restore -text "restore root" -font $df -command {restore_root_folder}
 
+label .treebrowser.menuline2.transpose -text "transpose by"  -font $df
+tooltip::tooltip .treebrowser.menuline2.transpose "Number of semitones to transpose. It is restored
+ to zero whenever you select another midi file."
+spinbox .treebrowser.menuline2.semi -from -5 -to 5 -increment 1  -font $df -width 4 -textvariable midi(semitones) 
+
 tooltip::tooltip .treebrowser.menuline2.jump "If you know the name of a subfolder
 in this directory, it may be more practical
 to jump to this location rather than scrolling
@@ -1412,7 +1424,7 @@ is still exposed when you exit midiexplorer.
 # pack everything and set binding to quick keys
 set ww $w.menuline
 pack $ww.file  $ww.view $ww.play $ww.display $ww.rhythm $ww.pitch  $ww.database $ww.abc $ww.settings $ww.internals $ww.help -anchor w -side left
-pack .treebrowser.menuline2.jump .treebrowser.menuline2.name .treebrowser.menuline2.random .treebrowser.menuline2.restore -side left
+pack .treebrowser.menuline2.jump .treebrowser.menuline2.name .treebrowser.menuline2.random .treebrowser.menuline2.restore .treebrowser.menuline2.transpose .treebrowser.menuline2.semi -side left
 pack .treebrowser.menuline -anchor w
 pack .treebrowser.menuline2 -anchor w
 
@@ -1687,12 +1699,20 @@ proc rglob {dirlist globlist} {
 proc populatedir {tree root} {
    global font rootnode
    global midi
+   global filegenre
+   global genre_db
    $tree tag configure fnt -font $font
    $tree delete [$tree children {}]
    set rootnode [$tree insert {} end -text $root -values [list $root directory] -tag fnt]
    populateTree $tree $rootnode
    set genrefile $midi(rootfolder)/genre.tsv
-   if {[file exist $genrefile]} {load_genre_database}
+   # we need to copy genre_db to filegenre so it is not
+   # overwritten by the genre_manager when we load the popular hits
+   if {[file exist $genrefile]} {load_genre_database genre.tsv 0}
+     foreach filename [array names genre_db] {
+        set filegenre($filename) $genre_db($filename)
+        #puts "filegenre($filename) = $filegenre($filename)"
+        }
    }
 
 
@@ -2060,12 +2080,10 @@ proc interpretMidi {} {
 
 
   array unset miditxt 
-  #array unset track2channel
   array unset channel2program
   array unset track2program
   array unset programmod
 
-  if {![info exist timesig]} {set timesig 4/4}
 
   set genre [search_genre_database]
   label .info.input -text $midi(midifilein) 
@@ -2085,7 +2103,7 @@ proc interpretMidi {} {
   set keyInfo  "$keysig [sftotext $sf]"
   }
   if {![info exist tempo]} {set tempo 120}
-  label .info.tempo -text "$tempo beats/minute" -font $df
+  label .info.tempo -text "$tempo beats/minute  " -font $df
   label .info.size -text "$lastbeat beats"  -font $df
   button .info.keysig -text "key: $keyInfo" -font $df -command show_rmaj
   label .info.timesig -text "time signature: $timesig" -font $df
@@ -2259,6 +2277,7 @@ proc selected_midi {} {
  set sel [.treebrowser.tree selection]
  set c [.treebrowser.tree item $sel -values]
  set f [lindex $c 0]
+ set midi(semitones) 0
  #puts "selected midi $sel $f"
  set extension [string tolower [file extension $f]]
  if {$extension == ".mid"} {  
@@ -2417,6 +2436,7 @@ set ntempos 0
 set rmin 0
 set rmaj 0
 
+set timesig 4/4
 if {[info exist tempo]} {unset tempo}
 #array unset progr
 set rootfolder $midi(rootfolder)
@@ -2446,7 +2466,6 @@ foreach line [split $midi_info '\n'] {
             }
     tempo {set tempo [lindex $line 1]}
     tempocmds {set ntempos [lindex $line 1]}
-    tsignature {set tsignature [lindex $line 1]}
     key {set keysig [lindex $line 1]
          set keysf [lindex $line 2]
          set keyconfidence [lindex $line 3]
@@ -2469,8 +2488,8 @@ foreach line [split $midi_info '\n'] {
     progsact {set cprogsact [lrange $line 1 end]}
     chanvol {set chanvol [lrange $line 1 end]}
     timesig {set value [lindex $line 1]
-             if {![info exist timesig]} {set timesig $value}
              if {$timesig != $value} {incr ntimesig}
+             set timesig $value
              }
     rmin {set rmin [lrange $line 1 end]}
     rmaj {set rmaj [lrange $line 1 end]}
@@ -4424,8 +4443,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
     set result [getVersionNumber $midi(path_midicopy)]
     set err [scan $result "%f" ver]
     #puts $result
-    if {$err == 0 || $ver < 1.39} {
-         appendInfoError "You need midicopy.exe version 1.39 or higher."
+    if {$err == 0 || $ver < 1.40} {
+         appendInfoError "You need midicopy.exe version 1.40 or higher."
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
@@ -6061,6 +6080,7 @@ proc chordgram_Button1Release {} {
     if {[winfo exist .midistructure]} {
           chordgram_migrate_to_midistruct $co  
       }
+    updateWindows_for_chordgram
    }
 
 proc chordgram_limits {co} {
@@ -6311,7 +6331,12 @@ proc notegram_plot {source} {
      button .notegram.head.play -text play -font $df -command {playExposed notegram}
      button .notegram.head.zoom -text zoom -command zoom_notegram -font $df
      button .notegram.head.unzoom -text unzoom -command unzoom_notegram -font $df
-     pack  .notegram.head.2 .notegram.head.play .notegram.head.zoom .notegram.head.unzoom -side left -anchor w
+     button .notegram.head.phist -text "pitch histogram" -font $df\
+           -command {midi_statistics pitch notegram
+                     show_note_distribution
+                     }
+
+     pack  .notegram.head.2 .notegram.head.play .notegram.head.zoom .notegram.head.unzoom .notegram.head.phist -side left -anchor w
      pack  .notegram.head -side top -anchor w 
      set c .notegram.can
      canvas $c -width $pianorollwidth -height 250 -border 3 -relief sunken
@@ -6345,6 +6370,7 @@ proc notegram_Button1Release {} {
     if {[winfo exist .midistructure]} {
           notegram_migrate_to_midistruct $co  
       }
+    updateWindows_for_notegram 
     }
 
 proc notegram_ClearMark {} {
@@ -7567,6 +7593,8 @@ proc midi_to_midi {sel} {
     global midispeed
     global ppqn
     
+    puts "midi_to_midi $sel"
+
     # We first delete the old file in case winamp is still playing it.
     set cmd "file delete -force -- $midi(outfilename)"
     catch {eval $cmd} done
@@ -7618,6 +7646,8 @@ proc midi_to_midi {sel} {
     set cmd "exec [list $midi(path_midicopy)]  $selvoice  -from $begin\
                 -to $end" 
     if {$midispeed != 1.00} {lappend cmd " -speed $midispeed"}
+
+
     lappend cmd  $midi(midifilein) $midi(outfilename)
 
     #puts "cmd = $cmd"
@@ -7745,6 +7775,11 @@ if {$midi(midishow_sep) == "track"} {
          set option [string range $option 0 end-1]
   }
 if {$midispeed != 1.00} {append option " -speed $midispeed"}
+
+if {$midi(semitones) != 0} {
+   append option " -transpose $midi(semitones) "
+   }   
+
 if {$limits != "none"} {
 	append option " -frombeat $fbeat -tobeat $tbeat "
         }
@@ -10056,6 +10091,14 @@ if {[winfo exist .drumanalysis]} {
    }
 }
   
+
+proc updateWindows_for_notegram {} {
+  if {[winfo exists .pitchclass]} {
+            midi_statistics pitch notegram
+            show_note_distribution
+            }
+  }
+
 proc updateWindows_for_tableau {} {
   if {[winfo exists .pitchclass]} {
             midi_statistics pitch tableau
@@ -10092,6 +10135,19 @@ proc updateWindows_for_tableau {} {
 if {[winfo exists .chordview]} {
    chordtext_window tableau
    }
+}
+
+proc updateWindows_for_chordgram {} {
+  if {[winfo exists .chordstats]} {
+            chord_histogram chordgram
+            }
+  if {[winfo exists .chordview]} {
+            chordtext_window chordgram
+            }
+  if {[winfo exists .pitchclass]} {
+           midi_statistics pitch chordgram
+           show_note_distribution
+           }
 }
 
 proc show_note_distribution {} {
@@ -11328,12 +11384,6 @@ radiobutton $w.matchcriterion.cheb -text "chebyshev distance" -font $df\
 pack $w.matchcriterion.cosine $w.matchcriterion.mse  $w.matchcriterion.manhat $w.matchcriterion.cheb -side left
 grid $w.matchcriterion -columnspan 4 -sticky w
 
-checkbutton $w.checkname -variable searchstate(cname) -command searchname
-label $w.labname -text "string in file name" -font $df 
-entry $w.name -textvariable midi(sname) -width 16 -font $df -state disabled
-grid $w.checkname $w.labname $w.name -sticky nsew
-
-
 checkbutton $w.checkprogs -variable searchstate(checkprogs) -command searchprogs
 button $w.labprogs -text "contains programs" -font $df -command programSelector
 entry $w.progsin -textvariable midi(proglist) -font $df -state disabled
@@ -11408,6 +11458,12 @@ grid $w.checkkeysignature $w.choosekey $w.keysignature
 checkbutton $w.checklyrics -variable searchstate(lyrics)
 label $w.haslyrics -text "has lyrics" -font $df
 grid $w.checklyrics $w.haslyrics
+
+checkbutton $w.checkname -variable searchstate(cname) -command searchname
+label $w.labname -text "string in file name" -font $df 
+entry $w.name -textvariable midi(sname) -width 16 -font $df -state disabled
+grid $w.checkname $w.labname $w.name -sticky nsew
+
 
 set state {{cname sname} {ctempo tempo} {checkprogs proglist} {cbends nbends} {cndrums ndrums} {cpcol pcolthr} {cpitch pitchthr} {cpitche pitche}}
 
@@ -12630,7 +12686,8 @@ return $midiname
 
 
 proc search_genre_database {} {
-global genre_db
+#global genre_db
+global filegenre
 global midi
 set rootfolder $midi(rootfolder)
 set rootfolderbytes [string length $rootfolder]
@@ -12638,15 +12695,15 @@ incr rootfolderbytes
 set midiname  [string range $midi(midifilein) $rootfolderbytes end]
 set midiname [lakh_core_filename $midiname]
 set genre ""
-if {[info exist genre_db($midiname)]} {
-   set genre $genre_db($midiname)
+if {[info exist filegenre($midiname)]} {
+   set genre $filegenre($midiname)
    } else {
    set genre Unknown
-   set genre_db($midiname) $genre
+   set filegenre($midiname) $genre
    }
 if {$genre == "0"} {return ""}
 if {$genre == "Unknown"} {return ""}
-return $genre_db($midiname)
+return $filegenre($midiname)
 }
 
 
@@ -15595,7 +15652,7 @@ proc show_data_page {text wrapmode clean} {
 
 set abcmidilist {path_abc2midi 4.85\
             path_midi2abc 3.59\
-            path_midicopy 1.39\
+            path_midicopy 1.40\
 	    path_midistats 0.96\
             path_abcm2ps 8.14.6}
 
@@ -16603,7 +16660,7 @@ focus .notebook.ent
 proc add_note {} {
 global midi
 global notedata
-set outhandle [open save/melody.txt a]
+set outhandle [open save/toppops.txt a]
 set front [string length $midi(rootfolder)]
 incr front
 set filename [string range $midi(midifilein) $front end]
@@ -16857,16 +16914,20 @@ set genre_db($midiname) $genredata
 set genreUpdated 1
 }
 
-proc load_genre_database {} {
+proc load_genre_database {csvfile save} {
 global genre_db
 global midi
-set genrefile $midi(rootfolder)/genre.tsv
+global databasefiles
+#set genrefile $midi(rootfolder)/genre.tsv
+set genrefile $midi(rootfolder)/$csvfile
 #puts "genrefile = $genrefile"
 if {![file exist $genrefile]} {
-   appendInfoError "cannot find $genrefile"
+   appendInfoError "cannot find $genrefile. If you are using the lakh clean database,\nyou can find this file in the midiexplorer source file."
    return
    }
 set i 0
+if {[info exist genre_db]} {unset genre_db}
+set databasefiles [list]
 set inhandle [open $genrefile]
 while {![eof $inhandle]} {
   gets $inhandle line
@@ -16874,6 +16935,7 @@ while {![eof $inhandle]} {
   set f [lindex $data 0]
   set g [lindex $data 1]
   set genre_db($f) $g 
+  if {$save} {lappend databasefiles  $f}
   #if {$f == ""} {puts "blank line $i"}
   incr i
   }
@@ -16884,7 +16946,9 @@ close $inhandle
 proc count_genres {} {
 global genre_db
 global genrecount
+array unset genrecount
 foreach {f g} [array get genre_db] {
+  if {[string length $g] < 2} continue
   if {![info exist genrecount($g)]} {
    set genrecount($g) 1} else {
    set genrecount($g) [expr $genrecount($g) + 1]
@@ -16925,7 +16989,6 @@ global gcounts
 set countlist [array get genrecount]
 set gcounts {}
 foreach {item0 item1} $countlist {
-  #puts "$item0 $item1"
   set elem [list $item0 $item1] 
   lappend gcounts $elem
   }
@@ -16945,11 +17008,12 @@ foreach elem $gcounts {
 
 proc genre_file_list {genre} {
 global genre_db
+global databasefiles
 .genremanager.frm.right.list  delete 0 end
-foreach {f g} [array get genre_db] {
-  if {$g == $genre} {
-    .genremanager.frm.right.list insert end $f
-    }
+foreach f $databasefiles {
+   if {$genre_db($f) == $genre} {
+     .genremanager.frm.right.list insert end $f
+     }
   }
 }
 
@@ -17008,7 +17072,8 @@ source code. You have permission to edit this file.
 "
 
 
-proc make_genre_manager {} {
+# The genre_manager is also used for listing the top hits.
+proc make_genre_manager {csvfile} {
   global midi
   global df
   global selectedGenre
@@ -17017,10 +17082,10 @@ proc make_genre_manager {} {
   global lastGenreLoc
 
   set selectedGenre none
-  set genrefile $midi(rootfolder)/genre.tsv
+  set genrefile $csvfile
+  load_genre_database $genrefile 1
+  count_genres
   if {![winfo exist .genremanager]} {
-    load_genre_database
-    count_genres
     toplevel .genremanager
     positionWindow .genremanager
     frame .genremanager.menus
@@ -17058,7 +17123,7 @@ proc make_genre_manager {} {
     set f .genremanager.frm.right
     frame $f
     pack $f -side left
-    listbox $f.list -yscrollcommand {.genremanager.frm.right.ysbar set} -selectmode single -font $df -width 30
+    listbox $f.list -yscrollcommand {.genremanager.frm.right.ysbar set} -selectmode single -font $df -width 50
     scrollbar $f.ysbar -orient vertical -command {.genremanager.frm.right.list yview}
     pack $f.ysbar -side right -fill y -in $f
     pack $f.list -fill both -expand y -in $f
