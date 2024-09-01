@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.77 2024-08-21 15:20" 
+set midiexplorer_version "MidiExplorer version 4.78 2024-08-26 13:10" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -814,6 +814,7 @@ proc midiInit {} {
    set midi(openChords) 1
    set midi(showUnidentifiedChords) 0
 #
+   set midi(use_js) 1
 }
 
 set genreUpdated 0
@@ -3994,6 +3995,11 @@ entry $w.edent -textvariable midi(path_editor) -font $df -width 64
 grid $w.edbut -row 5 -column 1
 grid $w.edent -row 5 -column 2
 bind $w.edent <Return> {focus .support.header}
+
+checkbutton $w.display -variable midi(use_js) 
+label $w.displaylabel -font $df -text "use Jef Moine's javascript instead of abcm2ps and gs"
+grid $w.display -row 6 -column 1  
+grid $w.displaylabel  -row 6 -column 2 -sticky nw 
 }
 
 
@@ -14213,6 +14219,7 @@ if {![winfo exist .abcoutput]} {
   button $f.1.display -text display -font $df -command display_abc_file
   button $f.1.displaysvg -text "web display" -font $df -command display_abc_file_using_abc2svg
   tooltip::tooltip $f.1.display  "Convert the abc notation to a\nPostScript file and display."
+  tooltip::tooltip $f.1.displaysvg  "Use Jef's JavaScript to render the abc file."
   button $f.1.play -text play -font $df -command play_abc_file
   tooltip::tooltip $f.1.play  "Convert the abc notation to\na midi file and play."
   button $f.1.save -text save -font $df -command save_abc_file
@@ -14422,6 +14429,15 @@ proc display_abc_output {result} {
 global midi
 global exec_out
 set ext ".abc"
+if {$midi(use_js)} {
+   set abcdata $result
+   set outhandle [open X.tmp w]
+   puts $outhandle $abcdata
+   close $outhandle
+   displayX.tmp_using_abc2svg
+   return
+   } 
+   
 if {![file exist $midi(path_abcm2ps)]} {
   set msg "To use this function you require the executable abcm2ps. Please\
   indicate the path to this file in settings/supporting executables."
@@ -14475,6 +14491,15 @@ set cmd "exec [list $midi(browser)] file:[file join [pwd] Out.pdf] &"
 append exec_out \n$cmd
 catch {eval $cmd} result
 append exec_out \n$result
+}
+
+proc displayX.tmp_using_abc2svg {} {
+global midi
+global exec_out
+copyXtmptohtml 
+set cmd "exec [list $midi(browser)] file:[file join [pwd] $midi(outhtml)] &"
+catch {eval $cmd} result
+set exec_out "$exec_out\n$cmd\n$result"
 }
 
 proc display_abc_file_using_abc2svg {} {
@@ -17071,6 +17096,25 @@ be placed in the lakh_clean directory. This file comes with the midiexplorer\
 source code. You have permission to edit this file.
 "
 
+set hlp_toppops "Popular Hits
+
+The YouTube channel
+https://www.youtube.com/@TopCultureTV\
+contains videos of the most popular songs for each month starting\
+from the 1960's. These songs are also listed on the the\
+Spotify playlists associated with the above videos.\
+Most of the midi files associated with these popular songs can\
+be found in the Lakh Clean dataset.\
+This function displays a window linking these popular songs\
+with the midi files.
+
+The program uses the same frame work as the find genre feature.\
+To work, the program must find the file toppops.csv in\
+the Lakh Clean directory. This file comes with the midiexplorer\
+source code zip file. 
+
+"
+
 
 # The genre_manager is also used for listing the top hits.
 proc make_genre_manager {csvfile} {
@@ -17135,6 +17179,12 @@ proc make_genre_manager {csvfile} {
   }
   sortGenreList a
   set lastGenreLoc -1
+  if {$genrefile == "toppops.csv"} {
+    .genremanager.menus.help configure -command {show_message_page $hlp_toppops word}
+    } else {
+    .genremanager.menus.help configure -command {show_message_page $hlp_genremanager word}
+   }
+
 }
 
 
