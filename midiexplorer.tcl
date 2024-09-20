@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.78 2024-08-26 13:10" 
+set midiexplorer_version "MidiExplorer version 4.79 2024-09-18 16:40" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -2106,17 +2106,17 @@ proc interpretMidi {} {
   if {![info exist tempo]} {set tempo 120}
   label .info.tempo -text "$tempo beats/minute  " -font $df
   label .info.size -text "$lastbeat beats"  -font $df
-  button .info.keysig -text "key: $keyInfo" -font $df -command show_rmaj
+  button .info.keysig -text "key: $keyInfo" -font $df -relief ridge -command show_rmaj
   label .info.timesig -text "time signature: $timesig" -font $df
   label .info.ntimesig -text "$ntimesig time signatures" -font $df -fg darkblue
   label .info.nkeysig -text "$nkeysig key signature " -font $df -fg darkblue
   label .info.lyrics -text "Has lyrics" -fg darkblue -font $df
-  label .info.notQuantized -text "Not quantized" -fg darkblue -font $df
+  button .info.notQuantized -text "Not quantized" -fg darkblue -font $df -relief ridge -command {beat_graph none}
   label .info.triplets -text "Has triplets" -fg darkblue -font $df
   label .info.qnotes -text "Mainly quarter notes" -fg darkblue -font $df
-  label .info.dithered -text "Dithered quantization" -fg darkblue -font $df
-  label .info.cleanq -text "Clean quantization" -fg darkblue -font $df
-  label .info.progchanges -text "$programchanges Program changes" -fg darkblue -font $df
+  button .info.dithered -text "Dithered quantization" -fg darkblue -font $df -relief ridge -command {beat_graph none}
+  button .info.cleanq -text "Clean quantization" -fg darkblue -font $df -relief ridge -command {beat_graph none}
+  button .info.progchanges -text "$programchanges Program changes" -fg darkblue -font $df -relief ridge -command midi_structure_display
   label .info.tempochanges -text "$ntempos Tempo changes" -fg darkblue -font $df
   label .info.error -text $midierror -fg red -font $df
 
@@ -5023,6 +5023,25 @@ set hlp_pianoroll_actions "The action menu provides miscellaneous\
         
 
 #         beat graph
+
+set hlp_beat_graph "   Beat Graph
+
+This graph plots all the note onset times as a fraction of a beat\
+versus the beat number of the whole midi file (or selected tracks/channels\
+of the midi file) If the midi file is perfectly quantized in units of\
+beats, half-beats and etc... then you should see horizontal lines corresponding
+to the quarter notes, eighth notes, sixteenth notes and maybe triplets. If the\
+file is quantized with some dithering (noise) then the lines will\
+show some scatter. If there is no quantization, then there will be\
+a random distribution of dots.
+
+Clicking on the onset button will show a histogram of these note\
+note onset time fractions.
+"
+
+
+
+
 proc beat_graph {source} {
     global scanwidth scanheight
     global xlbx ytbx xrbx ybbx
@@ -5031,6 +5050,7 @@ proc beat_graph {source} {
     global fbeat
     global tbeat
     global compactMidifile
+    global df
     
     
     set tsel [count_selected_midi_tracks]
@@ -5043,11 +5063,19 @@ proc beat_graph {source} {
     set pianoresult [split $pianoresult \n]
     
     set bgraph .beatgraph.c
+    set header .beatgraph.h
     if {[winfo exists .beatgraph] == 0} {
         toplevel .beatgraph
         positionWindow .beatgraph
-        pack [canvas .beatgraph.c -width $scanwidth -height $scanheight]\
-                -expand yes -fill both
+        frame $header
+        button $header.hlp -text help -font $df -command {show_message_page $hlp_beat_graph word}
+        button $header.onset -text onset -font $df\
+          -command {midi_statistics onset none
+                   plotmidi_onset_pdf
+                   }
+        pack $header.onset $header.hlp -side left -anchor e
+        canvas .beatgraph.c -width $scanwidth -height $scanheight
+        pack $header $bgraph -side top
     } else {.beatgraph.c delete all}
      
     # white or black characters
@@ -5081,7 +5109,7 @@ proc beat_graph {source} {
     }
     set ypos [expr $ytbx + 15]
     set xpos [expr $xlbx + 10]
-    $bgraph create text $xpos $ypos -text $compactMidifile  -anchor w
+    $bgraph create text $xpos $ypos -text $compactMidifile  -anchor w -font $df
 }
 
 
@@ -6324,6 +6352,18 @@ close $outhandle
 tk_messageBox -message "saved in midiexplorer_home/chordgram.txt"  -type ok
 }
 
+set hlp_notegram "Notegram
+
+For every beat, the pitch classes of all the active notes are\
+plotted. The plot is useful for exposing any key changes.\
+The plot is sensitive to the selected tracks or channels in\
+the track info window.
+
+To zoom, sweep out a region of interest and then click on the\
+zoom button. The unzoom button restores the plot to the entire\
+midi file. 
+
+"
 
 proc notegram_plot {source} {
    global pianorollwidth
@@ -6341,8 +6381,9 @@ proc notegram_plot {source} {
            -command {midi_statistics pitch notegram
                      show_note_distribution
                      }
+     button .notegram.head.hlp -text help -font $df -command {show_message_page $hlp_notegram word}
 
-     pack  .notegram.head.2 .notegram.head.play .notegram.head.zoom .notegram.head.unzoom .notegram.head.phist -side left -anchor w
+     pack  .notegram.head.2 .notegram.head.play .notegram.head.zoom .notegram.head.unzoom .notegram.head.phist .notegram.head.hlp -side left -anchor w
      pack  .notegram.head -side top -anchor w 
      set c .notegram.can
      canvas $c -width $pianorollwidth -height 250 -border 3 -relief sunken
@@ -10182,14 +10223,21 @@ to that corresponding to the maximum value.\
 proc show_rmaj {} {
 global rmin
 global rmaj
+global df
 set sharpflatnotes  {C C# D Eb E F F# G G# A Bb B}
 if {$rmaj == 0} return
 set rmajplot .rminmaj.c
 if {![winfo exist .rminmaj]} {
   toplevel .rminmaj
   positionWindow .rminmaj
-  button .rminmaj.hlp -text help -command {show_message_page $hlp_rminmaj word}
-  pack .rminmaj.hlp -side top -anchor e
+  frame .rminmaj.frm
+  button .rminmaj.frm.pitchclass -text "pitch class" -font $df \
+      -command {midi_statistics pitch none
+                show_note_distribution
+               }
+  button .rminmaj.frm.hlp -text help -font $df -command {show_message_page $hlp_rminmaj word}
+  pack .rminmaj.frm.pitchclass .rminmaj.frm.hlp -side left -anchor e
+  pack .rminmaj.frm -side top -anchor e
   pack [canvas $rmajplot -width 425 -height 165]
   } else {
   $rmajplot delete all}
@@ -10315,8 +10363,13 @@ proc plot_pitch_class_histogram {} {
         toplevel .pitchclass
         positionWindow .pitchclass
         
-        checkbutton .pitchclass.circle -text "circle of fifths" -variable midi(pitchclassfifths) -font $df -command plot_pitch_class_histogram
-        pack .pitchclass.circle
+        frame .pitchclass.frm
+        checkbutton .pitchclass.frm.circle -text "circle of fifths" -variable midi(pitchclassfifths) -font $df -command plot_pitch_class_histogram
+        button .pitchclass.frm.notegram -text notegram -font $df -command {notegram_plot none}
+        button .pitchclass.frm.chordgram -text chordgram -font $df -command {chordgram_plot none}
+        button .pitchclass.frm.keyfinder -text keyfinder -font $df -command show_rmaj
+        pack .pitchclass.frm.circle .pitchclass.frm.notegram .pitchclass.frm.chordgram .pitchclass.frm.keyfinder -side left
+        pack .pitchclass.frm
         pack [canvas $pitchc -width 425 -height 125]\
                 -expand yes -fill both
     } else {.pitchclass.c delete all}
