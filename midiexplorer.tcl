@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.79 2024-09-18 16:40" 
+set midiexplorer_version "MidiExplorer version 4.80 2024-10-02 16:50" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -1836,6 +1836,31 @@ set nodes [$w.tree children [$w.tree children {}]]
 set nnodes [llength $nodes]
 set pick [expr int(rand()*$nnodes)]
 set node [lindex $nodes $pick]
+set nodetype  [lindex [$w.tree item $node -values] 1]
+#puts "nodetype = $nodetype"
+populateTree $w.tree $node
+
+if {$nodetype == "directory"} {
+  set nodes [$w.tree children $node]
+  set nnodes [llength $nodes]
+  set pick [expr int(rand()*$nnodes)]
+  set node [lindex $nodes $pick]
+  set nodetype  [lindex [$w.tree item $node -values] 1]
+#puts "nodetype = $nodetype"
+  populateTree $w.tree $node
+}
+
+if {$nodetype == "directory"} {
+  set nodes [$w.tree children $node]
+  set nnodes [llength $nodes]
+  set pick [expr int(rand()*$nnodes)]
+  set node [lindex $nodes $pick]
+  set nodetype  [lindex [$w.tree item $node -values] 1]
+  #puts "nodetype = $nodetype"
+  populateTree $w.tree $node
+  }
+$w.tree item $node -open true
+$w.tree selection set $node
 $w.tree see $node
 }
 
