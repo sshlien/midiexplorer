@@ -42,7 +42,7 @@ proc rglob { basedir pattern } {
   return $fileList
   }
 
-set inFolder "/home/seymour/clean_midi"
+set inFolder "/home/seymour/clean midi"
 #inFolderLength is used for returning the file path relative
 #to the root folder inFolder.
 set inFolderLength  [string length $inFolder]
@@ -578,6 +578,70 @@ if {[string first "exited" $output] > 0 ||
 close $outhandle
 }
 
+global patcount
+
+proc count_drum_grooves {} {
+global patcount
+global midifileList
+set k 0
+foreach midifile $midifileList {
+  incr k
+  if {$k > 1000} break
+  set drumpats [get_midi_drum_pat $midifile]
+#puts "drumpats = $drumpats"
+  set drumpats [split $drumpats]
+  set j 0
+  set pat ""
+  foreach i $drumpats {
+    incr j
+    if {$j == 4} {
+       append pat $i
+       #puts "pat = $pat"
+       if {[info exist patcount($pat)]} {
+          set patcount($pat) [expr $patcount($pat) + 1]
+       } else {
+          set patcount($pat) 0
+       }
+     set j 0
+     set pat ""
+    } else {
+    append pat $i:
+      }
+  }
+}
+output_patcount
+}
+
+proc output_patcount {} {
+global patcount
+set patlist [array names patcount]
+set patlist [lsort $patlist]
+foreach pat $patlist {
+  if {$patcount($pat) > 400} {puts "$pat\t $patcount($pat)"}
+  }
+}
+
+proc get_midi_drum_pat {midifile} {
+ global midi exec_out
+ global midilength
+ global midifileList
+ set midilength 0
+ #puts "midifile = $midifile"
+ set fileexist [file exist $midifile]
+ #puts "get_midi_info_for: midifilein = $midi(midifilein) filexist = $fileexist"
+ if {$fileexist} {
+   set exec_options "[list $midifile ] -ppat"
+   set cmd "exec ../midistats [list $midifile] -ppat"
+   catch {eval $cmd} midi_info
+   set exec_out $cmd\n$midi_info
+   #update_console_page
+   set pats [lindex [split $midi_info \n] 2]
+   return $pats
+   } else {
+   set msg "Unable to find file $midifile" 
+   puts $msg
+   }
+}
 
 
 
@@ -590,5 +654,7 @@ close $outhandle
 #make_pitchanalysis $inFolderLength
 #find_melody_labels $inFolderLength
 #extract_melody_parameters
-extract_melody_step_parameters 
+#extract_melody_step_parameters 
 #gather_derived_stats $inFolderLength
+count_drum_grooves
+

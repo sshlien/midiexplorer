@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.80 2024-10-02 16:50" 
+set midiexplorer_version "MidiExplorer version 4.81 2024-10-23 11:00" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -88,6 +88,7 @@ set briefconsole 1
 #   Part 28.0 programcolor
 #   Part 29.0 genre_db support
 #   Part 30.0 miditable
+#   Part 31.0 drum grooves
 #
 
 set welcome "Welcome to $midiexplorer_version. This application
@@ -697,6 +698,7 @@ proc midiInit {} {
     set midi(.ftable) ""
     set midi(.rminmaj) ""
     set midi(.genremanager) ""
+    set midi(.drumgroove) ""
 
     
     set midi(player1) ""
@@ -815,6 +817,8 @@ proc midiInit {} {
    set midi(showUnidentifiedChords) 0
 #
    set midi(use_js) 1
+#
+   set midi(groovelength) 4
 }
 
 set genreUpdated 0
@@ -1242,6 +1246,10 @@ menu $ww -tearoff 0
             -command {plot_velocity_map none}
         $ww add command  -label "beat graph" -font $df \
             -command {beat_graph none}
+        $ww add command  -label "drum analysis" -font $df \
+            -command {analyze_drum_patterns 0}
+        $ww add command  -label "drum grooves" -font $df \
+            -command {drumgroove_window}
 
 tooltip::tooltip $w.menuline.rhythm "Computes the and plots the distribution
 of various rhythm related parameters of the selected midi file."
@@ -1468,6 +1476,7 @@ Control-s\tmidi structre
 Control-t\tdetailed tableau
 Control-u\tduckduckgo search
 Control-w\tplay midi file
+Alt-d\tget_midi_drum_pat
 "
 
 
@@ -3188,7 +3197,6 @@ if {![file exist $midi(path_midi2abc)]} {
 readMidiFileHeader $midi(midifilein); # read midi header
 set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
 catch {eval $cmd} pianoresult
-#puts "midifilein = $midi(midifilein)"
 set nrec [llength $pianoresult]
 set midilength [lindex $pianoresult [expr $nrec -1]]
 if {![string is integer $midilength]} {
@@ -3534,9 +3542,11 @@ return $pitchcodelist
 proc simple_tableau {} {
 global midi
 global df
+global cleanData
 
 set permut5th {0 7 2 9 4 11 6 1 8 3 10 5}
 loadMidiFile
+set cleanData 1
 noteRibbon
 .ribbon.frm.can delete all
 
@@ -3671,10 +3681,12 @@ global lastTableau
 global tableauHeight40
 global midi
 global exec_out
+global cleanData
 
 set exec_out "detailed_tableau"
 
 loadMidiFile
+set cleanData 1
 set lastTableau "pitch"
 update_console_page
 
@@ -3828,7 +3840,6 @@ return [list $fbeat $tbeat]
 
 # Part 24.0           Console Page Support Functions
 
-#source warning.tcl
 
 proc update_console_page {} {
     global exec_out
@@ -5664,6 +5675,7 @@ proc determineChordSequence {source miditextOutput} {
     #puts "my_make_and_display_chords: nbeats = $nbeats" 
     
     loadMidiFile
+    set cleanData 1
 
     if {$miditextOutput} {
       set v .chordview.2.txt
@@ -8862,7 +8874,7 @@ proc get_drum_patterns {simple} {
 #  set start and stop onto a beat boundary.
    set bstart [expr $start/$ppqn]
    set bstop [expr $stop/$ppqn]
-#   puts "in beats $bstart $bstop"
+   #puts "get_drum_patterns in beats $bstart $bstop"
    set start [expr $bstart*$ppqn]
    set stop [expr $bstop*$ppqn]
    set mlength [expr $stop - $start]
@@ -9062,10 +9074,14 @@ global midilength
 global mlength
 global fullbarseqstring
 global fullDrumStats
+global cleanData
 set d .drumanalysis.blk.ctl
 set graph .drumanalysis.blk.c
 set t .drumanalysis.t
+loadMidiFile
+set cleanData 1
 set drumpat [get_drum_patterns $simple] 
+#puts "analyze_drum_patterns drumpat = $drumpat"
 
 if {[winfo exists $d] == 0} {
   setup_i2l
@@ -9169,7 +9185,7 @@ $d.9a configure -text $barentropy -command "plot_tatum_histogram $graph [list $b
 proc analyzeDrumPatternsFor {drum period} {
 global drumpatches
 set b .drummap.txt
- set drumname [lindex [lindex $drumpatches [expr $drum-35] 1]]
+set drumname [lindex [lindex $drumpatches [expr $drum-35] 1]]
 set drumpat [get_drum_patterns 0] 
 #write_drumpat $drumpat 
 set sdrumpat [extract_drumpat_for $drum $drumpat]
@@ -9245,7 +9261,6 @@ proc graph_drum_periodicity {drumpat graph} {
 set curve {}
 set peaks {}
 set maxy [bit_correlate $drumpat 0]
-#puts $maxy
 set maxy [expr double($maxy)]
 for {set i 0} {$i < 65} {incr i} {
  set y [expr [bit_correlate $drumpat $i] / $maxy]
@@ -10147,6 +10162,8 @@ if {[winfo exists .ftable]} {
 if {[winfo exists .rminmaj]} {
    show_rmaj
    }
+if {[winfo exists .drumgroove]} {drumgroove_window}
+if {[winfo exists .drumanalysis]} {analyze_drum_patterns 0}   
 }
 
 proc update_drumroll_pdfs {} {
@@ -13200,7 +13217,7 @@ proc getGeometryOfAllToplevels {} {
                ".midiplayer" ".tmpfile" ".cfgmidi2abc" ".pgram" ".keystrip"
                ".keypitchclass" ".channel9" ".ribbon" ".ptableau"
                ".touchplot" ".effect" ".csettings" ".drummap" ".programcolor"
-               ".tinfo" ".ftable" ".rminmaj" ".genremanager"}
+               ".tinfo" ".ftable" ".rminmaj" ".genremanager" ".drumgroove"}
   foreach top $toplevellist {
     if {[winfo exist $top]} {
       set g [wm geometry $top]"
@@ -13240,8 +13257,10 @@ proc get_note_patterns {} {
    global midilength
    global beatsperbar
    global notefragments
+   global cleanData
 
    loadMidiFile
+   set cleanData 1
    set ppqn4 [expr $ppqn/4]
    set jitter [expr $ppqn4/2]
    set notefragments [expr 5 + $midilength/$ppqn4]
@@ -17512,6 +17531,230 @@ puts $midistats_output
 #trace add execution compute_pianoroll leave "cmdstr"
 
 restore_root_folder 
+
+
+#   Part 30.0 drum grooves
+
+set hlp_drumgroove "Drum Grooves
+
+Many percussion tracks contain the bass drum, the snare drum\
+and cymbols of some type. These instruments play several repeating\
+patterns consisting of 4 or more beats.  Each pattern is called\
+a groove. See the pdf file\n\n\
+ https://www.dcpdrums.co.uk/wp-content/uploads/2018/04/Drum-Beats-and-Grooves.pdf\n\n\
+for some of these grooves.\n\n\
+Unfortunately, there are many more percussion grooves that appear\
+in the midi files.\
+In order to identify these distinct grooves, we encode them in a particular\
+fashion so that they can be represented by a short character string.\
+The bass drum and snare drum are identified their onset times are quantized\
+times to units of sixteenth note length or one quarter of a beat.\
+The position of these times are encoded into a binary 4-bit half byte.\
+Thus the binary number 1000 denotes a drum hit occuring in the beginning\
+of a beat, and  0010 denotes a drum hit in the middle of a beat.\
+This is done for both the bass drum and snare drum. The two half bytes\
+are then combined into one byte where the bass drum occupies the higher\
+half byte. A groove is formed from 4 bytes and inserting a colon\
+between bytes to make it easier to interpret. The cymbol plays an\
+important role, but it is ignored since it usually just marks time\
+with a few exceptions.\n\n\
+By default the program assumes that a groove is 4 beats long; however,\
+you can change it to 3, 6, or 8 using the top menu item. This groove\
+length remains in effect until you change it.\n\n\
+Assuming the groove length is set to 4 or less, the window displays\
+the beat number and the groove in both binary and decimal formats.\
+For larger groove lengths, only the decimal format is presented.\n\n\
+If the function is able to identify the find a name for the groove, it is\
+also shown. This occurs rarely.\n\n\
+A line of dots indicates that the same groove repeats in subsequent\
+4/4 bars.\n\n\
+If you click the histogram menu item, the sequential groove list\
+will be replaced by a table indicating the number of times each\
+groove appears.
+ 
+"
+
+set groovename(8:2:8:2) bossanova
+set groovename(8:2:130:2) funkshuffle2
+set groovename(8:8:8:8) 4onFloor
+set groovename(8:128:8:128) 4on4
+set groovename(8:128:10:128) hardrock
+set groovename(8:130:0:130) funkshuffle
+set groovename(8:130:2:128) bluesrock
+set groovename(8:130:2:130) rockshuffle
+set groovename(8:130:8:128) poprock
+set groovename(8:130:10:130) rockshuffle2
+set groovename(8:130:40:0) folkrock
+set groovename(8:136:8:136) disco
+set groovename(8:144:65:128) heavyrock
+set groovename(8:160:8:128) twist
+set groovename(10:132:10:128) heavymetal
+set groovename(40:40:40:40) doubletime
+set groovename(40:168:40:168) bluesshuffle
+set groovename(72:64:192:64) halfshuffle
+set groovename(8:144:65:128) rock
+set groovename(136:128:130:130) motown
+set groovename(0:0:8:0) reggae
+set groovename(249:249:249:249) samba
+set groovename(24:40:24:40) soca
+
+proc setGrooveLength {size} {
+global midi
+set midi(groovelength) $size
+.drumgroove.1.size configure -text $midi(groovelength)
+get_midi_drum_pat
+}
+
+proc drumgroove_window {} {
+global df
+global midi
+global drum_groove
+if {[winfo exist .drumgroove] == 0} {
+  set f .drumgroove
+  toplevel $f
+  positionWindow $f
+  frame $f.1
+  button $f.1.help -text help -font $df -command {show_message_page $hlp_drumgroove word}
+  label $f.1.size -text $midi(groovelength) -font $df
+  set ww $f.1.beats.items
+  menubutton $f.1.beats -text "beats/groove" -menu $f.1.beats.items -font $df
+  menu $ww -tearoff 0
+  $ww add command -label 3 -font $df -command {setGrooveLength  3}
+  $ww add command -label 4 -font $df -command {setGrooveLength  4}
+  $ww add command -label 6 -font $df -command {setGrooveLength  6}
+  $ww add command -label 8 -font $df -command {setGrooveLength  8}
+  button $f.1.histogram -text histogram -font $df -command count_drum_grooves
+
+
+  pack $f.1.size $f.1.beats $f.1.histogram $f.1.help -side left -anchor w
+  frame $f.2
+  pack $f.1 $f.2 -side top -anchor w
+  text $f.2.txt -yscrollcommand {.drumgroove.2.scroll set} -width 64 -font $df
+  scrollbar .drumgroove.2.scroll -orient vertical -command {.drumgroove.2.txt yview}
+  pack $f.2.txt $f.2.scroll -side left -fill y
+  }
+  get_midi_drum_pat
+}
+
+proc get_midi_drum_pat {} {
+ global midi exec_out
+ global midilength
+ set midilength 0
+ set fileexist [file exist $midi(midifilein)]
+ #puts "get_midi_info_for: midifilein = $midi(midifilein) filexist = $fileexist"
+ if {$fileexist} {
+   set exec_options "[list $midi(midifilein) ] -ppat"
+   set cmd "exec [list $midi(path_midistats)]  $exec_options"
+   catch {eval $cmd} midi_info
+   set exec_out $cmd\n$midi_info
+   #update_console_page
+   set pats [lindex [split $midi_info \n] 2]
+   #puts "get_midi_drum_pat:\n"
+   separate_drumpats_into_bars $pats
+   return $midi_info
+   } else {
+   set msg "Unable to find file $midi(midifilein). Perhaps you should \
+   clear the recent history."
+   show_message_page $msg word
+   }
+ }
+
+proc separate_drumpats_into_bars {drumpats} {
+global groovename
+global midi
+set v .drumgroove.2.txt
+$v delete 0.0 end
+set pats [split $drumpats ]
+set j 0
+set outstring1 ""
+set outstring2 ""
+set lastoutstring2 0
+set dotdot 0
+set barno 0
+foreach i $drumpats {
+  incr j
+  append outstring1 [format %08b $i]
+  append outstring1 " " 
+#  append outstring2 [format %03i $i]
+  if {$j != $midi(groovelength)} {append outstring2 $i:}
+  if {$j == $midi(groovelength)} {append outstring2 $i
+                if {[info exist groovename($outstring2)]} {
+                    set name $groovename($outstring2)
+                  } else {
+                    set name ""
+                  } 
+                if {$outstring2 != $lastoutstring2} {
+                  #puts "$barno $outstring1 $outstring2 $name"
+                  if {$midi(groovelength) <=4} {
+                    $v insert insert "$barno $outstring1 $outstring2 $name\n"
+                   } else {
+                    $v insert insert "$barno $outstring2 $name\n"
+                   }
+              
+                  set lastoutstring2 $outstring2
+                  set dotdot 0
+                } else {
+                  if {!$dotdot} {
+                    $v insert insert ". . . . . . . . . . . . . . .\n" 
+                    set dotdot 1
+                    }
+                }
+                set j 0
+                set outstring1 ""
+                set outstring2 ""
+                }
+  incr barno
+  }
+}
+
+
+proc count_drum_grooves {} {
+global patcount
+global midi
+set k 0
+set drumpats [get_midi_drum_pat]
+#puts "drumpats = $drumpats"
+set drumpats [split $drumpats]
+set j 0
+set pat ""
+foreach i $drumpats {
+  incr j
+  if {$j == $midi(groovelength)} {
+     append pat $i
+     #puts "pat = $pat"
+     if {[info exist patcount($pat)]} {
+        set patcount($pat) [expr $patcount($pat) + 1]
+     } else {
+        set patcount($pat) 1
+     }
+   set j 0
+   set pat ""
+  } else {
+  append pat $i:
+    }
+}
+
+output_patcount
+}
+
+proc output_patcount {} {
+global patcount
+set patlist [array names patcount]
+set v .drumgroove.2.txt
+$v delete 0.0 end
+set groovelist [list]
+foreach pat $patlist {
+  lappend groovelist [list $pat $patcount($pat)]
+  }
+set groovelist [lsort -index 1 -integer -decreasing $groovelist]
+foreach g $groovelist {
+  $v insert insert "[lindex $g 0]\t\t[lindex $g 1]\n"
+  }
+}
+
+
+bind all <Alt-d> {drumgroove_window
+                 }
 
 #check for argc,argv
 if {$argc != 0} {
