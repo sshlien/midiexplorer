@@ -586,7 +586,8 @@ global midifileList
 set k 0
 foreach midifile $midifileList {
   incr k
-  if {$k > 1000} break
+  if {[expr $k % 500] == 0} {puts $k}
+  if {$k > 20000} break
   set drumpats [get_midi_drum_pat $midifile]
 #puts "drumpats = $drumpats"
   set drumpats [split $drumpats]
@@ -600,7 +601,7 @@ foreach midifile $midifileList {
        if {[info exist patcount($pat)]} {
           set patcount($pat) [expr $patcount($pat) + 1]
        } else {
-          set patcount($pat) 0
+          set patcount($pat) 1
        }
      set j 0
      set pat ""
@@ -612,14 +613,77 @@ foreach midifile $midifileList {
 output_patcount
 }
 
+proc count_drum_grooves_for_file {} {
+global filepatcount 
+global midifileList
+set k 0
+set rootfolder "/home/seymour/clean midi/"
+set rootfolderbytes [string length $rootfolder]
+set outhandle [open "grooveFile.txt" "w"]
+foreach midifile $midifileList {
+  if {[info exist filepatcount]} {unset filepatcount} 
+  incr k
+  if {[expr $k % 500] == 0} {puts $k}
+  if {$k > 18000} break
+  #puts $midifile
+  set compactMidifile [string range $midifile $rootfolderbytes end]
+  puts -nonewline $outhandle \"$compactMidifile\"
+
+  set drumpats [get_midi_drum_pat $midifile]
+#puts "drumpats = $drumpats"
+  set drumpats [split $drumpats]
+  set j 0
+  set pat ""
+  foreach i $drumpats {
+    incr j
+    if {$j == 4} {
+       append pat $i
+       #puts "pat = $pat"
+       if {[info exist filepatcount($pat)]} {
+          set filepatcount($pat) [expr $filepatcount($pat) + 1]
+       } else {
+          set filepatcount($pat) 1
+       }
+     set j 0
+     set pat ""
+    } else {
+    append pat $i:
+      }
+  }
+output_file_grooves $outhandle
+}
+close $outhandle
+}
+
+
 proc output_patcount {} {
 global patcount
 set patlist [array names patcount]
-set patlist [lsort $patlist]
+set patcountlist [list]
 foreach pat $patlist {
-  if {$patcount($pat) > 400} {puts "$pat\t $patcount($pat)"}
+  #if {$patcount($pat) > 400} {puts "$pat\t $patcount($pat)"}
+  lappend patcountlist [list $pat $patcount($pat)]
   }
+set patcountlist [lsort -index 1 -integer -decreasing $patcountlist]
+set outhandle [open "groovehistogram.txt" "w"]
+foreach patitem $patcountlist {
+  puts $outhandle $patitem
+  if {[lindex $patitem 1] < 10} break
+  }
+close $outhandle
 }
+
+
+proc output_file_grooves {outhandle} {
+global filepatcount
+set patlist [array names filepatcount]
+foreach pat $patlist {
+  if {$pat == "0:0:0:0"} continue
+  if {$filepatcount($pat) > 10} {puts -nonewline $outhandle ", $pat"}
+  }
+  puts $outhandle ""
+}
+
 
 proc get_midi_drum_pat {midifile} {
  global midi exec_out
@@ -656,5 +720,6 @@ proc get_midi_drum_pat {midifile} {
 #extract_melody_parameters
 #extract_melody_step_parameters 
 #gather_derived_stats $inFolderLength
-count_drum_grooves
+#count_drum_grooves
+count_drum_grooves_for_file
 
