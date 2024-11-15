@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.81 2024-10-23 11:00" 
+set midiexplorer_version "MidiExplorer version 4.81 2024-11-11 19:00" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -1339,7 +1339,7 @@ button .treebrowser.menuline2.restore -text "restore root" -font $df -command {r
 label .treebrowser.menuline2.transpose -text "transpose by"  -font $df
 tooltip::tooltip .treebrowser.menuline2.transpose "Number of semitones to transpose. It is restored
  to zero whenever you select another midi file."
-spinbox .treebrowser.menuline2.semi -from -5 -to 5 -increment 1  -font $df -width 4 -textvariable midi(semitones) 
+spinbox .treebrowser.menuline2.semi -from -11 -to 11 -increment 1  -font $df -width 4 -textvariable midi(semitones) 
 
 tooltip::tooltip .treebrowser.menuline2.jump "If you know the name of a subfolder
 in this directory, it may be more practical
@@ -17553,7 +17553,7 @@ The position of these times are encoded into a binary 4-bit half byte.\
 Thus the binary number 1000 denotes a drum hit occuring in the beginning\
 of a beat, and  0010 denotes a drum hit in the middle of a beat.\
 This is done for both the bass drum and snare drum. The two half bytes\
-are then combined into one byte where the bass drum occupies the higher\
+are then combined into one byte where the bass drum occupies the lower\
 half byte. A groove is formed from 4 bytes and inserting a colon\
 between bytes to make it easier to interpret. The cymbol plays an\
 important role, but it is ignored since it usually just marks time\
@@ -17623,6 +17623,8 @@ if {[winfo exist .drumgroove] == 0} {
   $ww add command -label 4 -font $df -command {setGrooveLength  4}
   $ww add command -label 6 -font $df -command {setGrooveLength  6}
   $ww add command -label 8 -font $df -command {setGrooveLength  8}
+  $ww add command -label 12 -font $df -command {setGrooveLength  12}
+  $ww add command -label 16 -font $df -command {setGrooveLength  16}
   button $f.1.histogram -text histogram -font $df -command count_drum_grooves
 
 
@@ -17651,7 +17653,7 @@ proc get_midi_drum_pat {} {
    set pats [lindex [split $midi_info \n] 2]
    #puts "get_midi_drum_pat:\n"
    separate_drumpats_into_bars $pats
-   return $midi_info
+   return $pats
    } else {
    set msg "Unable to find file $midi(midifilein). Perhaps you should \
    clear the recent history."

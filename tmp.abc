@@ -1,0 +1,12 @@
+X:1
+T: 8:128:10:130
+M: 4/4
+L: 1/8
+Q: 1/4 = 120
+K: C
+%%MIDI channel 10
+%%MIDI drummap F 36
+%%MIDI drummap d 38
+%%percmap F b-d-1
+%%percmap d a-s
+|:Fz dz  FF dF  :||
