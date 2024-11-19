@@ -92,7 +92,7 @@ if {$os == "unix"} {
   set midi(explorer) "~seymour/abc/midiexplorer.tcl"
   set midi(abc) "/home/seymour/abc/runabc.tcl"
 } else {
-  set midi(rootdir) "C:/Users/fy733/Music/lakh clean midi"
+  set midi(rootdir) "C:/Users/fy733/Music/lakh clean midi/"
   set midi(explorer) C:/Users/fy733/OneDrive/Documents/abc/tcl/midiexplorer.tcl
   set midi(abc) C:/Users/fy733/OneDrive/Documents/abc/tcl/runabc.tcl
 }
@@ -270,15 +270,22 @@ global midi
 set c .container
 set index [$c.filelist.box selection]
 set filename [$c.filelist.box item $index -values]
-set filename [string range $filename 1 end-1]
 #puts $filename
-set fullpath [file join $midi(rootdir) $filename]
+#set fullpath [file join $midi(rootdir) $filename]
 
 #puts "fullpath = $fullpath"
 if {$os == "unix"} {
+  set filename [string range $filename 1 end-1]
+  set fullpath [file join $midi(rootdir) $filename]
   set cmd "exec /usr/bin/wish $midi(explorer) [list $fullpath] &"
 } else {
-  set cmd "exec wish $midi(explorer) $fullpath &"
+  set filename [string range $filename 2 end-1]
+  set fullpath [file join $midi(rootdir) $filename]
+  #set fullpath [file join "C:/Users/fy733/Music/lakh clean midi/" $filename]
+  #puts "midi(rootdir) = $midi(rootdir)"
+  #puts "filename = $filename"
+  #puts "fullpath = $fullpath"
+  set cmd "exec wish $midi(explorer) [list $fullpath] &"
 }
 #puts "cmd = $cmd"
 catch {eval $cmd} result
