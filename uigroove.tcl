@@ -25,7 +25,11 @@ label .summary.k
 label .summary.bin 
 button .summary.abc -text abc -command {
    groove2abc 
-   exec "$midi(abc)"
+   if {$os == "unix"} {
+     exec $midi(abc) &
+   } else {
+     exec wish $midi(abc) &
+    }
    }
 
 button .summary.help -text help -command {show_message_page $hlp_uigroove word}
@@ -55,6 +59,11 @@ groove and executes runabc.tcl that allows you to open the file.
 
 If you select one of the midi files in the left listbox, it will\
 start up midiexplorer.tcl which opens that midi file.
+
+Note that each time you click the abc button, a new version of\
+runabc is started. The last version is still active. Similarly,\
+each time you select a file in the right listbox, a new version of\
+midiexplorer is started. The previous version is still active.
 "
  
 proc show_message_page {text wrapmode} {
@@ -81,7 +90,7 @@ set os $tcl_platform(platform)
 if {$os == "unix"} {
   set midi(rootdir) "/home/seymour/clean midi/"
   set midi(explorer) "~seymour/abc/midiexplorer.tcl"
-  set midi(abc) "~seymour/abc/runabc.tcl"
+  set midi(abc) "/home/seymour/abc/runabc.tcl"
 } else {
   set midi(rootdir) "C:/Users/fy733/Music/lakh clean midi"
   set midi(explorer) C:/Users/fy733/OneDrive/Documents/abc/tcl/midiexplorer.tcl

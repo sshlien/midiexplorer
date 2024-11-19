@@ -1,4 +1,9 @@
 #drumloop.tcl
+#!/bin/sh
+# the next line restarts using wish \
+exec wish8.6 "$0" "$@"
+#
+
 # This script generates the files grooves.csv and grooveFile.txt
 # from a large collection of midi files. These files are the
 # the input to the program uigroove.tcl
@@ -56,15 +61,33 @@ proc rglob { basedir pattern } {
   }
 
 
+set os $tcl_platform(platform)
+if {$os == "unix"} {
+  set rootfolder  "/home/seymour/clean midi/"
+  set midistats_path "../midistats"
+} else {
+  set rootfolder "C:/Users/fy733/Music/lakh clean midi"
+  set midistats_path "C:/Users/fy733/OneDrive/Documents/abc/tcl/midistats.exe"
+}
+ if {![file exist $midistats_path]} {
+   tk_messageBox -message "cannot find $midistats_path" -type ok
+   exit
+   }
+
 
 global patcount
+frame .drumloopwindow
+label .drumloopwindow.count -text 0
+pack .drumloopwindow
+pack .drumloopwindow.count
 
 proc count_drum_grooves_for_file {} {
 global filepatcount 
 global patcount
 global midifileList
+global rootfolder
 set k 0
-set rootfolder "/home/seymour/clean midi/"
+#set rootfolder "/home/seymour/clean midi/"
 set rootfolderbytes [string length $rootfolder]
 
 set outhandle [open "grooveFile.txt" "w"]
@@ -72,8 +95,12 @@ set outhandle [open "grooveFile.txt" "w"]
 foreach midifile $midifileList {
   if {[info exist filepatcount]} {unset filepatcount} 
   incr k
-  if {[expr $k % 500] == 0} {puts $k}
-  #if {$k > 300} break
+  if {[expr $k % 500] == 0} {
+     puts $k
+     .drumloopwindow.count configure -text $k
+     update
+     }
+  #if {$k > 3000} break
   #puts $midifile
   set compactMidifile [string range $midifile $rootfolderbytes end]
 
@@ -109,6 +136,9 @@ output_file_grooves $outhandle
 update_groove_file_references 
  }
 close $outhandle
+destroy .drumloopwindow.count
+destroy .drumloopwindow
+destroy .
 output_fileref
 output_patcount
 }
@@ -191,14 +221,16 @@ proc get_midi_drum_pat {midifile} {
  global midi exec_out
  global midilength
  global midifileList
+ global midistats_path
  set midilength 0
  #puts "midifile = $midifile"
  set fileexist [file exist $midifile]
  #puts "get_midi_info_for: midifilein = $midi(midifilein) filexist = $fileexist"
  if {$fileexist} {
    set exec_options "[list $midifile ] -ppat"
-   set cmd "exec ../midistats [list $midifile] -ppat"
+   set cmd "exec $midistats_path [list $midifile] -ppat"
    catch {eval $cmd} midi_info
+   #puts "midi_info = $midi_info"
    set exec_out $cmd\n$midi_info
    #update_console_page
    set pats [lindex [split $midi_info \n] 2]
@@ -209,11 +241,11 @@ proc get_midi_drum_pat {midifile} {
    }
 }
 
-set rootfolder "/home/seymour/clean midi"
+#set rootfolder "/home/seymour/clean midi"
 #inFolderLength is used for returning the file path relative
 #to the root folder inFolder.
-set inFolderLength  [string length $rootfolder]
-incr inFolderLength
+#set inFolderLength  [string length $rootfolder]
+#incr inFolderLength
 set midifileList [rglob $rootfolder *.mid]
 # alphabetical sort
 set midifileList [lsort $midifileList]
