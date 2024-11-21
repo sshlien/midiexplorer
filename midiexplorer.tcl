@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.81 2024-11-11 19:00" 
+set midiexplorer_version "MidiExplorer version 4.82 2024-11-21 14:30" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -1341,6 +1341,13 @@ tooltip::tooltip .treebrowser.menuline2.transpose "Number of semitones to transp
  to zero whenever you select another midi file."
 spinbox .treebrowser.menuline2.semi -from -11 -to 11 -increment 1  -font $df -width 4 -textvariable midi(semitones) 
 
+
+scale .treebrowser.menuline2.speed -length 100 -from 0.1 -to 3.0 -orient horizontal\
+ -resolution 0.05 -width 10 -variable midispeed -font $df
+set midispeed 1.0
+label .treebrowser.menuline2.speedlabel -text speed -font $df -relief flat -pady 1
+
+
 tooltip::tooltip .treebrowser.menuline2.jump "If you know the name of a subfolder
 in this directory, it may be more practical
 to jump to this location rather than scrolling
@@ -1433,7 +1440,7 @@ is still exposed when you exit midiexplorer.
 # pack everything and set binding to quick keys
 set ww $w.menuline
 pack $ww.file  $ww.view $ww.play $ww.display $ww.rhythm $ww.pitch  $ww.database $ww.abc $ww.settings $ww.internals $ww.help -anchor w -side left
-pack .treebrowser.menuline2.jump .treebrowser.menuline2.name .treebrowser.menuline2.random .treebrowser.menuline2.restore .treebrowser.menuline2.transpose .treebrowser.menuline2.semi -side left
+pack .treebrowser.menuline2.jump .treebrowser.menuline2.name .treebrowser.menuline2.random .treebrowser.menuline2.restore .treebrowser.menuline2.transpose .treebrowser.menuline2.semi .treebrowser.menuline2.speed .treebrowser.menuline2.speedlabel -side left
 pack .treebrowser.menuline -anchor w
 pack .treebrowser.menuline2 -anchor w
 
@@ -4684,7 +4691,7 @@ proc piano_window {} {
             -command {show_message_page $hlp_pianoroll_actions word}
     
     scale $p.speed -length 100 -from 0.1 -to 3.0 -orient horizontal\
- -resolution 0.05 -width 10 -variable midispeed
+ -resolution 0.05 -width 10 -variable midispeed -font $df
     set midispeed 1.0
     label $p.speedlabel -text speed -font $df -relief flat -pady 1
     button $p.help -text help -relief flat -font $df\
@@ -7729,7 +7736,7 @@ proc midi_to_midi {sel} {
     # create temporary midi file
     set cmd "exec [list $midi(path_midicopy)]  $selvoice  -from $begin\
                 -to $end" 
-    if {$midispeed != 1.00} {lappend cmd " -speed $midispeed"}
+    if {$midispeed != 1.00} {append cmd " -speed $midispeed"}
 
 
     lappend cmd  $midi(midifilein) $midi(outfilename)
