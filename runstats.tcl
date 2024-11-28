@@ -578,6 +578,80 @@ if {[string first "exited" $output] > 0 ||
 close $outhandle
 }
 
+proc get_midi_drum_pat {midifile} {
+ global midi exec_out
+ global midilength
+ global midifileList
+ set midilength 0
+ #puts "midifile = $midifile"
+ set fileexist [file exist $midifile]
+ #puts "get_midi_info_for: midifilein = $midi(midifilein) filexist = $fileexist"
+ if {$fileexist} {
+   set cmd "exec ../midistats [list $midifile] -ppathist"
+   catch {eval $cmd} midi_info
+   #puts "midi_info = $midi_info"
+   set exec_out $cmd\n$midi_info
+   #update_console_page
+   set pats [lindex [split $midi_info \n] 2]
+   return $pats
+   } else {
+   set msg "Unable to find file $midifile"
+   puts $msg
+   }
+}
+
+proc count_groovebeat {beathistogram} {
+  global beatfreq
+  foreach {beat ignore count} $beathistogram {
+    #puts "$beat $count"
+    if {![info exist beatfreq($beat)]} {
+      set beatfreq($beat) $count 
+     } else {
+      set beatfreq($beat) [expr $beatfreq($beat) +  $count]
+      }
+    }
+}
+
+proc dump_beatfreq {} {
+  global beatfreq
+  set beatfreqlist [list]
+  set beatlist [array names beatfreq]
+  foreach beat $beatlist {
+    #puts "$beat $beatfreq($beat)"
+    lappend beatfreqlist [list $beat $beatfreq($beat)]
+    }
+  set beatfreqlist [lsort -index 1 -integer -decreasing $beatfreqlist]
+  #puts $beatfreqlist
+  set outhandle [open "groovebeatfreq.csv" "w"]
+  foreach item $beatfreqlist {
+    set beat [lindex $item 0]
+    set count [lindex $item 1]
+    puts $outhandle "$beat,$count"
+    }
+close $outhandle
+}
+
+proc get_groovebeat_histogram {} {
+global filepatcount
+global patcount
+global midifileList
+set k 0
+#set rootfolder "/home/seymour/clean midi/"
+#set rootfolderbytes [string length $rootfolder]
+foreach midifile $midifileList {
+  incr k
+  if {[expr $k % 500] == 0} {
+     puts $k
+     update
+     }
+  #if {$k > 2000} break
+
+  set beathistogram [get_midi_drum_pat $midifile]
+  #puts "beathistogram = $beathistogram"
+  count_groovebeat $beathistogram
+  }
+dump_beatfreq 
+}
 
 #make_programcolorCdf $inFolderLength
 #make_programcolor $inFolderLength
@@ -589,4 +663,5 @@ close $outhandle
 #extract_melody_parameters
 #extract_melody_step_parameters 
 #gather_derived_stats $inFolderLength
+get_groovebeat_histogram 
 

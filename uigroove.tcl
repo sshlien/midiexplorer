@@ -258,7 +258,7 @@ puts $outhandle "%%MIDI channel 10
 %%MIDI drummap d 38
 %%percmap F b-d-1
 %%percmap d a-s
-$combo|"
+\[1,2,3,4 $combo|"
 close $outhandle
 }
 
