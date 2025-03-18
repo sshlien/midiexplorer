@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.85 2025-03-13 13:35" 
+set midiexplorer_version "MidiExplorer version 4.85 2025-03-17 20:20" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -3190,6 +3190,7 @@ global ppqn
 global chanprog
 global cleanData
 global exec_out
+global lastpulse
 
 #puts "loadingMidi $midi(midifilein)"
 append exec_out "\n\nloadMidiFile : extracting info from $midi(midifilein)"
@@ -3217,8 +3218,7 @@ catch {eval $cmd} pianoresult
 set pianoresult [split $pianoresult \n]
 set nrec [llength $pianoresult]
 #puts "nrec = $nrec"
-set midilength [lindex [lindex $pianoresult [expr $nrec -1] 1]]
-#puts "loadMidiFile midilength = $midilength"
+set midilength [expr $lastpulse/$ppqn]
 if {![string is integer $midilength]} {
    if {![winfo exist .info.error]} {
 	label .info.error -text  "cannot process this file" -fg red -font $df
@@ -3227,7 +3227,6 @@ if {![string is integer $midilength]} {
         }
 
 set ppqn [lindex [lindex $pianoresult 0] 3]
-set lastbeat [expr $midilength/$ppqn]
 #puts "nrec = $nrec midilength = $midilength lastbeat = $lastbeat"
 set midicommands [lsort -command compare_onset $pianoresult ]
 
@@ -5117,7 +5116,6 @@ proc beat_graph {source} {
     set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
     catch {eval $cmd} pianoresult
     set nrec [llength $pianoresult]
-    set midilength [lindex $pianoresult [expr $nrec -6]]
     set pianoresult [split $pianoresult \n]
     
     set bgraph .beatgraph.c
@@ -7188,6 +7186,7 @@ proc adjust_vert_spacing {vspace} {
 proc compute_pianoroll {} {
     global midi
     global midilength
+    global lastpulse
     global pianoPixelsPerFile
     global pianoresult pianoxscale
     #global activechan
@@ -7204,8 +7203,9 @@ proc compute_pianoroll {} {
     append exec_out $cmd
     catch {eval $cmd} pianoresult
     set pianoresult [split $pianoresult "\n"]
-    set nrec [llength $pianoresult]
-    set midilength [lindex [lindex $pianoresult [expr $nrec -2] 0]]
+    #set nrec [llength $pianoresult]
+    #set midilength [lindex [lindex $pianoresult [expr $nrec -2] 0]]
+    set midilength $lastpulse
     
     #puts "compute_pianoroll [llength $pianoresult]"
     update_console_page 
@@ -8449,7 +8449,9 @@ proc show_drum_events {} {
     global df
     global exec_out
     global drumrollwidth
-
+    global lastpulse
+    global ppqn
+    global midilength
 
  if {[file exist $midi(midifilein)] == 0} {
         .drumroll.txt configure -text "can't open file $midi(midifilein)"\
@@ -8468,8 +8470,8 @@ proc show_drum_events {} {
     if {[string first "no such" $pianoresult] >= 0} {abcmidi_no_such_error $midi(path_midi2abc)}
     set exec_out $cmd\n\n$pianoresult
     set pianoresult [split $pianoresult "\n"]
-    set nrec [llength $pianoresult]
-    set midilength [lindex [lindex $pianoresult [expr $nrec -1]] 0]
+    set midilength  $lastpulse    
+
     if {[string is integer $midilength] != 1} {
         .drumroll.txt configure -text "$midilength ??"
         return
@@ -8537,8 +8539,6 @@ proc compute_drumroll {} {
     }
     
     
-    set nrec [llength $pianoresult]
-    set midilength [lindex [lindex $pianoresult [expr $nrec -2] 0]]
     set sep 10
 
     
@@ -8890,6 +8890,7 @@ proc get_drum_patterns {simple} {
    global pianoresult
    global midilength
    global mlength
+   set nodrumdata 1
    set limits [midi_limits .drumroll.can]
    set start [lindex $limits 0]
    set stop  [lindex $limits 1]
@@ -8917,6 +8918,7 @@ proc get_drum_patterns {simple} {
         if {[string is double $begin] != 1} continue
         set c [lindex $line 3]
         if {$c != 10} continue
+        set nodrumdata 0
         if {[lindex $line 5] < 1} continue
         set note [lindex $line 4]
         if {$note < 35 || $note > 81} continue
@@ -8930,7 +8932,12 @@ proc get_drum_patterns {simple} {
         dict set drumpat $loc $patfrag 
         #puts "drumpat $loc $patfrag $note $drumindex"
        }
-   return $drumpat
+   if {$nodrumdata} {
+     puts "no percussion channel"
+     return 0
+     } else {
+     return $drumpat
+     }
 }
 
 proc extract_drumpat_for {drum drumpat} {
@@ -9102,6 +9109,9 @@ set t .drumanalysis.t
 loadMidiFile
 set cleanData 1
 set drumpat [get_drum_patterns $simple] 
+#puts "drumpat length = [llength $drumpat]"
+if {[llength $drumpat] == 1} {appendInfoError "No percussion channel"
+                              return}
 #puts "analyze_drum_patterns drumpat = $drumpat"
 
 if {[winfo exists $d] == 0} {
@@ -13387,7 +13397,7 @@ proc get_all_note_patterns {} {
    global midicommands
    global chanprog
 
-   #puts "calling get_all_note_patterns"
+   #puts "calling get_all_note_patterns midilength = $midilength"
 
    set ppqn4 [expr $ppqn/4]
    set jitter [expr $ppqn4/2]
@@ -13646,6 +13656,7 @@ global midi
 global pianoresult
 global midilength
 global lasttrack
+global lastpulse
 
 set b .barmap.txt
 if {![winfo exist .barmap]} {
@@ -13662,8 +13673,9 @@ $b tag configure headr -background wheat3
 
 set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
 catch {eval $cmd} pianoresult
-set nrec [llength $pianoresult]
-set midilength [lindex $pianoresult [expr $nrec -1]]
+#set nrec [llength $pianoresult]
+#set midilength [lindex $pianoresult [expr $nrec -1]]
+set midilength $lastpulse
 set beatsperbar 4
 
 set exec_out [append exec_out "note_patterns:\n\n$cmd\n\n $pianoresult"]
@@ -14931,6 +14943,7 @@ global sorted_pianoresult
 global beats_per_pixel
 global pxlbx pxrbx
 global briefconsole
+global lastpulse
 
 set pgraph .pgram.c
 $pgraph delete all
@@ -14953,9 +14966,8 @@ catch {eval $cmd} pianoresult
  if {[string first "no such" $pianoresult] >= 0} {abcmidi_no_such_error $midi(path_midi2abc)}
 set pianoresult [split $pianoresult \n]
 set sorted_pianoresult [lsort -command compare_onset $pianoresult]
-set nrec [llength $pianoresult]
-set midilength [lindex $pianoresult [expr $nrec -1]]
-set nbeats [expr $midilength/$ppqn]
+set midilength [expr $lastpulse/$ppqn]
+set nbeats $midilength
 if {$briefconsole} {
   append exec_out compute_pgram:\n$cmd\n\n[string range $pianoresult 0 200]...
   } else {
@@ -15423,9 +15435,6 @@ set the path to a midi file."
     set pianoresult [split $pianoresult \n]
     set ppqn [lindex [lindex $pianoresult 0] 3]
     if {$midi(debug)} {puts "ppqn = $ppqn"}
-    set nrec [llength $pianoresult]
-    #set midilength [lindex $pianoresult [expr $nrec -1]]
-    #set lastbeat [expr $midilength/$ppqn]
     set stripscale [expr 500.0/$lastbeat]
     if {$midi(debug)} {puts "midilength = $midilength lastbeat = $lastbeat"}
     set str1 ""
@@ -16832,11 +16841,13 @@ global midilength
 global lasttrack
 global midicommands
 global ntrks
+global lastpulse
 
 set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
 catch {eval $cmd} pianoresult
-set nrec [llength $pianoresult]
-set midilength [lindex $pianoresult [expr $nrec -1]]
+#set nrec [llength $pianoresult]
+#set midilength [lindex $pianoresult [expr $nrec -1]]
+set midilength $lastpulse
 set beatsperbar 4
 set midicommands [lsort -command compare_onset [split $pianoresult \n]]
 
