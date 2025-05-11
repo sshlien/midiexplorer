@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.85 2025-03-17 20:20" 
+set midiexplorer_version "MidiExplorer version 4.88 2025-05-07 08:20" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -1161,6 +1161,8 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
             -command {midi_structure_display}
         $ww add command  -label "tableau" -font $df \
             -command detailed_tableau -accelerator "ctrl-t"
+        $ww add command  -label "pitch class map" -font $df \
+            -command simple_tableau
 	$ww add command -label pianoroll -font $df -accelerator "ctrl-r"\
             -command piano_roll_display
 	$ww add command -label drumroll -font $df -command {drumroll_window} -accelerator "ctrl-d"
@@ -1876,15 +1878,7 @@ if {$nodetype == "directory"} {
   populateTree $w.tree $node
 }
 
-if {$nodetype == "directory"} {
-  set nodes [$w.tree children $node]
-  set nnodes [llength $nodes]
-  set pick [expr int(rand()*$nnodes)]
-  set node [lindex $nodes $pick]
-  set nodetype  [lindex [$w.tree item $node -values] 1]
-  #puts "nodetype = $nodetype"
-  populateTree $w.tree $node
-  }
+
 $w.tree item $node -open true
 $w.tree selection set $node
 $w.tree see $node
@@ -3260,7 +3254,8 @@ if {![winfo exist .ribbon]} {
   button $v.help -text help -font $df -command {show_message_page $hlp_PitchClassMap word}
   button $v.play -text play -font $df
   checkbutton $v.circle -text "circle of fifths" -variable midi(tableau5) -font $df -command updateTableauWindows
-  pack $v.play $v.circle $v.help -side left -anchor nw
+  #pack $v.play $v.circle $v.help -side left -anchor nw
+  pack  $v.circle $v.help -side left -anchor nw
   
   set w .ribbon.frm
   frame $w
@@ -13703,12 +13698,14 @@ for {set c 0} {$c < $ntrks} {incr c} {
     if {[dict exists $notepat $c,size]} {
       set size  [dict get $notepat $c,size]
       set tatumhistogram [make_string_histogram_for $notepat $c $size]
+      #dump_key $tatumhistogram
       set patindexdict [keys2index $tatumhistogram]
-      set tsize [llength $patindexdict]
+      set tsize [expr [llength $patindexdict] /2]
       set beatseries [index_and_group_for $patindexdict $notepat $c $beatsperbar "-"]
       set beathistogram [make_string_histogram $beatseries]
       set patindex2dict [keys2index $beathistogram]
-      set bsize [llength $patindex2dict]
+      set bsize [expr [llength $patindex2dict]/2 -1]
+      #subtract 1 to ignore key=0
       set barseq [index_and_group $patindex2dict $beatseries $beatsperbar "-"]
       set barhistogram [make_string_histogram $barseq]
       set barsize [llength [dict keys $barhistogram]]
@@ -13743,6 +13740,13 @@ for {set c 0} {$c < $ntrks} {incr c} {
 $b tag add headr 1.0 1.end
 incr nlines
 $b configure -height $nlines
+}
+
+proc dump_dict {dictionary} {
+set keys [dict keys $dictionary]
+foreach key $keys {
+  puts "key = $key value = [dict get $dictionary $key]"
+  }
 }
 
 proc symbolfy_series {f series grouping} {
@@ -17665,6 +17669,8 @@ if {[winfo exist .drumgroove] == 0} {
   set ww $f.1.beats.items
   menubutton $f.1.beats -text "beats/groove" -menu $f.1.beats.items -font $df
   menu $ww -tearoff 0
+  $ww add command -label 1 -font $df -command {setGrooveLength  1}
+  $ww add command -label 2 -font $df -command {setGrooveLength  2}
   $ww add command -label 3 -font $df -command {setGrooveLength  3}
   $ww add command -label 4 -font $df -command {setGrooveLength  4}
   $ww add command -label 6 -font $df -command {setGrooveLength  6}
