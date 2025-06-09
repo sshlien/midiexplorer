@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.88 2025-05-07 08:20" 
+set midiexplorer_version "MidiExplorer version 4.90 2025-06-08 11:25" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -1697,9 +1697,11 @@ grid rowconfigure $w.dummy 0 -weight 1
 
 
 proc rglob {dirlist globlist} {
+        set showprogress 1
         set result {}
         set recurse {}
         foreach dir $dirlist {
+                if {$showprogress} {appendInfoMessage $dir}                
                 if ![file isdirectory $dir] {
                         return -code error "'$dir' is not a directory"
                 }
@@ -8101,21 +8103,12 @@ proc create_midi_file {} {
 
 proc mftext_local_analysis {} {
     global midi
-    set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -mftext"
-    mftextwindow $midi(outfilename) 1
-}
-
-proc mftext_tmp_midi {} {
-    global midi
-    midi_to_midi 1
-    set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -mftext"
     mftextwindow $midi(outfilename) 1
 }
 
 proc mftext_tmp {} {
 # for testing. use <Control-T>
     global midi
-    set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -mftext"
     output_mftext $midi(outfilename) 
 }
 
@@ -11443,6 +11436,17 @@ close $inhandle
 appendInfoMessage "There are $index midi file descriptors"
 }
 
+proc get_desc {index var} {
+global desc
+if {[dict exists $desc($index) $var]} {
+  return [dict get $desc($index) $var]
+  } else {
+  #puts "no $var in $desc($index) for $index"
+  return -1
+  }
+}
+
+
 proc sftotext {sf} {
 if {$sf == 0} {
   return ""
@@ -11798,7 +11802,8 @@ set filter_code(cname) "if \{\[match_title \$item\] < 0\} \{return 0\}"
 set filter_code(ctempo) "if \{\[match_tempo \$item\] == -1\} \{return 0\}"
 set filter_code(checkprogs) "if \{\[dict exists \$desc(\$item) progs] && \[list_in_list \$midi(proglist) \[dict get \$desc(\$item) progs\]\] == 0\} \{return 0\}"
 set filter_code(checkperc) "if \{\[list_in_list \$midi(drumlist) \[dict get \$desc(\$item) drums\]\] == 0\} \{return 0\}"
-set filter_code(checkexclude) "return \[list_not_in_list \$midi(progexlist) \[dict get \$desc(\$item) progs\]\]"
+#set filter_code(checkexclude) "return \[list_not_in_list \$midi(progexlist) \[dict get \$desc(\$item) progs\]\]"
+set filter_code(checkexclude) "return \[list_not_in_list \$midi(progexlist) \[get_desc \$item progs\]\]"
 set filter_code(cbends) "if \{\[dict get \$desc(\$item) pitchbend\] < \$midi(nbends)\} \{return 0\}"
 set filter_code(cndrums) "if \{\[match_ndrums \$item\] == -1\} \{return 0\}"
 set filter_code(cprog1) "if \{\[correlate_progs \$item\] > \$midi(progthr) \} \{
@@ -12347,8 +12352,10 @@ global desc
 global searchstate
 global midi
 global rcriterion
+global exec_out
 clearInfoMessages
 set rootfolder $midi(rootfolder)
+set exec_out "scanning $midi(rootfolder)"
 set rootfolderbytes [string length $rootfolder]
 set n [prepare_filter]
 if {$n < 1} {.searchbox.msg configure -text "First check one of the boxes"\
@@ -15910,6 +15917,7 @@ proc load_mflines {} {
 # in the global array mflines.
 global mflines
 global midi
+global exec_out
 set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -mftext"
 catch {eval $cmd} mftextresults
 set exec_out $mftextresults
