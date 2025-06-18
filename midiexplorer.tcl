@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.90 2025-06-08 11:25" 
+set midiexplorer_version "MidiExplorer version 4.92 2025-06-17 17:30" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -1642,8 +1642,12 @@ for {set i 1} {$i < $midi(history_length)} {incr i} {
 set midi(history_length) 0
 }
 
+proc destroyMessage {} {
+if {[winfo exists ._msg_]} {destroy ._msg_}
+}
 
 proc popMessage {text} {
+  destroyMessage
   set b ._msg_
   if {![winfo exists $b]} {
     toplevel $b -class Tooltip
@@ -2133,6 +2137,7 @@ proc interpretMidi {} {
   array unset programmod
 
 
+  destroyMessage
   set genre [search_genre_database]
   label .info.input -text $midi(midifilein) 
   button .info.tracks -text "$ntrks tracks" -font $df -command midiTable
@@ -2155,7 +2160,7 @@ proc interpretMidi {} {
   label .info.size -text "$lastbeat beats"  -font $df
   button .info.keysig -text "key: $keyInfo" -font $df -relief ridge -command show_rmaj
   label .info.timesig -text "time signature: $timesig" -font $df
-  label .info.ntimesig -text "$ntimesig time signatures" -font $df -fg darkblue
+  button .info.ntimesig -text "$ntimesig time signatures" -font $df -fg darkblue -command list_timesigmod
   label .info.nkeysig -text "$nkeysig key signature " -font $df -fg darkblue
   label .info.lyrics -text "Has lyrics" -fg darkblue -font $df
   button .info.notQuantized -text "Not quantized" -fg darkblue -font $df -relief ridge -command {beat_graph none}
@@ -2164,7 +2169,7 @@ proc interpretMidi {} {
   button .info.dithered -text "Dithered quantization" -fg darkblue -font $df -relief ridge -command {beat_graph none}
   button .info.cleanq -text "Clean quantization" -fg darkblue -font $df -relief ridge -command {beat_graph none}
   button .info.progchanges -text "$programchanges Program changes" -fg darkblue -font $df -relief ridge -command midi_structure_display
-  label .info.tempochanges -text "$ntempos Tempo changes" -fg darkblue -font $df
+  button .info.tempochanges -text "$ntempos Tempo changes" -fg darkblue -font $df -command list_tempomod
   label .info.error -text $midierror -fg red -font $df
 
   if {[string length $midierror]>0} {
@@ -2461,10 +2466,12 @@ global keysf
 global keyconfidence
 global ntimesig
 global timesig
+global timesigmod
 global chanvol
 global programchanges
 global tempo
 global ntempos
+global tempomod
 global rmin
 global rmaj
 array unset xchannel2program
@@ -2485,6 +2492,9 @@ set rmin 0
 set rmaj 0
 
 set timesig 4/4
+set timesigmod [list]
+set tempomod [list]
+
 if {[info exist tempo]} {unset tempo}
 #array unset progr
 set rootfolder $midi(rootfolder)
@@ -2512,7 +2522,11 @@ foreach line [split $midi_info '\n'] {
             set lastpulse [lindex $line 1]
             set lastbeat [expr $lastpulse/$ppqn]
             }
-    tempo {set tempo [lindex $line 1]}
+    tempo {set tempo [lindex $line 1]
+           }
+    ctempo {set tempo [lindex $line 1]
+           update_tempomod [lindex $line 1] [lindex $line 2]
+           }
     tempocmds {set ntempos [lindex $line 1]}
     key {set keysig [lindex $line 1]
          set keysf [lindex $line 2]
@@ -2536,7 +2550,10 @@ foreach line [split $midi_info '\n'] {
     progsact {set cprogsact [lrange $line 1 end]}
     chanvol {set chanvol [lrange $line 1 end]}
     timesig {set value [lindex $line 1]
-             if {$timesig != $value} {incr ntimesig}
+             if {$timesig != $value} {
+                 incr ntimesig
+                 update_timesigmod $timesig [lindex $line 2]
+                 }
              set timesig $value
              }
     rmin {set rmin [lrange $line 1 end]}
@@ -2588,6 +2605,16 @@ proc update_tempomod {tempo beat} {
   lappend tempomod [list $tempo $beat]
   }
 
+proc update_timesigmod {timesig beat} {
+  global timesigmod
+  lappend timesigmod [list $timesig $beat]
+  }
+
+proc update_keysigmod {keysig beat} {
+  global keysigmod
+  lappend keysigmod [list $keysig $beat]
+  }
+
 proc program_mod {c beat} {
   global programmod
   if {![info exist programmod($c)]} {return -1}
@@ -2632,6 +2659,17 @@ proc list_tempomod {} {
   popMessage $msg
   }  
   
+proc list_timesigmod {} {
+  global timesigmod
+  set msg ""
+  append msg "timesig\tbeat number\n"
+  foreach timesigcmd $timesigmod {
+    set t [lindex $timesigcmd 0]
+    set b [lindex $timesigcmd 1]
+    append msg "$t\t$b\n"
+    }
+  popMessage $msg
+  }
  
 
 
@@ -4497,8 +4535,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
     set msg ""
     set result [getVersionNumber $midi(path_midi2abc)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 3.59} {
-         appendInfoError "You need midi2abc.exe version 3.57"
+    if {$err == 0 || $ver < 3.64} {
+         appendInfoError "You need midi2abc.exe version 3.64"
          }
     set result [getVersionNumber $midi(path_midicopy)]
     set err [scan $result "%f" ver]
@@ -4508,8 +4546,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.98} {
-         appendInfoError "You need midistats.exe version 0.98 or higher."
+    if {$err == 0 || $ver < 0.99} {
+         appendInfoError "You need midistats.exe version 0.99 or higher."
          }
     return pass
 }
@@ -15823,9 +15861,9 @@ proc show_data_page {text wrapmode clean} {
 
 
 set abcmidilist {path_abc2midi 5.02\
-            path_midi2abc 3.63\
+            path_midi2abc 3.64\
             path_midicopy 1.40\
-	    path_midistats 0.98\
+	    path_midistats 0.99\
             path_abcm2ps 8.14.6}
 
 
