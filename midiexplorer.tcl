@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.92 2025-06-17 17:30" 
+set midiexplorer_version "MidiExplorer version 4.95 2025-06-25 09:30" 
 set briefconsole 1
 
 # Copyright (C) 2019-2024 Seymour Shlien
@@ -997,13 +997,13 @@ package require Tk
 
 # .top contains both .treebrowser and .info
 positionWindow "."
-panedwindow .top -orient vertical -showhandle 1 -sashwidth 10 -sashrelief sunken -sashpad 4 -height 600
+panedwindow .top -orient vertical -showhandle 1 -sashwidth 10 -sashrelief sunken -sashpad 4 -height 520 
 pack .top -expand 1 -fill both
 
 set systembackground [lindex [. configure -background] 3]
 
 set w .treebrowser
-frame $w
+frame $w 
 wm title . $midiexplorer_version
 
 if {[string length $midi(colorscheme)] > 0} {
@@ -1649,18 +1649,17 @@ if {[winfo exists ._msg_]} {destroy ._msg_}
 proc popMessage {text} {
   destroyMessage
   set b ._msg_
-  if {![winfo exists $b]} {
-    toplevel $b -class Tooltip
-    wm overrideredirect $b 1
-    wm positionfrom $b program
-    set xy [winfo pointerxy .]
-    set x [lindex $xy 0]
-    set y [lindex $xy 1]
-    wm geometry $b +$x+$y
-    label $b.label -highlightthickness 0 -relief solid -bd 1 \
-      -background lightyellow -fg black -justify left -text $text
-    pack $b.label -ipadx 1
-    }
+  toplevel $b -class Tooltip
+  wm overrideredirect $b 1
+  wm positionfrom $b program
+  set xy [winfo pointerxy .]
+  set x [lindex $xy 0]
+  set y [lindex $xy 1]
+  wm geometry $b +$x+$y
+  label $b.label -highlightthickness 0 -relief solid -bd 1 \
+    -background lightyellow -fg black -justify left -text $text
+  pack $b.label -ipadx 1
+  bind $b <ButtonPress-1> destroyMessage
 }
 
 
@@ -1988,8 +1987,8 @@ if {[lindex $c 1] == "file"} {
 # join .treebrowser and .info in the panedwindow called .top
 frame .info 
 pack .info -anchor w 
-.top add .treebrowser 
-.top add .info -stretch always
+.top add .treebrowser -stretch always
+.top add .info -minsize 160
 
 proc presentInfoMessage {msg} {
 global df
@@ -2110,7 +2109,6 @@ proc interpretMidi {} {
   global rmaj
   global ppqn
   global lastbeat
-  global programmod
   global addendum
   global miditxt
   global midierror
@@ -2134,7 +2132,6 @@ proc interpretMidi {} {
   array unset miditxt 
   array unset channel2program
   array unset track2program
-  array unset programmod
 
 
   destroyMessage
@@ -2158,18 +2155,18 @@ proc interpretMidi {} {
   if {![info exist tempo]} {set tempo 120}
   label .info.tempo -text "$tempo beats/minute  " -font $df
   label .info.size -text "$lastbeat beats"  -font $df
-  button .info.keysig -text "key: $keyInfo" -font $df -relief ridge -command show_rmaj
+  button .info.keysig -text "key: $keyInfo" -font $df -relief raised -command show_rmaj -bd 3
   label .info.timesig -text "time signature: $timesig" -font $df
-  button .info.ntimesig -text "$ntimesig time signatures" -font $df -fg darkblue -command list_timesigmod
+  button .info.ntimesig -text "$ntimesig time signatures" -font $df -fg darkblue -command list_timesigmod -bd 3 -relief raised
   label .info.nkeysig -text "$nkeysig key signature " -font $df -fg darkblue
   label .info.lyrics -text "Has lyrics" -fg darkblue -font $df
-  button .info.notQuantized -text "Not quantized" -fg darkblue -font $df -relief ridge -command {beat_graph none}
+  button .info.notQuantized -text "Not quantized" -fg darkblue -font $df -relief raised -command {beat_graph none} -bd 3
   label .info.triplets -text "Has triplets" -fg darkblue -font $df
   label .info.qnotes -text "Mainly quarter notes" -fg darkblue -font $df
-  button .info.dithered -text "Dithered quantization" -fg darkblue -font $df -relief ridge -command {beat_graph none}
-  button .info.cleanq -text "Clean quantization" -fg darkblue -font $df -relief ridge -command {beat_graph none}
-  button .info.progchanges -text "$programchanges Program changes" -fg darkblue -font $df -relief ridge -command midi_structure_display
-  button .info.tempochanges -text "$ntempos Tempo changes" -fg darkblue -font $df -command list_tempomod
+  button .info.dithered -text "Dithered quantization" -fg darkblue -font $df -relief raised -command {beat_graph none} -bd 3
+  button .info.cleanq -text "Clean quantization" -fg darkblue -font $df -relief raised -command {beat_graph none} -bd 3
+  button .info.progchanges -text "$programchanges Program changes" -fg darkblue -font $df -relief raised -command list_programmod -bd 3 
+  button .info.tempochanges -text "$ntempos Tempo changes" -fg darkblue -font $df -command list_tempomod -bd 3
   label .info.error -text $midierror -fg red -font $df
 
   if {[string length $midierror]>0} {
@@ -2474,6 +2471,7 @@ global ntempos
 global tempomod
 global rmin
 global rmaj
+global programmod
 array unset xchannel2program
 array unset trkinfo
 set midierror ""
@@ -2494,6 +2492,7 @@ set rmaj 0
 set timesig 4/4
 set timesigmod [list]
 set tempomod [list]
+set programmod [list]
 
 if {[info exist tempo]} {unset tempo}
 #array unset progr
@@ -2524,7 +2523,7 @@ foreach line [split $midi_info '\n'] {
             }
     tempo {set tempo [lindex $line 1]
            }
-    ctempo {set tempo [lindex $line 1]
+    ctempo {
            update_tempomod [lindex $line 1] [lindex $line 2]
            }
     tempocmds {set ntempos [lindex $line 1]}
@@ -2564,7 +2563,8 @@ foreach line [split $midi_info '\n'] {
     activetrack {set ntrks [lindex $line 1]
                  append midierror "only $ntrks valid tracks"}
     Lyrics {set hasLyrics 1}
-    programcmd {set programchanges [lindex $line 1]}
+    cprogram {set programchanges [lindex $line 1]
+              update_programmod $line}
     unquantized {set notQuantized 1}
     triplets {set hasTriplets 1}
     qnotes {set qnotes 1}
@@ -2587,17 +2587,13 @@ foreach line [split $midi_info '\n'] {
  return 0
 }
 
-proc update_programmod {c p beat} {
+proc update_programmod {arglist} {
   global programmod
-  if {![info exist programmod($c)]}  {
-     set programmod($c) "[list $beat] [list $p]"
-      } else {
-      set beatlist [lindex $programmod($c) 0] 
-      lappend beatlist $beat
-      set proglist [lindex $programmod($c) 1]
-      lappend proglist $p
-      set programmod($c) [list $beatlist $proglist]
-      }
+  #puts "update_programmod $arglist"
+  set c [lindex $arglist 1]
+  set p [lindex $arglist 2]
+  set beat [lindex $arglist 3]
+  lappend programmod [list $c $p $beat]
   }
 
 proc update_tempomod {tempo beat} {
@@ -2630,18 +2626,15 @@ proc program_mod {c beat} {
   return [lindex $proglist $index]
   }
 
-proc list_progammod {} {
+proc list_programmod {} {
   global programmod
-  global mlist
   set msg ""
-  append msg "channel\tbeat number\tprogram\n"
-  for {set i 0} {$i < 17} {incr i} {
-    if {[info exist programmod($i)] == 0} {continue}
-    set beatlist [lindex $programmod($i) 0]
-    set proglist [lindex $programmod($i) 1]
-    foreach b $beatlist p $proglist {
-      append msg "$i\t$b\t[lindex $mlist $p]\n"
-      }
+  append msg "channel\tbeat\tprogram\n"
+  foreach progchange $programmod {
+    set c [lindex $progchange 0]
+    set p [lindex $progchange 1]
+    set beat [lindex $progchange 2]
+    append msg "$c\t$beat\t$p\n"
     }
   popMessage $msg
   }
