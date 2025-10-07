@@ -5,10 +5,10 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.95 2025-06-25 09:30" 
+set midiexplorer_version "MidiExplorer version 4.96 2025-10-05 15:15" 
 set briefconsole 1
 
-# Copyright (C) 2019-2024 Seymour Shlien
+# Copyright (C) 2019-2025 Seymour Shlien
 #
 #
 # This program is free software; you can redistribute it and/or modify
@@ -1037,6 +1037,9 @@ $ww add command -label "genre finder" -font $df -command {
     make_genre_manager genre.tsv
     }
 
+$ww add command -label "musicmap genre info" -font $df\
+            -command musicmap-info
+
 $ww add command -label "top hits" -font $df -command {
     make_genre_manager toppops.csv
     }
@@ -1144,6 +1147,8 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
 	    -command google_search 
 	$ww add command -label "google genre" -font $df -accelerator "ctrl-g"\
 	    -command "google_search genre"
+        $ww add command -label "musicmap similar" -font $df\
+            -command musicmap
 	$ww add command -label "duckduckgo search" -font $df -accelerator "ctrl-u"\
 	    -command duckduckgo_search
         $ww add command -label "track info" -font $df -command midiTable
@@ -1773,6 +1778,7 @@ set stopScan 1
 proc makeAbortButton {} {
 global df
 global stopScan
+if {[winfo exist .treebrowser.menuline2.stop]} {return}
 button .treebrowser.menuline2.stop -text stop -font $df -command abortScan
 pack .treebrowser.menuline2.stop -side left
 set stopScan 0
@@ -14267,6 +14273,31 @@ set cmd "exec [list $midi(browser)] [list $s] &"
 catch {eval $cmd} result
 append exec_out $cmd\n$result
 update_console_page
+}
+
+proc musicmap {} {
+global midi
+global exec_out
+set exec_out "google_search:\n"
+set splitname [file split $midi(midifilein)]
+#puts $splitname
+set l [llength $splitname]
+set l1 [expr $l -1]
+set l2 [expr $l -2]
+set title [file root [lindex $splitname $l1]]
+set artist [lindex $splitname $l2]
+set s "https://www.music-map.com/$artist"
+set cmd "exec [list $midi(browser)] [list $s] &"
+catch {eval $cmd} result
+append exec_out $cmd\n$result
+}
+
+proc musicmap-info {} {
+global midi
+set s "https://musicmap.info"
+set cmd "exec [list $midi(browser)] [list $s] &"
+catch {eval $cmd} result
+append exec_out $cmd\n$result
 }
 
 proc duckduckgo_search {} {
