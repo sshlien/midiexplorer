@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.96 2025-10-05 15:15" 
+set midiexplorer_version "MidiExplorer version 4.97 2025-10-10 14:43" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -1052,7 +1052,7 @@ $ww add command -label "quit" -font $df -command {
 
 $ww add command -label "help" -font $df -command {show_message_page $hlp_filemenu word}
 
-menu .treebrowser.menuline.file.items.recent -tearoff 0
+menu .treebrowser.menuline.file.items.recent -tearoff 1
 for {set i 0} {$i < $midi(history_length)} {incr i} {
     $ww.recent add radiobutton  -label $midi(history$i) \
        -value $i -variable history_index -command "open_recent_folder [list $midi(history$i)]" -font $df
@@ -1614,27 +1614,24 @@ proc updateHistory {openfile} {
         if {[string compare $midi(history$i) $openfile] ==  0} return
     }
     
-    if {$midi(history_length) == 0}  {
-        $w add radiobutton  -value 0 -font $df\
-                -variable history_index -command "open_recent_folder [list $openfile]"
-    }
     
     # push history down open stack
     for {set i $midi(history_length)} {$i > 0} {incr i -1}  {
         set j [expr $i -1]
-        set k [expr $i +2]
         set midi(history$i) $midi(history$j)
-        if {$midi(history_length) < 10 && $i == $midi(history_length) } {
-            $w add radiobutton  -label $midi(history$i) \
-                    -value $i -variable history_index\
-                    -font $df -command "open_recent_folder [list $openfile]"
-        } else {
-            $w entryconfigure  $k -label $midi(history$j)
         }
-    }
     set midi(history0) $openfile
-    $w entryconfigure 2 -label $midi(history0)
+
+#delete all entries
+   .treebrowser.menuline.file.items.recent delete 0 $midi(history_length)
+
+#add new history
     if {$midi(history_length) < 10} {incr midi(history_length)}
+    for {set i 0} {$i <$midi(history_length)} {incr i } {
+         $w add radiobutton  -label $midi(history$i) \
+                    -value $i -variable history_index\
+                    -font $df -command "open_recent_folder [list $midi(history$i)]"
+         }
 }
 
 
@@ -1856,7 +1853,6 @@ proc populateTree {tree node} {
 proc findChildInTree {w name} {
 # in case the root folder is not there
 restore_root_folder 
-#puts "searching for $name"
 set nodes [$w.tree children [$w.tree children {}]]
 foreach node $nodes {
  set c [$w.tree item $node -value]
@@ -2315,7 +2311,20 @@ for {set i 1} {$i < 17} {incr i} {
 
 
 proc open_recent_folder {recent_folder} {
-findChildInTree .treebrowser [file tail $recent_folder]
+global midi
+#puts "open_recent_folder $recent_folder"
+enable_top_menubuttons
+set folderlist [file split $recent_folder]
+set laststring [string range [join $folderlist] end-3 end]
+if {$laststring == ".mid"} {
+  set folder2list [join [lrange $folderlist end-1 end-1]]
+  #puts "folder2list = $folder2list"
+  findChildInTree .treebrowser  $folder2list
+  set midi(midifilein) $recent_folder
+  open_selected_midi
+  } else {
+  findChildInTree .treebrowser  [file tail $recent_folder]
+  }
 }
 
 
@@ -2337,43 +2346,50 @@ proc selected_midi {} {
  #puts "selected midi $sel $f"
  set extension [string tolower [file extension $f]]
  if {$extension == ".mid"} {  
+   enable_top_menubuttons
+   set midi(midifilein) $f
+   #updateHistory [file dirname $f]
+   updateHistory $f
+   open_selected_midi
+   }
+}
+
+proc enable_top_menubuttons {} {
    .treebrowser.menuline.view configure -state normal
    .treebrowser.menuline.play configure -state normal
    .treebrowser.menuline.rhythm configure -state normal
    .treebrowser.menuline.pitch configure -state normal
    .treebrowser.menuline.abc configure -state normal
    .treebrowser.menuline.display configure -state normal
-   set midi(midifilein) $f
-   updateHistory [file dirname $f]
-   clearMidiTracksAndChannels
-   set midi_info [get_midi_info_for]
-   parse_midi_info $midi_info
-   presentMidiInfo
-   loadMidiFile
-   set cleanData 1
-   if {[winfo exist .piano]} {
-            zero_trksel
-            set pianoPixelsPerFile $pianorollwidth
-            compute_pianoroll
-            update_displayed_pdf_windows .piano.can}
-   if {[winfo exist .midistructure]} {
-            zero_trksel
-	    midi_structure_window 
-	    }
-   if {[winfo exist .mftext]} {mftextwindow $midi(midifilein) 0}
-   if {[winfo exist .drumroll]} {show_drum_events}
-   updateAllWindows pianoroll
-   }
+}
+
+proc open_selected_midi {} {
+global midi
+#puts "open_selected_midi $midi(midifilein)"
+clearMidiTracksAndChannels
+set midi_info [get_midi_info_for]
+parse_midi_info $midi_info
+presentMidiInfo
+loadMidiFile
+set cleanData 1
+if {[winfo exist .piano]} {
+         zero_trksel
+         set pianoPixelsPerFile $pianorollwidth
+         compute_pianoroll
+         update_displayed_pdf_windows .piano.can}
+if {[winfo exist .midistructure]} {
+         zero_trksel
+  midi_structure_window 
+  }
+if {[winfo exist .mftext]} {mftextwindow $midi(midifilein) 0}
+if {[winfo exist .drumroll]} {show_drum_events}
+updateAllWindows pianoroll
 }
 
 
+
 proc load_last_midi_file {} {
- .treebrowser.menuline.view configure -state normal
- .treebrowser.menuline.play configure -state normal
- .treebrowser.menuline.rhythm configure -state normal
- .treebrowser.menuline.pitch configure -state normal
- .treebrowser.menuline.abc configure -state normal
- .treebrowser.menuline.display configure -state normal
+ enable_top_menubuttons
  set midi_info [get_midi_info_for]
  if {$midi_info == ""} return
  parse_midi_info $midi_info
