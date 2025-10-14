@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.97 2025-10-10 14:43" 
+set midiexplorer_version "MidiExplorer version 4.97 2025-10-15 12:15" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -997,7 +997,7 @@ package require Tk
 
 # .top contains both .treebrowser and .info
 positionWindow "."
-panedwindow .top -orient vertical -showhandle 1 -sashwidth 10 -sashrelief sunken -sashpad 4 -height 520 
+panedwindow .top -orient vertical -showhandle 1 -sashwidth 10 -sashrelief sunken -sashpad 4 -height 620 
 pack .top -expand 1 -fill both
 
 set systembackground [lindex [. configure -background] 3]
