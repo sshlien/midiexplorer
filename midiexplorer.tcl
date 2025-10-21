@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 4.97 2025-10-15 12:15" 
+set midiexplorer_version "MidiExplorer version 4.98 2025-10-21 08:36" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -1018,7 +1018,7 @@ set ww $w.menuline.file.items
 menubutton $w.menuline.file -text file -menu $w.menuline.file.items -font $df
 menu $ww -tearoff 0
 $ww add command -label "root directory" -font $df -command {
-    set rootfolder [tk_chooseDirectory -title "Choose the directory containing the midi files or folders"]
+    set rootfolder [tk_chooseDirectory -title "Choose the directory containing the midi files or folders" -initialdir $midi(rootfolder)]
     if {[string length $rootfolder] > 0} {set midi(rootfolder) $rootfolder}
 
     if {[file exist $midi(rootfolder)]}  {populatedir .treebrowser.tree $midi(rootfolder)
@@ -2365,6 +2365,7 @@ proc enable_top_menubuttons {} {
 
 proc open_selected_midi {} {
 global midi
+global pianorollwidth
 #puts "open_selected_midi $midi(midifilein)"
 clearMidiTracksAndChannels
 set midi_info [get_midi_info_for]
@@ -4737,7 +4738,7 @@ proc piano_window {} {
             -command {pianoroll_statistics velocity .piano.can
                 plotmidi_velocity_pdf}
     $p.action.items add command  -label "velocity map" -font $df \
-            -command {plot_velocity_map .piano.can}
+            -command {plot_velocity_map pianoroll}
     $p.action.items add command  -label "beat graph" -font $df \
             -command {beat_graph pianoroll}
     $p.action.items add command  -label "notegram" -font $df \
@@ -10968,6 +10969,7 @@ proc plot_velocity_map {source} {
     global trksel
     global fbeat
     global tbeat
+    #puts "plot_velocity_map $source"
     set velmap .midivelocity.c
     if {[winfo exists .midivelocity] == 0} {
         toplevel .midivelocity
@@ -10984,16 +10986,21 @@ proc plot_velocity_map {source} {
     set midilength [lindex $pianoresult [expr $nrec -6]]
 
    set colfg [lindex [.info.input config -fg] 4]
-    #set limits [midi_limits .piano.can]
-    #set start [expr double([lindex $limits 0])/$ppqn]
-    #set stop  [expr double([lindex $limits 1])/$ppqn]
+    set limits [midi_limits .piano.can]
+    set start [expr double([lindex $limits 0])/$ppqn]
+    set stop  [expr double([lindex $limits 1])/$ppqn]
     set delta_tick [expr int(($tbeat - $fbeat)/10.0)]
     if {$delta_tick < 1} {set delta_tick 1}
     set tsel [count_selected_midi_tracks]
     $velmap create rectangle 50 20 350 220 -outline black\
             -width 2 -fill white
     Graph::alter_transformation 50 350 220 20 $fbeat $tbeat 0.0 132
-    Graph::draw_x_ticks $velmap $fbeat $tbeat $delta_tick 2  0 %4.0f $colfg
+    if {[expr $tbeat - $fbeat] > 2.0} {
+      Graph::draw_x_ticks $velmap $fbeat $tbeat $delta_tick 2  0 %4.0f $colfg
+      } else {
+    Graph::draw_x_ticks $velmap $fbeat $tbeat 0.5 1  0 %4.1f $colfg
+      }
+
     Graph::draw_y_ticks $velmap 0.0 132.0 8.0 2 %3.0f $colfg
     set pianoresult [split $pianoresult '\n']
     foreach line $pianoresult {
