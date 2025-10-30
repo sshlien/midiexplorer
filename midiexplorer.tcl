@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.00 2025-10-26 09:40" 
+set midiexplorer_version "MidiExplorer version 5.01 2025-10-30 16:46" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -487,7 +487,7 @@ bind $w.frame.list <Double-1> {
     tk_setPalette [selection get]
     set midi(colorscheme) [selection get]
     set hexColor [getHexColor $midi(colorscheme)]
-    if {[lindex $hexColor 1] < 500} {
+    if {[lindex $hexColor 1] < 400} {
       ttk::style configure Treeview -foreground white -background [lindex $hexColor 0]
       } else {
       ttk::style configure Treeview -foreground black -background [lindex $hexColor 0]
@@ -2190,16 +2190,16 @@ proc interpretMidi {} {
   label .info.size -text "$lastbeat beats"  -font $df
   button .info.keysig -text "key: $keyInfo" -font $df -relief raised -command show_rmaj -bd 3
   label .info.timesig -text "time signature: $timesig" -font $df
-  button .info.ntimesig -text "$ntimesig time signatures" -font $df -fg darkblue -command list_timesigmod -bd 3 -relief raised
-  label .info.nkeysig -text "$nkeysig key signature " -font $df -fg darkblue
-  label .info.lyrics -text "Has lyrics" -fg darkblue -font $df
-  button .info.notQuantized -text "Not quantized" -fg darkblue -font $df -relief raised -command {beat_graph none} -bd 3
-  label .info.triplets -text "Has triplets" -fg darkblue -font $df
-  label .info.qnotes -text "Mainly quarter notes" -fg darkblue -font $df
-  button .info.dithered -text "Dithered quantization" -fg darkblue -font $df -relief raised -command {beat_graph none} -bd 3
-  button .info.cleanq -text "Clean quantization" -fg darkblue -font $df -relief raised -command {beat_graph none} -bd 3
-  button .info.progchanges -text "$programchanges Program changes" -fg darkblue -font $df -relief raised -command list_programmod -bd 3 
-  button .info.tempochanges -text "$ntempos Tempo changes" -fg darkblue -font $df -command list_tempomod -bd 3
+  button .info.ntimesig -text "$ntimesig time signatures" -font $df -command list_timesigmod -bd 3 -relief raised
+  label .info.nkeysig -text "$nkeysig key signature " -font $df
+  label .info.lyrics -text "Has lyrics" -font $df
+  button .info.notQuantized -text "Not quantized" -font $df -relief raised -command {beat_graph none} -bd 3
+  label .info.triplets -text "Has triplets" -font $df
+  label .info.qnotes -text "Mainly quarter notes" -font $df
+  button .info.dithered -text "Dithered quantization" -font $df -relief raised -command {beat_graph none} -bd 3
+  button .info.cleanq -text "Clean quantization" -font $df -relief raised -command {beat_graph none} -bd 3
+  button .info.progchanges -text "$programchanges Program changes" -font $df -relief raised -command list_programmod -bd 3 
+  button .info.tempochanges -text "$ntempos Tempo changes" -font $df -command list_tempomod -bd 3
   label .info.error -text $midierror -fg red -font $df
 
   if {[string length $midierror]>0} {
@@ -4855,6 +4855,8 @@ proc piano_window {} {
         set miditime [midi_to_midi 1]
         piano_notate_midi_extract
         }
+    button .piano.trkchn.velocity -relief raised -padx 1 -pady 1 -command piano_roll_velocity
+    ####grid .piano.trkchn.velocity -column 2 -row 2
     
     
     bind $p.can <ButtonPress-1> {piano_Button1Press %x %y}
@@ -4883,9 +4885,10 @@ if {$midi(midishow_sep) == "track"} {
   } else {
   set midichannels($num) $trksel($num)
   }
-if {[winfo exists .tinfo]} {
+if {[winfo exists .tinfo] == 1} {
    midiTable
    }
+if {[winfo exists .pianovelocity] == 1} compute_pianoroll_velocity
 }
 
 
@@ -4898,7 +4901,7 @@ global miditracks
 global midi
 
 set nselected [count_trksel]
-#puts "highlightTrackStatic $num nselected = $nselected trksel($num) = $trksel($num)"
+puts "highlightTrackStatic $num nselected = $nselected trksel($num) = $trksel($num)"
 if {$nselected == 0} {hideExposeSomePianoRollTracksChannels 0
 	             }
 
@@ -4917,6 +4920,7 @@ update_displayed_pdf_windows .piano.can
 if {[winfo exists .tinfo]} {
    midiTable
    }
+if {[winfo exists .pianovelocity]} {compute_pianoroll_velocity}
 }
 
 proc applyHighlightTrackStatic {} {
@@ -4958,6 +4962,44 @@ for {set i 0} {$i < 32} {incr i} {
 return $count
 }
 
+proc piano_roll_velocity {} {
+set p .pianovelocity
+global pianorollwidth
+if {![winfo exist $p]} {
+  toplevel $p
+  canvas $p.can -width $pianorollwidth -height 100 -border 3 -relief sunken -scrollregion\
+            {0 0 2500 80}
+  pack $p.can
+  }
+compute_pianoroll_velocity
+}
+
+proc compute_pianoroll_velocity {} {
+global pianoresult pianoxscale
+global midi
+global trksel
+#puts "trksel [array get trksel]"
+set p .pianovelocity.can
+$p delete all
+foreach line $pianoresult {
+   if {[llength $line] != 6} continue
+   set begin [lindex $line 0]
+   if {[string is double $begin] != 1} continue
+   set end [lindex $line 1]
+   set t [lindex $line 2]
+   set c [lindex $line 3]
+   if {$c == 10} continue
+   if {$trksel($c) == 0} continue
+   set track2channel($t) $c
+   if {$midi(midishow_sep) == "track"} {set sep $t} else {set sep $c}
+   set v [lindex $line 5]
+   set ix1 [expr $begin/$pianoxscale]
+   set iy1 [expr 80- $v/2]
+   set ix2 [expr $ix1+2]
+   set iy2 [expr $iy1+2]
+   $p create rect $ix1 $iy1 $ix2 $iy2
+   }
+}
 
 #
 
@@ -4996,6 +5038,7 @@ proc BindXview {lists args} {
     foreach l $lists {
         eval {$l xview} $args
     }
+    if {[winfo exist .pianovelocity]} {.pianovelocity.can xview moveto [lindex $args 1]}
     update_displayed_pdf_windows [lindex $lists 0]
 }
 
@@ -5071,6 +5114,7 @@ proc piano_zoom {} {
         set xv [lindex [.piano.can xview] 0]
         compute_pianoroll
         piano_horizontal_scroll $xv
+        puts "xv = $xv"
     }
     update_displayed_pdf_windows .piano.can
     applyHighlightTrackStatic 
@@ -7283,7 +7327,7 @@ proc compute_pianoroll {} {
     
     #set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
     set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
-    append exec_out $cmd
+    append exec_out \n$cmd
     catch {eval $cmd} pianoresult
     set pianoresult [split $pianoresult "\n"]
     #set nrec [llength $pianoresult]
@@ -7463,7 +7507,7 @@ if {$hide == 1} {
   } else {
   set col black
   }
-#puts "hideExposeSomePiano... hide = $hide col = $col"
+puts "hideExposeSomePiano... hide = $hide col = $col"
 if {$midi(midishow_sep) == "track"} {
   for {set i 2} {$i < 32} {incr i} {
     if {[info exist track2channel($i)] && $trksel($i) == 0} {
@@ -7474,6 +7518,7 @@ if {$midi(midishow_sep) == "track"} {
   for {set i 0} {$i <17} {incr i} {
     if {[info exist activechan($i)] && $trksel($i) == 0} {
       .piano.can itemconfigure trk$i -fill $col -width 4
+      puts "hide channel $i"
     }
   }
 }
@@ -7498,6 +7543,7 @@ proc put_trkchan_selector {} {
         .piano.trkchn.play configure -text "play tracks" -font $df
         .piano.trkchn.display configure -text "display tracks" -font $df
         .piano.trkchn.abc configure -text "notate tracks" -font $df
+        .piano.trkchn.velocity configure -text "note velocities" -font $df
 	for {set i 2} {$i <32} {incr i} {
             if {[info exist track2channel($i)]} {
               grid .piano.trkchn.$i -sticky nw -row [expr $j/10] -column [expr 2 +( $j % 10)]
@@ -7510,6 +7556,7 @@ proc put_trkchan_selector {} {
         .piano.trkchn.play configure -text "play channels" -font $df
         .piano.trkchn.display configure -text "display channels" -font $df
         .piano.trkchn.abc configure -text "notate channels" -font $df
+        .piano.trkchn.velocity configure -text "note velocities" -font $df
 	for {set i 0} {$i <17} {incr i} {
             if {[lindex $channel_activity $i] > 0} {
               set i1 [expr $i+1]
@@ -7568,6 +7615,7 @@ proc put_trkchan_selector {} {
 proc piano_horizontal_scroll {val} {
     .piano.can xview moveto $val
     .piano.canx xview moveto $val
+    if {[winfo exist .pianovelocity]} {.pianovelocity.can xview moveto $val}
 }
 
 
@@ -7782,8 +7830,6 @@ proc midi_to_midi {sel} {
     global midispeed
     global ppqn
     
-    puts "midi_to_midi $sel"
-
     # We first delete the old file in case winamp is still playing it.
     set cmd "file delete -force -- $midi(outfilename)"
     catch {eval $cmd} done
@@ -9334,7 +9380,7 @@ if {![winfo exist .drummap]} {
    }
 wm title .drummap "drummap"
 $b delete 1.0 end
-$b tag configure headr -background wheat3
+$b tag configure headr -background brown4
 $b insert insert "drum\t\t\t  i/j/k\n" headr
 set nlines 0
 foreach drum [array names activedrum] {
@@ -10010,7 +10056,6 @@ proc plotmidi_onset_pdf {} {
         if {$histogram($i) > $maxhgraph} {set maxhgraph $histogram($i)}
     }
     set colfg [lindex [.info.input config -fg] 4]
-    set colfg #000000
     set maxhgraph [expr $maxhgraph + 0.1]
     if {[winfo exists .onsetpdf] == 0} {
         toplevel .onsetpdf
@@ -10053,7 +10098,7 @@ proc plotmidi_offset_pdf {} {
         lappend hgraph $histogram($i)
         if {$histogram($i) > $maxhgraph} {set maxhgraph $histogram($i)}
     }
-   set colfg [lindex [.info.input config -fg] 4]
+    set colfg [lindex [.info.input config -fg] 4]
     set maxhgraph [expr $maxhgraph + 0.1]
     if {[winfo exists .offsetpdf] == 0} {
         toplevel .offsetpdf
@@ -10477,6 +10522,7 @@ proc plot_pitch_class_histogram {} {
     set ytbx 5
     set ybbx [expr $h -15]
     set sharpflatnotes  {C C# D Eb E F F# G G# A Bb B}
+    set colfg [lindex [.info.input config -fg] 4]
 
     set maxgraph 0.0
     set pitchcl ""
@@ -10543,7 +10589,7 @@ proc plot_pitch_class_histogram {} {
           set i $j
           }
         set ix [Graph::ixpos [expr $i +0.5]]
-        $pitchc create text $ix $iy -text $note -font $df
+        $pitchc create text $ix $iy -text $note -font $df -fill $colfg
         set iyb [Graph::iypos $notedist($j)]
         set count [expr round($notedist($j)*$total)]
         append exec_out  "$note $count\n"
@@ -11018,7 +11064,7 @@ proc plot_velocity_map {source} {
     set nrec [llength $pianoresult]
     set midilength [lindex $pianoresult [expr $nrec -6]]
 
-   set colfg [lindex [.info.input config -fg] 4]
+    set colfg [lindex [.info.input config -fg] 4]
     set limits [midi_limits .piano.can]
     set start [expr double([lindex $limits 0])/$ppqn]
     set stop  [expr double([lindex $limits 1])/$ppqn]
@@ -13764,7 +13810,7 @@ if {![winfo exist .barmap]} {
    } 
 wm title .barmap "$type map"
 $b delete 1.0 end
-$b tag configure headr -background wheat3
+$b tag configure headr -background grey50
 
 set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
 catch {eval $cmd} pianoresult
@@ -13776,7 +13822,7 @@ set beatsperbar 4
 set exec_out [append exec_out "note_patterns:\n\n$cmd\n\n $pianoresult"]
 update_console_page
 if {$midi(midishow_sep) == "track"} {
-   $b insert insert "trk\tn  \n" wheat3
+   $b insert insert "trk\tn  \n" grey50
    set ntrks $lasttrack
    incr ntrks} else {
    $b insert insert "chn\ti/j/k       \n" wheat3
@@ -15528,10 +15574,12 @@ proc keymap {source} {
     set xrbx 498
     set ytbx 30
     set ybbx 70
+    # white or black characters
+    set colfg [lindex [.info.input config -fg] 4]
     set yscale [expr (70 - 30)/15.0]
     .keystrip.c create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
-         -width 2 -fill grey90 
-     
+         -width 2 -fill $colfg
+
      for {set sf -6} {$sf < 7} {incr sf 2} {
        set y0 [expr (6 -$sf) * $yscale  + 33]
        .keystrip.c create line $xlbx $y0 $xrbx $y0 -fill gray70
