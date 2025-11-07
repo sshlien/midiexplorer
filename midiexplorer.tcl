@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.01 2025-10-30 16:46" 
+set midiexplorer_version "MidiExplorer version 5.03 2025-11-06 08:52" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -454,6 +454,7 @@ proc ::tooltip::enableCanvas {w args} {
 proc colorScheme {} {
 global midi
 global df
+global colfg
 set w .colors
 catch {destroy $w}
 toplevel $w
@@ -471,9 +472,19 @@ button $w.action.default -text "restore defaults" -font $df -command {
 	set midi(colorscheme) grey90
         set hexColor [getHexColor $midi(colorscheme)]
         ttk::style configure Treeview -foreground black -background [lindex $hexColor 0]
-        tk_setPalette grey90}
+        tk_setPalette grey90
+        set colfg black
+        }
+button $w.action.black -text "black mode" -font $df -command {
+	set midi(colorscheme) black
+        set hexColor [getHexColor black] 
+        ttk::style configure Treeview -foreground white -background [lindex $hexColor 0]
+        tk_setPalette black
+        set colfg black
+        }
+
 pack $w.action
-pack $w.action.default -side left
+pack $w.action.default $w.action.black -side left
 
 frame $w.frame -borderwidth 10
 pack $w.frame -side top -expand yes -fill y
@@ -492,10 +503,16 @@ bind $w.frame.list <Double-1> {
       } else {
       ttk::style configure Treeview -foreground black -background [lindex $hexColor 0]
       }
-    #puts [ttk::style configure Treeview]
+# get the default foreground color for checkbuttons (radiobuttons)
+      checkbutton .z
+      set checkforeground [.z configure -foreground]
+      set colfg [lindex $checkforeground 4]
+      destroy .z
 }
 
-$w.frame.list insert 0 black gray60 gray70 gray80 gray85 gray90 gray95 \
+
+
+$w.frame.list insert 0 gray60 gray70 gray80 gray85 gray90 gray95 \
     snow1 snow2 snow3 snow4 seashell1 seashell2 \
     seashell3 seashell4 AntiqueWhite1 AntiqueWhite2 AntiqueWhite3 \
     AntiqueWhite4 bisque1 bisque2 bisque3 bisque4 PeachPuff1 \
@@ -572,6 +589,12 @@ proc getHexColor {colorName} {
 
     # Combine into the full hexadecimal color string
     return "#$hexR$hexG$hexB $brightness"
+}
+
+proc black2white {colorName} {
+if {$colorName == "white"} {
+  return black
+  } else {return "white"}
 }
 
 
@@ -706,6 +729,7 @@ proc midiInit {} {
     set midi(.pitchclass) ""
     set midi(.keypitchclass) ""
     set midi(.midivelocity) ""
+    set midi(.pianovelocity) ""
     set midi(.mftext) ""
     set midi(.searchbox) ""
     set midi(.graph) ""
@@ -818,7 +842,7 @@ proc midiInit {} {
 
     set midi(mftextunits) 2
     set midi(autoopen) 0
-    set midi(colorscheme) ""
+    set midi(colorscheme) "bisque"
 
 
     set midi(midirest) 2
@@ -1034,6 +1058,12 @@ wm title . $midiexplorer_version
 
 if {[string length $midi(colorscheme)] > 0} {
   tk_setPalette $midi(colorscheme)
+# get the default foreground color for checkbuttons (radiobuttons)
+# in case colorScheme was not called.
+      checkbutton .z
+      set checkforeground [.z configure -foreground]
+      set colfg [lindex $checkforeground 4]
+      destroy .z
   }
 
 
@@ -1085,7 +1115,8 @@ for {set i 0} {$i < $midi(history_length)} {incr i} {
 }
 
 
-#unfortunately none of these tooltips are visible on Windows due to a bug
+#unfortunately none of these tooltips are visible on Windows for older
+#versions of tcl/tk due to a bug
 tooltip::tooltip $ww -index 0 "select the folder containing midi
 files to browse. This will be called\nthe root folder."
 tooltip::tooltip $ww -index 1 "extract the information of the last
@@ -1132,13 +1163,13 @@ $ww add command -label "midi2abc configuration" -font $df -command midi2abc_conf
 
 $ww add command -label "color scheme" -font $df -command colorScheme
 
-$ww add checkbutton -label "auto-open" -font $df -variable midi(autoopen)
+$ww add checkbutton -label "auto-open" -font $df -variable midi(autoopen) -selectcolor [black2white $colfg]
 
 $ww add checkbutton -label "tooltips" -font $df -variable midi(tooltips)\
-  -command cfgtooltips
+  -command cfgtooltips  -selectcolor [black2white $colfg]
 
 $ww add checkbutton -label "remember locations of windows" -font $df\
- -variable midi(autoposition)
+ -variable midi(autoposition)  -selectcolor [black2white $colfg]
 
 $ww add command -label "clear recents" -font $df -command deleteHistory
 
@@ -1513,7 +1544,7 @@ bind_accelerators
 set hlp_shortcuts "Shortcuts\n
 Control-a\taftertouch
 Control-b\tplay
-Control-d\drumroll
+Control-d\tdrumroll
 Control-e\tbar rhythm patterns
 Control-g\tsearch genre
 Control-h\tchordgram
@@ -3039,9 +3070,11 @@ pack $w.blk.right.status
 
 frame $w.prf
 label $w.prf.ignlab -text "ignore hi-hat" -font $df
-checkbutton $w.prf.ignchk -variable midi(ignoreHiHat) -command switchIgnoreHiHat
+checkbutton $w.prf.ignchk -variable midi(ignoreHiHat) -command switchIgnoreHiHat\
+-fg black
 label $w.prf.seplab -text "separate drums" -font $df
-checkbutton $w.prf.sepchk -variable midi(separate) -command compute_drum_pattern
+checkbutton $w.prf.sepchk -variable midi(separate) -command compute_drum_pattern\
+-fg black
 pack   $w.prf.ignlab $w.prf.ignchk $w.prf.seplab $w.prf.sepchk -side left 
 
 bind_all_percussion_tags
@@ -3276,6 +3309,7 @@ global lastpulse
 #puts "loadingMidi $midi(midifilein)"
 append exec_out "\n\nloadMidiFile : extracting info from $midi(midifilein)"
 
+if {![info exists lastpulse]} load_last_midi_file
 if {$cleanData} return
 if {![file exist $midi(midifilein)]} {
  set msg "Cannot find the file $midi(midifilein). Use the open button to browse to the midi file that\
@@ -3332,6 +3366,7 @@ proc noteRibbon {} {
 global df
 global midie
 global hlp_PitchClassMap
+global colfg
 if {![winfo exist .ribbon]} {
   toplevel .ribbon
   positionWindow ".ribbon"
@@ -3340,7 +3375,7 @@ if {![winfo exist .ribbon]} {
   frame  $v 
   button $v.help -text help -font $df -command {show_message_page $hlp_PitchClassMap word}
   button $v.play -text play -font $df
-  checkbutton $v.circle -text "circle of fifths" -variable midi(tableau5) -font $df -command updateTableauWindows
+  checkbutton $v.circle -text "circle of fifths" -variable midi(tableau5) -font $df -command updateTableauWindows -selectcolor [black2white $colfg]
   #pack $v.play $v.circle $v.help -side left -anchor nw
   pack  $v.circle $v.help -side left -anchor nw
   
@@ -3421,6 +3456,7 @@ proc tableauWindow {} {
 # creates window for the simple and detailed tableau
 global midi
 global df
+global colfg
 set w .ptableau
 if {![winfo exist $w]} {
   toplevel $w
@@ -3434,6 +3470,7 @@ if {![winfo exist $w]} {
   label .ptableau.status -text "$midi(midifilein)"
   frame $w.header
   button $w.header.play -text play -command {playExposed tableau} -font $df
+  puts "button color = [lindex [$w.header.play configure -fg] 3]"
   tooltip::tooltip $w.header.play "Generates the midi file for the selected\nchannels and region and plays it.."
   menubutton $w.header.dot -text "dot size" -font $df -menu $w.header.dot.items
   menu $w.header.dot.items -tearoff 0
@@ -3445,7 +3482,8 @@ if {![winfo exist $w]} {
   $w.header.dot.items add radiobutton -label 5 -font $df -command {dotmod 5}
  tooltip::tooltip $w.header.dot "Adjusts the dot size for each note."
 
-  checkbutton $w.header.comp -text compress  -font $df -variable midi(compression) -command detailed_tableau 
+  
+  checkbutton $w.header.comp -text compress  -font $df -variable midi(compression) -command detailed_tableau -selectcolor [black2white $colfg] 
  tooltip::tooltip $w.header.comp "Compresses the horizontal scale so that the\nentire midi file fits in the window for most files."
 
  menubutton $w.header.plot -text plot -menu $w.header.plot.items -font $df
@@ -3483,7 +3521,7 @@ if {![winfo exist $w]} {
  tooltip::tooltip $w.header.plot "Various plots including chordgram and notegram"
 
 
-  checkbutton $w.header.circle -text "circle of fifths" -variable midi(tableau5) -font $df -command updateTableauWindows
+  checkbutton $w.header.circle -text "circle of fifths" -variable midi(tableau5) -font $df -command updateTableauWindows -selectcolor [black2white $colfg]
  tooltip::tooltip $w.header.circle "Sets the vertical scale for notes to follow\nthe circle of fifths when checked."
 
   button $w.header.abc -text abc -font $df -command tableau_abc
@@ -4133,7 +4171,7 @@ grid $w.edbut -row 5 -column 1
 grid $w.edent -row 5 -column 2
 bind $w.edent <Return> {focus .support.header}
 
-checkbutton $w.display -variable midi(use_js) 
+checkbutton $w.display -variable midi(use_js) -fg black
 label $w.displaylabel -font $df -text "use Jef Moine's javascript instead of abcm2ps and gs"
 grid $w.display -row 6 -column 1  
 grid $w.displaylabel  -row 6 -column 2 -sticky nw 
@@ -4698,6 +4736,7 @@ proc piano_window {} {
     global midi
     global df
     global midispeed
+    global colfg
     if {[winfo exist .piano]} {destroy .piano}
     toplevel .piano
     positionWindow .piano
@@ -4725,9 +4764,9 @@ proc piano_window {} {
     $p.config.items add checkbutton -label "suppress drum channel" -font $df\
             -variable midi(nodrumroll) -command compute_pianoroll
     $p.config.items add checkbutton -label "follow while playing" -font $df\
-            -variable midi(midishow_follow)
+            -variable midi(midishow_follow) 
     $p.config.items add command -label "ppqn adjustment" -font $df\
-            -command ppqn_adjustment_window
+            -command ppqn_adjustment_window 
     $p.config.items add command -label "external executables" -font $df\
             -command set_external_programs
     
@@ -4770,6 +4809,8 @@ proc piano_window {} {
                 plotmidi_velocity_pdf}
     $p.action.items add command  -label "velocity map" -font $df \
             -command {plot_velocity_map pianoroll}
+    $p.action.items add command  -label "velocity map detailed" -font $df \
+            -command {piano_roll_velocity}
     $p.action.items add command  -label "beat graph" -font $df \
             -command {beat_graph pianoroll}
     $p.action.items add command  -label "notegram" -font $df \
@@ -4832,7 +4873,7 @@ proc piano_window {} {
     grid .piano.trkchn -columnspan 3 -sticky nw
     
     for {set i 0} {$i < 32} {incr i} {
-          checkbutton .piano.trkchn.$i -text $i -variable trksel($i) -font $df
+          checkbutton .piano.trkchn.$i -text $i -variable trksel($i) -font $df  -selectcolor [black2white $colfg]
         }
 
     configureTrackSelector
@@ -4855,8 +4896,6 @@ proc piano_window {} {
         set miditime [midi_to_midi 1]
         piano_notate_midi_extract
         }
-    button .piano.trkchn.velocity -relief raised -padx 1 -pady 1 -command piano_roll_velocity
-    ####grid .piano.trkchn.velocity -column 2 -row 2
     
     
     bind $p.can <ButtonPress-1> {piano_Button1Press %x %y}
@@ -4967,9 +5006,12 @@ set p .pianovelocity
 global pianorollwidth
 if {![winfo exist $p]} {
   toplevel $p
-  canvas $p.can -width $pianorollwidth -height 100 -border 3 -relief sunken -scrollregion\
-            {0 0 2500 80}
+  canvas $p.can -width $pianorollwidth -height 140 -border 3 -relief sunken -scrollregion\
+            {0 0 2500 140} -bd 3
+  positionWindow .pianovelocity
+  label $p.msg -text ""
   pack $p.can
+  pack $p.msg
   }
 compute_pianoroll_velocity
 }
@@ -4978,9 +5020,22 @@ proc compute_pianoroll_velocity {} {
 global pianoresult pianoxscale
 global midi
 global trksel
+global piano_vert_lines
+global colfg
 #puts "trksel [array get trksel]"
 set p .pianovelocity.can
+set pianosr  [.piano.can cget -scrollregion]
+#puts "pianosr = $pianosr"
+set pianovsr [.pianovelocity.can cget -scrollregion]
+#puts "pianovsr = $pianovsr"
+set xscroll [lindex $pianosr 2]
+set pianovsr [lreplace $pianovsr 2 2 $xscroll]
+#puts "pianovsr = $pianovsr"
+.pianovelocity.can configure -scrollregion $pianovsr
+
+
 $p delete all
+set npoints 0
 foreach line $pianoresult {
    if {[llength $line] != 6} continue
    set begin [lindex $line 0]
@@ -4994,13 +5049,50 @@ foreach line $pianoresult {
    if {$midi(midishow_sep) == "track"} {set sep $t} else {set sep $c}
    set v [lindex $line 5]
    set ix1 [expr $begin/$pianoxscale]
-   set iy1 [expr 80- $v/2]
+   set iy1 [expr 140 - $v]
    set ix2 [expr $ix1+2]
    set iy2 [expr $iy1+2]
-   $p create rect $ix1 $iy1 $ix2 $iy2
+   $p create rect $ix1 $iy1 $ix2 $iy2 -outline $colfg
+   incr npoints
    }
+if {$npoints < 2}   {
+   .pianovelocity.msg configure -text "select a track or channel in the pianoroll window and zoom or scroll" -fg red
+   } else {
+   .pianovelocity.msg configure -text ""
+   }
+
+piano_velocity_qnotelines
 }
 
+proc piano_velocity_qnotelines {} {
+    global ppqn midilength pianoxscale piano_vert_lines
+    global piano_qnote_offset vspace
+    global colfg
+    set p .pianovelocity
+    set top 0
+    set bot 138
+    $p.can delete -tag  barline
+    if {$piano_vert_lines > 0} {
+        set vspace [expr $ppqn*$piano_vert_lines]
+        set txspace $vspace
+        while {[expr $txspace/$pianoxscale] < 40} {
+            set txspace [expr $txspace + $vspace]
+        }
+        
+        
+        for {set i $piano_qnote_offset} {$i < $midilength} {incr i $vspace} {
+            set ix1 [expr $i/$pianoxscale]
+            if {$ix1 < 0} continue
+            $p.can create line $ix1 $top $ix1 $bot -width 1 -tag barline -fill green
+        }
+        
+        for {set i $piano_qnote_offset} {$i < $midilength} {incr i $txspace} {
+            set ix1 [expr $i/$pianoxscale]
+            if {$ix1 < 0} continue
+            $p.can create text $ix1 5 -text [expr $piano_vert_lines*int($i/$vspace)] -fill $colfg
+        }
+    }
+}
 #
 
 
@@ -5038,7 +5130,10 @@ proc BindXview {lists args} {
     foreach l $lists {
         eval {$l xview} $args
     }
-    if {[winfo exist .pianovelocity]} {.pianovelocity.can xview moveto [lindex $args 1]}
+    if {[winfo exist .pianovelocity]} {
+      .pianovelocity.can xview moveto [lindex $args 1] 
+      # puts "pianovelocity.can xview moveto $args"
+      }
     update_displayed_pdf_windows [lindex $lists 0]
 }
 
@@ -5114,7 +5209,6 @@ proc piano_zoom {} {
         set xv [lindex [.piano.can xview] 0]
         compute_pianoroll
         piano_horizontal_scroll $xv
-        puts "xv = $xv"
     }
     update_displayed_pdf_windows .piano.can
     applyHighlightTrackStatic 
@@ -5235,6 +5329,7 @@ proc beat_graph {source} {
     global tbeat
     global compactMidifile
     global df
+    global colfg
     
     
     set tsel [count_selected_midi_tracks]
@@ -5262,7 +5357,6 @@ proc beat_graph {source} {
     } else {.beatgraph.c delete all}
      
     # white or black characters
-    set colfg [lindex [.info.input config -fg] 4]
 
 
     set delta_tick [expr int(($tbeat - $fbeat)/10.0)]
@@ -5389,8 +5483,8 @@ proc chordtext_window {source} {
      button $f.1.histogram -text "chord histogram" -font $df -command "chord_histogram $source"
      menubutton $f.1.options -text options -font $df -menu $f.1.options.items
      menu $f.1.options.items 
-     $f.1.options.items add checkbutton  -label "open chords" -font $df -variable midi(openChords) -command "openClosedChords $source"
-     $f.1.options.items add checkbutton -label "show unidentified chords" -font $df -variable midi(showUnidentifiedChords) -command "openClosedChords $source"
+     $f.1.options.items add checkbutton  -label "open chords" -font $df -variable midi(openChords) -command "openClosedChords $source" -fg black
+     $f.1.options.items add checkbutton -label "show unidentified chords" -font $df -variable midi(showUnidentifiedChords) -command "openClosedChords $source" -fg black
      pack $f.1.help $f.1.histogram $f.1.options -side left -anchor w
      frame $f.2
      pack $f.1 $f.2 -side top -anchor w
@@ -6089,6 +6183,7 @@ proc chordgram_plot {source} {
    global keysig
    global beatsplitter
    global exec_out
+   global colfg
    set exec_out "chordgram_plot\n"
    set beatsplitter 1
    if {![winfo exist .chordgram]} {
@@ -6096,7 +6191,7 @@ proc chordgram_plot {source} {
      positionWindow .chordgram
      set ch .chordgram.head
      frame $ch 
-     checkbutton $ch.2 -text "circle of fifths" -variable midi(chordgram) -font $df -padx 1  -command "call_compute_chordgram chordgram"
+     checkbutton $ch.2 -text "circle of fifths" -variable midi(chordgram) -font $df -padx 1  -command "call_compute_chordgram chordgram" -selectcolor [black2white $colfg]
      button $ch.play -text play -font $df -padx 1 -command {playExposed chordgram}
   tooltip::tooltip $ch.play "play the highlighted area or
  the exposed plot."
@@ -6236,6 +6331,8 @@ compute_chordgram $start $stop
 proc make_chordgram {source} {
 global chord_sequence
 global seqlength
+global lastpulse
+if {![info exists lastpulse]} load_last_midi_file
 set chord_sequence [determineChordSequence $source 0]
 set last_beat [dict size $chord_sequence]
 set seqlength $last_beat
@@ -6357,6 +6454,7 @@ proc compute_chordgram {start stop} {
    global fbeat
    global tbeat
    global keysig
+   global colfg
    global exec_out
    append exec_out "compute_chordgram $start $stop\n"
    #puts "key siganature = $keysig"
@@ -6382,9 +6480,6 @@ proc compute_chordgram {start stop} {
    $c delete all
    $c create rectangle $xlbx $ybbx $xrbx $ytbx -outline black -width 2 -fill lightgrey 
   set start5 [expr (1 + int($start)/5)*5.0]
-
-   # white or black characters
-   set colfg [lindex [.info.input config -fg] 4]
 
    set pixelsperbeat [expr ($xrbx - $xlbx) / double($stop - $start)]
    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx $start $stop 0.0 200.0 
@@ -6553,11 +6648,12 @@ proc notegram_plot {source} {
    global pianorollwidth
    global midi
    global df
+   global colfg
    if {![winfo exist .notegram]} {
      toplevel .notegram
      positionWindow .notegram
      frame .notegram.head
-     checkbutton .notegram.head.2 -text "circle of fifths" -variable midi(notegram) -font $df -command {compute_notegram none}
+     checkbutton .notegram.head.2 -text "circle of fifths" -variable midi(notegram) -font $df -command {compute_notegram none} -selectcolor [black2white $colfg]
      button .notegram.head.play -text play -font $df -command {playExposed notegram}
      button .notegram.head.zoom -text zoom -command zoom_notegram -font $df
      button .notegram.head.unzoom -text unzoom -command unzoom_notegram -font $df
@@ -6658,10 +6754,10 @@ proc compute_notegram {source} {
    global cleanData
    global exec_out
    global briefconsole
+   global colfg
    set exec_out "compute_notegram:\n"
    set permut5th {0 7 2 9 4 11 6 1 8 3 10 5}
    # white or black characters
-   set colfg [lindex [.info.input config -fg] 4]
 
    copyMidiToTmp $source
    set cleanData 0
@@ -6886,10 +6982,10 @@ function"
 
   set f [frame $w.leftbuttons -bd 3 -relief sunken]
   for {set i 2} {$i <40} {incr i} {
-    checkbutton .midistructure.leftbuttons.$i -text "trk$i" -variable miditracks($i) -font $df -command {updateAllWindows midistructure}
+    checkbutton .midistructure.leftbuttons.$i -text "trk$i" -variable miditracks($i) -font $df -command {updateAllWindows midistructure} -fg black
     }
   for {set i 1} {$i <17} {incr i} {
-    checkbutton .midistructure.leftbuttons.c$i -text "chan$i" -variable midichannels($i) -font $df -command {updateAllWindows midistructure}
+    checkbutton .midistructure.leftbuttons.c$i -text "chan$i" -variable midichannels($i) -font $df -command {updateAllWindows midistructure} -fg black
     }
   set yspacing [winfo reqheight .midistructure.leftbuttons.2]
   canvas $w.can -width $midistructurewidth -height 200 -border 3 -relief sunken -scrollregion "0. 0. $midistructurewidth 200"
@@ -7044,6 +7140,7 @@ proc show_prog_structure {} {
   global midicommands
   global ppqn
   global chn2prg
+  global colfg
 
   set exec_out "show_prog_structure"
   #puts "show_midi_structure channel2program [array get channel2program]"
@@ -7110,7 +7207,7 @@ proc show_prog_structure {} {
     set x  [expr $x + $xspacing]
     set x1 [expr $x * $pixels_per_beat]
     .midistructure.can create line $x1 0 $x1 [expr $nbut*$yspacing] -dash {1 2}
-    .midistructure.canx create text $x1 15 -text $x -font $df
+    .midistructure.canx create text $x1 15 -text $x -font $df -fill $colfg
     }
 
 
@@ -7325,7 +7422,7 @@ proc compute_pianoroll {} {
     global piano_qnote_offset
     global exec_out
     
-    #set cmd "exec [list $midi(path_midi2abc)] $midi(outfilename) -midigram"
+    if {![info exists lastpulse]} load_last_midi_file
     set cmd "exec [list $midi(path_midi2abc)] [list $midi(midifilein)] -midigram"
     append exec_out \n$cmd
     catch {eval $cmd} pianoresult
@@ -7393,7 +7490,6 @@ proc compute_pianoroll {} {
     
     piano_qnotelines
 
-
     foreach line $pianoresult {
         if {[string match "Program" [lindex $line 1]] == 1} {
           set chanprog([lindex $line 2]) [lindex $line 3]
@@ -7411,13 +7507,15 @@ proc compute_pianoroll {} {
         set track2channel($t) $c
         if {$midi(midishow_sep) == "track"} {set sep $t} else {set sep $c}
         set note [lindex $line 4]
+        set v [lindex $line 5]
         set ix1 [expr $begin/$pianoxscale]
         set ix2 [expr $end/$pianoxscale]
         set iy [expr 720 - ($note-20)*8]
+        set iyvel [expr 600 - $v/2]
         if {$midi(nodrumroll) == 0 || $c != 10} {
           $p.can create line $ix1 $iy $ix2 $iy -width 3 -tag trk$sep\
                 -arrow last -arrowshape {2 2 2}
-          #puts "tag = trk$sep"
+#          $p.can create line $ix1 $iyvel $ix2 $iyvel -width 3 -fill brown
           }
         set activechan($sep) 1
     }
@@ -7444,6 +7542,7 @@ proc compute_pianoroll {} {
 proc piano_qnotelines {} {
     global ppqn midilength pianoxscale piano_vert_lines
     global piano_qnote_offset vspace
+    global colfg
     set p .piano
     $p.canx delete all
     set bounding_box [$p.can bbox all]
@@ -7467,7 +7566,7 @@ proc piano_qnotelines {} {
         for {set i $piano_qnote_offset} {$i < $midilength} {incr i $txspace} {
             set ix1 [expr $i/$pianoxscale]
             if {$ix1 < 0} continue
-            $p.canx create text $ix1 5 -text [expr $piano_vert_lines*int($i/$vspace)]
+            $p.canx create text $ix1 5 -text [expr $piano_vert_lines*int($i/$vspace)] -fill $colfg
         }
     }
 }
@@ -7543,7 +7642,6 @@ proc put_trkchan_selector {} {
         .piano.trkchn.play configure -text "play tracks" -font $df
         .piano.trkchn.display configure -text "display tracks" -font $df
         .piano.trkchn.abc configure -text "notate tracks" -font $df
-        .piano.trkchn.velocity configure -text "note velocities" -font $df
 	for {set i 2} {$i <32} {incr i} {
             if {[info exist track2channel($i)]} {
               grid .piano.trkchn.$i -sticky nw -row [expr $j/10] -column [expr 2 +( $j % 10)]
@@ -7556,7 +7654,6 @@ proc put_trkchan_selector {} {
         .piano.trkchn.play configure -text "play channels" -font $df
         .piano.trkchn.display configure -text "display channels" -font $df
         .piano.trkchn.abc configure -text "notate channels" -font $df
-        .piano.trkchn.velocity configure -text "note velocities" -font $df
 	for {set i 0} {$i <17} {incr i} {
             if {[lindex $channel_activity $i] > 0} {
               set i1 [expr $i+1]
@@ -8308,6 +8405,7 @@ set drumpatches {
 
 proc drum_selector {} {
 global drumpatches
+global colfg
 #global progmapper
 #global groupcolors
 global df
@@ -8321,7 +8419,7 @@ button .drumsel.47 -command clear_drum_select -font $df -text "clear all"
 for {set i 0} {$i < 47} {incr i} {
  set elem [lindex $drumpatches $i]
  set lab "[lindex $elem 0] [lindex $elem 1]"
- checkbutton $w.$i -text $lab -variable drumselect($i) -command update_drumlist -font $df -width 24 -anchor w -borderwidth 0 
+ checkbutton $w.$i -text $lab -variable drumselect($i) -command update_drumlist -font $df -width 24 -anchor w -borderwidth 0 -selectcolor [black2white $colfg]
  }
 for {set i 0} {$i < 12} {incr i} {
   set i2 [expr $i + 12]
@@ -8537,11 +8635,6 @@ proc drumroll_config {} {
     radiobutton $p.normal -text "play everything" -variable midi(playdrumdata) -value normaldrum -font $df 
     radiobutton $p.nodrum -text "do not play the percussion lines" -variable midi(playdrumdata) -font $df -value nodrums
     radiobutton $p.onlydrum -text "play only the percussion lines" -variable midi(playdrumdata) -font $df -value onlydrums
-#    radiobutton $p.focussel -text "boost selection" -variable midi(playdrumdata) -font $df -value boostdrumsel
-#    checkbutton $p.mute -text "mute nondrum channels"\
-# -variable midi(mutenodrum) -font $df
-#    checkbutton $p.drumboost -text "set selected drum loudness"\
-# -variable midi(drumvelocity) -font $df
     pack $p.normal $p.nodrum $p.onlydrum -side top -anchor w
 }
 
@@ -8574,7 +8667,9 @@ proc show_drum_events {} {
     global ppqn
     global midilength
 
- if {[file exist $midi(midifilein)] == 0} {
+    if {![info exists lastpulse]} load_last_midi_file
+
+    if {[file exist $midi(midifilein)] == 0} {
         .drumroll.txt configure -text "can't open file $midi(midifilein)"\
                 -foreground red -font $df
         return
@@ -8610,6 +8705,7 @@ proc drumroll_qnotelines {} {
     global piano_qnote_offset
     global vspace
     global df
+    global colfg
     set p .drumroll
     $p.canx delete all
     set bounding_box [$p.can bbox all]
@@ -8633,7 +8729,7 @@ proc drumroll_qnotelines {} {
         for {set i $piano_qnote_offset} {$i < $midilength} {incr i $txspace} {
             set ix1 [expr $i/$drumxscale]
             if {$ix1 < 0} continue
-            $p.canx create text $ix1 11 -font $df -text [expr $piano_vert_lines*int($i/$vspace)]
+            $p.canx create text $ix1 11 -font $df -text [expr $piano_vert_lines*int($i/$vspace)] -fill $colfg
         }
     }
 }
@@ -8654,6 +8750,7 @@ proc compute_drumroll {} {
     global df
     global activedrum avgvel
     global drumpick
+    global colfg
     
     if {[llength $pianoresult] < 1} {
         return
@@ -8695,7 +8792,7 @@ proc compute_drumroll {} {
 	    if {[winfo exist $p.cany.drm$i] != 1} {
               set drumpick($i) 0
 	      checkbutton $p.cany.drm$i -text $legend -variable drumpick($i)\
-	         -command update_drumroll_pdfs -font $df
+	         -command update_drumroll_pdfs -font $df -selectcolor [black2white $colfg]
               tooltip::tooltip $p.cany.drm$i  "$activedrum($jj) strikes\nvelocity = $avgvel($jj)"
                } else {
              $p.cany.drm$i configure -text $legend 
@@ -9974,10 +10071,10 @@ proc plotmidi_pitch_pdf {} {
     global midi
     global df
     global compactMidifile
+    global colfg
     set hgraph ""
     set maxhgraph 0.0
     set statc .pitchpdf.c
-    set colfg [lindex [.info.input config -fg] 4]
     for {set i 0} {$i < 128} {incr i} {
         lappend hgraph $i
         lappend hgraph $histogram($i)
@@ -10010,6 +10107,7 @@ proc plotmidi_velocity_pdf {} {
     global midi
     global df
     global compactMidifile
+    global colfg
     set hgraph ""
     set maxhgraph 0.0
     set statc .velocitypdf.c
@@ -10018,7 +10116,6 @@ proc plotmidi_velocity_pdf {} {
         lappend hgraph $histogram($i)
         if {$histogram($i) > $maxhgraph} {set maxhgraph $histogram($i)}
     }
-    set colfg [lindex [.info.input config -fg] 4]
     set maxhgraph [expr $maxhgraph + 0.1]
     if {[winfo exists .velocitypdf] == 0} {
         toplevel .velocitypdf
@@ -10046,6 +10143,7 @@ proc plotmidi_onset_pdf {} {
     global midi
     global df
     global compactMidifile
+    global colfg
     set hgraph ""
     set maxhgraph 0.0
     set statc .onsetpdf.c
@@ -10055,7 +10153,6 @@ proc plotmidi_onset_pdf {} {
         lappend hgraph $histogram($i)
         if {$histogram($i) > $maxhgraph} {set maxhgraph $histogram($i)}
     }
-    set colfg [lindex [.info.input config -fg] 4]
     set maxhgraph [expr $maxhgraph + 0.1]
     if {[winfo exists .onsetpdf] == 0} {
         toplevel .onsetpdf
@@ -10089,6 +10186,7 @@ proc plotmidi_offset_pdf {} {
     global midi
     global df
     global compactMidifile
+    global colfg
     set hgraph ""
     set maxhgraph 0.0
     set statc .offsetpdf.c
@@ -10098,7 +10196,6 @@ proc plotmidi_offset_pdf {} {
         lappend hgraph $histogram($i)
         if {$histogram($i) > $maxhgraph} {set maxhgraph $histogram($i)}
     }
-    set colfg [lindex [.info.input config -fg] 4]
     set maxhgraph [expr $maxhgraph + 0.1]
     if {[winfo exists .offsetpdf] == 0} {
         toplevel .offsetpdf
@@ -10127,6 +10224,7 @@ proc plotmidi_duration_pdf {} {
     global midi
     global df
     global compactMidifile
+    global colfg
     set hgraph ""
     set maxhgraph 0.0
     set statc .durpdf.c
@@ -10138,7 +10236,6 @@ proc plotmidi_duration_pdf {} {
         if {$histogram($i) > $maxhgraph} {set maxhgraph $histogram($i)}
     }
     set maxhgraph [expr $maxhgraph + 0.1]
-    set colfg [lindex [.info.input config -fg] 4]
     if {[winfo exists .durpdf] == 0} {
         toplevel .durpdf
         positionWindow .durpdf
@@ -10423,6 +10520,7 @@ proc show_rmaj {} {
 global rmin
 global rmaj
 global df
+global colfg
 set sharpflatnotes  {C C# D Eb E F F# G G# A Bb B}
 if {$rmaj == 0} return
 set rmajplot .rminmaj.c
@@ -10473,7 +10571,7 @@ for {set j 0} {$j < 12} {incr j} {
   set ix [ixpos $j]
   $rmajplot create line $ix $ybbx $ix $ytbx -dash {1 2}
   set i [expr ($j*7) % 12]
-  $rmajplot create text $ix 150 -text [lindex $sharpflatnotes $i] 
+  $rmajplot create text $ix 150 -text [lindex $sharpflatnotes $i] -fill $colfg
   }
 }
 
@@ -10514,6 +10612,7 @@ proc plot_pitch_class_histogram {} {
     global midi
     global compactMidifile
     global sharpflatnotes
+    global colfg
     
     set w 400
     set h 65 
@@ -10522,7 +10621,6 @@ proc plot_pitch_class_histogram {} {
     set ytbx 5
     set ybbx [expr $h -15]
     set sharpflatnotes  {C C# D Eb E F F# G G# A Bb B}
-    set colfg [lindex [.info.input config -fg] 4]
 
     set maxgraph 0.0
     set pitchcl ""
@@ -10564,7 +10662,7 @@ proc plot_pitch_class_histogram {} {
         positionWindow .pitchclass
         
         frame .pitchclass.frm
-        checkbutton .pitchclass.frm.circle -text "circle of fifths" -variable midi(pitchclassfifths) -font $df -command plot_pitch_class_histogram
+        checkbutton .pitchclass.frm.circle -text "circle of fifths" -variable midi(pitchclassfifths) -font $df -command plot_pitch_class_histogram -selectcolor [black2white $colfg]
         button .pitchclass.frm.notegram -text notegram -font $df -command {notegram_plot none}
         button .pitchclass.frm.chordgram -text chordgram -font $df -command {chordgram_plot none}
         button .pitchclass.frm.keyfinder -text keyfinder -font $df -command show_rmaj
@@ -11048,13 +11146,14 @@ proc plot_velocity_map {source} {
     global trksel
     global fbeat
     global tbeat
+    global colfg
     #puts "plot_velocity_map $source"
     set velmap .midivelocity.c
     if {[winfo exists .midivelocity] == 0} {
         toplevel .midivelocity
         positionWindow .midivelocity
         wm title .midivelocity "midi velocity versus beat number"        
-        pack [canvas $velmap]
+        pack [canvas $velmap -width 550]
     } else {
         .midivelocity.c delete all}
 
@@ -11064,16 +11163,15 @@ proc plot_velocity_map {source} {
     set nrec [llength $pianoresult]
     set midilength [lindex $pianoresult [expr $nrec -6]]
 
-    set colfg [lindex [.info.input config -fg] 4]
     set limits [midi_limits .piano.can]
     set start [expr double([lindex $limits 0])/$ppqn]
     set stop  [expr double([lindex $limits 1])/$ppqn]
     set delta_tick [expr int(($tbeat - $fbeat)/10.0)]
     if {$delta_tick < 1} {set delta_tick 1}
     set tsel [count_selected_midi_tracks]
-    $velmap create rectangle 50 20 350 220 -outline black\
+    $velmap create rectangle 50 20 550 220 -outline black\
             -width 2 -fill white
-    Graph::alter_transformation 50 350 220 20 $fbeat $tbeat 0.0 132
+    Graph::alter_transformation 50 550 220 20 $fbeat $tbeat 0.0 132
     if {[expr $tbeat - $fbeat] > 2.0} {
       Graph::draw_x_ticks $velmap $fbeat $tbeat $delta_tick 2  0 %4.0f $colfg
       } else {
@@ -11097,10 +11195,13 @@ proc plot_velocity_map {source} {
         if {$midi(midishow_sep) == "track"} {set sep $t} else {set sep $c}
         if {$tsel != 0 && $trksel($sep) == 0} continue
         set ix1 [Graph::ixpos $begin]
-        set ix2 [Graph::ixpos $end]
+        #set ix2 [Graph::ixpos $end]
+        set ix2 [expr $ix1 + 2]
         set iy [Graph::iypos $v]
-	if {$ix2 > 350} {set ix2 350}
-        $velmap create line $ix1 $iy $ix2 $iy -width 3
+        set iy2 [expr $iy + 2]
+	if {$ix2 > 550} {set ix2 550}
+        #$velmap create line $ix1 $iy $ix2 $iy -width 3
+        $velmap create rect $ix1 $iy $ix2 $iy2
     }
 }
 
@@ -11130,6 +11231,7 @@ proc mftext_tmp_midi {} {
 proc mftextwindow {midifilein nofile} {
     global midi df
     global mfnotes mftouch mfcntl mfprog mfmeta
+    global colfg
     set f .mftext
     if {[winfo exist $f]} {
       $f.fillab configure -text  $midifilein  
@@ -11163,15 +11265,15 @@ proc mftextwindow {midifilein nofile} {
     set mfmeta  0
     set mfcntl  0
     checkbutton $f.note -variable mfnotes  -text notes      -font $df\
-            -command mfnotescmd
+            -command mfnotescmd -selectcolor [black2white $colfg]
     checkbutton $f.touch -variable mftouch -text aftertouch -font $df\
-            -command mftouchcmd
+            -command mftouchcmd -selectcolor [black2white $colfg]
     checkbutton $f.prog  -variable mfprog  -text program    -font $df\
-            -command mfprogcmd
+            -command mfprogcmd -selectcolor [black2white $colfg]
     checkbutton $f.meta  -variable mfmeta  -text metatext   -font $df\
-            -command mfmetacmd
+            -command mfmetacmd -selectcolor [black2white $colfg]
     checkbutton $f.cntl  -variable mfcntl  -text cntl       -font $df\
-            -command mfcntlcmd
+            -command mfcntlcmd -selectcolor [black2white $colfg]
     pack $f.lab $f.note $f.touch $f.prog $f.meta $f.cntl -side left
     pack $f -side top -anchor w
 
@@ -11650,32 +11752,32 @@ positionWindow $w
 
 frame $w.matchcriterion
 radiobutton $w.matchcriterion.cosine -text "1 - cosine" -font $df\
- -value 1 -variable midi(matchcriterion) -command switch_criterion
+ -value 1 -variable midi(matchcriterion) -command switch_criterion -background white -fg black
 radiobutton $w.matchcriterion.mse -text "root mean square error" -font $df\
- -value 2 -variable midi(matchcriterion) -command switch_criterion
+ -value 2 -variable midi(matchcriterion) -command switch_criterion -background white -fg black
 radiobutton $w.matchcriterion.manhat -text "manhattan distance" -font $df\
- -value 3 -variable midi(matchcriterion) -command switch_criterion
+ -value 3 -variable midi(matchcriterion) -command switch_criterion -bg white -fg black
 radiobutton $w.matchcriterion.cheb -text "chebyshev distance" -font $df\
- -value 4 -variable midi(matchcriterion) -command switch_criterion
+ -value 4 -variable midi(matchcriterion) -command switch_criterion -bg white -fg black
 pack $w.matchcriterion.cosine $w.matchcriterion.mse  $w.matchcriterion.manhat $w.matchcriterion.cheb -side left
 grid $w.matchcriterion -columnspan 4 -sticky w
 
-checkbutton $w.checkprogs -variable searchstate(checkprogs) -command searchprogs
+checkbutton $w.checkprogs -variable searchstate(checkprogs) -command searchprogs -fg black
 button $w.labprogs -text "contains programs" -font $df -command programSelector
 entry $w.progsin -textvariable midi(proglist) -font $df -state disabled
 grid $w.checkprogs $w.labprogs $w.progsin -sticky nsew
 
-checkbutton $w.checkperc -variable searchstate(checkperc) -command searchperc
+checkbutton $w.checkperc -variable searchstate(checkperc) -command searchperc -fg black
 button $w.labperc -text "contains percussion" -font $df -command drum_selector
 entry $w.percin -textvariable midi(drumlist) -font $df -state disabled
 grid $w.checkperc $w.labperc $w.percin -sticky nsew
 
-checkbutton $w.checkexclude -variable searchstate(checkexclude) -command searchex
+checkbutton $w.checkexclude -variable searchstate(checkexclude) -command searchex -fg black
 label $w.labexprog -text "excludes programs" -font $df
 entry $w.excludein -textvariable midi(progexlist) -font $df -state disabled
 grid $w.checkexclude $w.labexprog $w.excludein -sticky nsew
 
-checkbutton $w.checkprog -variable searchstate(cprog) -command matchprogs
+checkbutton $w.checkprog -variable searchstate(cprog) -command matchprogs -fg black
 label $w.labprog -text "matches programs" -font $df
 label $w.labprogthr -text "threshold" -font $df
 scale $w.scaleprogthr -length 120 -from 0.0 -to 0.40 -orient horizontal\
@@ -11683,35 +11785,35 @@ scale $w.scaleprogthr -length 120 -from 0.0 -to 0.40 -orient horizontal\
 grid $w.checkprog $w.labprog $w.scaleprogthr $w.labprogthr -sticky nsew
 
 
-checkbutton $w.checkpcol -variable searchstate(cpcol) -command searchpcol
+checkbutton $w.checkpcol -variable searchstate(cpcol) -command searchpcol -fg black
 label $w.labpcol -text "matches program color" -font $df
 label $w.labpcolthr -text "threshold" -font $df
 scale $w.scalepcolthr -length 120 -from 0.0 -to 0.40 -orient horizontal\
   -resolution 0.005 -width 9 -variable midi(pcolthr) -font $df
 grid $w.checkpcol $w.labpcol $w.scalepcolthr $w.labpcolthr -sticky nsew
 
-checkbutton $w.checkpitch -variable searchstate(cpitch) -command searchpitch
+checkbutton $w.checkpitch -variable searchstate(cpitch) -command searchpitch -fg black
 label $w.labpitch -text "matches pitch class" -font $df
 scale $w.scalepitchthr -length 120 -from 0.0 -to 0.40 -orient horizontal\
   -resolution 0.005 -width 9 -variable midi(pitchthr) -font $df
 label $w.labpitchthr -text "threshold" -font $df
 grid $w.checkpitch $w.labpitch $w.scalepitchthr $w.labpitchthr -sticky nsew
 
-checkbutton $w.checktempo -variable searchstate(ctempo) -command searchtempo
+checkbutton $w.checktempo -variable searchstate(ctempo) -command searchtempo -fg black
 label $w.labtempo -text "tempo is " -font $df 
 scale $w.scaletempo -length 120 -from 20 -to 320 -orient horizontal\
   -resolution 10 -width 9 -variable midi(tempo) -font $df
 label $w.labbeats -text "beats/minute" -font $df
 grid $w.checktempo $w.labtempo $w.scaletempo  $w.labbeats -sticky nsew
 
-checkbutton $w.cbends -variable searchstate(cbends) -command searchbends
+checkbutton $w.cbends -variable searchstate(cbends) -command searchbends -fg black
 label $w.labnbends -text "at least" -font $df
 scale $w.scalebends -length 120 -from 500 -to 10000 -orient horizontal\
   -resolution 100 -width 9 -variable midi(nbends) -font $df
 label $w.labbends -text "pitchbends" -font $df
 grid $w.cbends $w.labnbends $w.scalebends $w.labbends -sticky nsew
 
-checkbutton $w.checkndrums -variable searchstate(cndrums) -command searchndrums
+checkbutton $w.checkndrums -variable searchstate(cndrums) -command searchndrums -fg black
 label $w.labndrums -text "approximately" -font $df
 scale $w.scaledrums -length 120 -from 2 -to 45 -orient horizontal\
   -resolution 1 -width 9 -variable midi(ndrums) -font $df
@@ -11720,7 +11822,7 @@ grid $w.checkndrums $w.labndrums $w.scaledrums $w.labndrums2 -sticky nsew
 
 
 checkbutton $w.checkpitchentropy -variable searchstate(cpitche) \
-  -command searchpitche
+  -command searchpitche -fg black
 label $w.labpitche -text "pitch entropy" -font $df
 scale $w.scapitche -length 150 -from 1.6 -to 3.8 -orient horizontal\
   -resolution 0.05 -width 9 -variable midi(pitche) -font $df
@@ -11731,11 +11833,11 @@ button $w.choosekey -text "choose key signature" -font $df -command select_keysi
 label $w.keysignature -text Cmaj -font $df
 grid $w.checkkeysignature $w.choosekey $w.keysignature
 
-checkbutton $w.checklyrics -variable searchstate(lyrics)
+checkbutton $w.checklyrics -variable searchstate(lyrics) -fg black
 label $w.haslyrics -text "has lyrics" -font $df
 grid $w.checklyrics $w.haslyrics
 
-checkbutton $w.checkname -variable searchstate(cname) -command searchname
+checkbutton $w.checkname -variable searchstate(cname) -command searchname -fg black
 label $w.labname -text "string in file name" -font $df 
 entry $w.name -textvariable midi(sname) -width 16 -font $df -state disabled
 grid $w.checkname $w.labname $w.name -sticky nsew
@@ -13046,14 +13148,16 @@ plotUnivariateDistribution $graph $curve 0.0 $max_x $xspace $xlabel
 
 proc plotUnivariateDistribution {graph curve min_x max_x xspace xlabel} {
     global df
+    global colfg
     set start $min_x
     set stop  $max_x
     set delta_tick 50
     $graph create rectangle 70 20 370 200 -outline black\
             -width 2 -fill white
     Graph::alter_transformation 70 370 200 20 $start $stop 0.0 1.0
-    Graph::draw_x_grid $graph $start $stop $xspace 1  0 %4.1f
+    Graph::draw_x_grid $graph $start $stop $xspace 1  0 %4.1f $colfg
     Graph::draw_y_grid $graph 0.0 1.0 0.2 1 %3.2f
+    Graph::draw_y_ticks $graph 0.0 1.0 0.2 1 %3.2f $colfg
     set npoints [expr [llength $curve ] -1]
     for {set i 0} {$i < $npoints} {incr i} {
         set datapoint0 [lindex $curve $i]
@@ -13073,7 +13177,7 @@ proc plotUnivariateDistribution {graph curve min_x max_x xspace xlabel} {
         }
     set iy1 [Graph::iypos -0.2]
     set ix1 200
-    $graph create text $ix1 $iy1 -text $xlabel -font $df
+    $graph create text $ix1 $iy1 -text $xlabel -font $df -fill $colfg
 }
 
 proc plot_line_graph {graph curve min_x max_x xspace xlabel min_y max_y title} {
@@ -13388,7 +13492,7 @@ proc getGeometryOfAllToplevels {} {
                ".colors" ".chordview" ".chordgram" ".midistructure" 
                ".drumsel" ".drumroll" ".drumanalysis" ".pitchpdf"
                ".velocitypdf" ".onsetpdf" ".offsetpdf"  ".durpdf" ".pitchclass"
-               ".midivelocity" ".mftext" ".searchbox" ".graph"
+               ".midivelocity" ".pianovelocity" ".mftext" ".searchbox" ".graph"
                ".fontwindow" ".support" ".preferences" ".beatgraph"
                ".ppqn" ".drumrollconfig" ".indexwindow" ".wiki"
                ".dictview" ".notegram" ".barmap" ".playmanage" ".data_info"
@@ -15457,6 +15561,7 @@ array set majorColors {
 proc keystrip_window {source} {
 global midi
 global df
+global colfg
 set spacelist {3 4 6 8 12 16 18 24 32 36 48 64}
  if {![winfo exist .keystrip.c]} {
 
@@ -15490,7 +15595,7 @@ set spacelist {3 4 6 8 12 16 18 24 32 36 48 64}
     pack $w.cfg.spc.spcbox -side left -anchor w
     radiobutton $w.cfg.spc.kk -text kk -value kk -variable midi(pitchcoef) -command "keymap $source" -font $df
     radiobutton $w.cfg.spc.ss -text ss -value ss -variable midi(pitchcoef) -command "keymap $source" -font $df
-    checkbutton $w.cfg.spc.w -text pitchWeighting -variable midi(pitchWeighting) -command "keymap $source" -font $df
+    checkbutton $w.cfg.spc.w -text pitchWeighting -variable midi(pitchWeighting) -command "keymap $source" -font $df -selectcolor [black2white $colfg]
     button $w.cfg.spc.h -text help -command keymap_help -font $df
     button $w.cfg.spc.c -text colors -command keyscape_keyboard -font $df
     pack $w.cfg.spc.kk $w.cfg.spc.ss $w.cfg.spc.w $w.cfg.spc.c $w.cfg.spc.h -side left -anchor w
@@ -15560,6 +15665,7 @@ proc keymap {source} {
     global cleanData
     global briefconsole
     global key2sf
+    global colfg
 
     #puts "keymap $midi(keySpacing)"
     set sflist {}
@@ -15575,7 +15681,6 @@ proc keymap {source} {
     set ytbx 30
     set ybbx 70
     # white or black characters
-    set colfg [lindex [.info.input config -fg] 4]
     set yscale [expr (70 - 30)/15.0]
     .keystrip.c create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
          -width 2 -fill $colfg
@@ -15838,6 +15943,7 @@ proc keymapPlotPitchClassHistogram {} {
     global histogram
     global df
     global midi
+    global colfg
     set notes {C C# D D# E F F# G G# A A# B}
     set maxgraph 0.0
     set xpos [expr $xrbx -40]
@@ -15850,7 +15956,7 @@ proc keymapPlotPitchClassHistogram {} {
     if {[winfo exists .keypitchclass] == 0} {
         toplevel .keypitchclass
         positionWindow ".keypitchclass"
-        checkbutton .keypitchclass.circle -text "circle of fifths" -variable midi(pitchclassfifths) -font $df -command keymapPlotPitchClassHistogram
+        checkbutton .keypitchclass.circle -text "circle of fifths" -variable midi(pitchclassfifths) -font $df -command keymapPlotPitchClassHistogram -selectcolor [black2white $colfg]
         pack .keypitchclass.circle
         pack [canvas $pitchc -width [expr $scanwidth +130] -height $scanheight]\
                 -expand yes -fill both
