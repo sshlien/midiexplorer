@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.03 2025-11-06 08:52" 
+set midiexplorer_version "MidiExplorer version 5.03 2025-11-11 05:57" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -1581,6 +1581,7 @@ proc messagetxt {txt} {
 
 proc fontSelector {} {
 global midi
+global colfg
 set w .fontwindow
 set sizelist {6 7 8 9 10 11 12 13 14 15}
 toplevel $w
@@ -1595,9 +1596,9 @@ grid $w.fontsellab $w.fontsel
 label $w.fontboxlab -text "font selector"
 grid  $w.fontboxlab $w.fontbox
 radiobutton $w.fontnormal -text normal -variable midi(font_weight) \
-       	-value normal -command changeFont
+       	-value normal -command changeFont -selectcolor [black2white $colfg]
 radiobutton $w.fontbold -text bold     -variable midi(font_weight) \
-       	-value bold -command changeFont
+       	-value bold -command changeFont -selectcolor [black2white $colfg]
 grid $w.fontnormal $w.fontbold
 label $w.fontsizelab -text "font size"
 ttk::combobox $w.fontsize -width 8  -textvariable midi(font_size)\
@@ -3470,7 +3471,6 @@ if {![winfo exist $w]} {
   label .ptableau.status -text "$midi(midifilein)"
   frame $w.header
   button $w.header.play -text play -command {playExposed tableau} -font $df
-  puts "button color = [lindex [$w.header.play configure -fg] 3]"
   tooltip::tooltip $w.header.play "Generates the midi file for the selected\nchannels and region and plays it.."
   menubutton $w.header.dot -text "dot size" -font $df -menu $w.header.dot.items
   menu $w.header.dot.items -tearoff 0
@@ -4183,6 +4183,7 @@ global df
 global player1 player2 player3
 global player1opt player2opt player3opt
 global midi
+global colfg
 set w .midiplayer
 if {[winfo exist $w]} {
   raise $w .
@@ -4194,7 +4195,7 @@ positionWindow $w
 label $w.header -text "midi player" -font $df
 grid $w.header -row 0 -column 1
 
-radiobutton $w.player1rad -command set_midiplayer -variable midi(player_sel) -value 1 
+radiobutton $w.player1rad -command set_midiplayer -variable midi(player_sel) -value 1 -selectcolor [black2white $colfg]
 button $w.player1but -text "midiplayer 1" -width 14 -font $df\
    -command {setpath player1; .midiplayer.player1rad invoke} 
 entry $w.player1ent -width 48 -relief sunken -textvariable midi(player1) -font $df
@@ -4211,7 +4212,7 @@ grid $w.player1optent -row 3 -column 2
 bind $w.player1optent <Return> {set_midiplayer
                                 focus .midiplayer.header}
 
-radiobutton $w.player2rad -command set_midiplayer -variable midi(player_sel) -value 2
+radiobutton $w.player2rad -command set_midiplayer -variable midi(player_sel) -value 2 -selectcolor [black2white $colfg]
 button $w.player2but -text "midiplayer 2" -width 14 -font $df\
    -command {setpath player2; .midiplayer.player2rad invoke} 
 entry $w.player2ent -width 48 -relief sunken -textvariable midi(player2) -font $df
@@ -4229,7 +4230,7 @@ grid $w.player2optent -row 5 -column 2
 bind $w.player2optent <Return> {set_midiplayer
                                 focus .midiplayer.header}
 
-radiobutton $w.player3rad -command set_midiplayer -variable midi(player_sel) -value 3
+radiobutton $w.player3rad -command set_midiplayer -variable midi(player_sel) -value 3 -selectcolor [black2white $colfg]
 button $w.player3but -text "midiplayer 3" -width 14 -font $df \
    -command {setpath player3; .midiplayer.player3rad invoke} 
 entry $w.player3ent -width 48 -relief sunken -textvariable midi(player3) -font $df
@@ -4246,7 +4247,7 @@ grid $w.player3optent -row 7 -column 2
 bind $w.player3optent <Return> {set_midiplayer
                                focus .midiplayer.header}
 
-radiobutton $w.player4rad -command set_midiplayer -variable midi(player_sel) -value 4
+radiobutton $w.player4rad -command set_midiplayer -variable midi(player_sel) -value 4 -selectcolor [black2white $colfg]
 button $w.player4but -text "midiplayer 4" -width 14 -font $df \
    -command {setpath player4; .midiplayer.player4rad invoke} 
 entry $w.player4ent -width 48 -relief sunken -textvariable midi(player4) -font $df
@@ -4263,7 +4264,7 @@ grid $w.player4optent -row 9 -column 2
 bind $w.player4optent <Return> {set_midiplayer
                                focus .midiplayer.header}
 
-radiobutton $w.player5rad -command set_midiplayer -variable midi(player_sel) -value 5
+radiobutton $w.player5rad -command set_midiplayer -variable midi(player_sel) -value 5 -selectcolor [black2white $colfg]
 button $w.player5but -text "midiplayer 5" -width 14 -font $df \
    -command {setpath player5; .midiplayer.player5rad invoke} 
 entry $w.player5ent -width 48 -relief sunken -textvariable midi(player5) -font $df
@@ -4280,7 +4281,7 @@ grid $w.player5optent -row 11 -column 2
 bind $w.player5optent <Return> {set_midiplayer
                                focus .midiplayer.header}
 
-radiobutton $w.player6rad -command set_midiplayer -variable midi(player_sel) -value 6
+radiobutton $w.player6rad -command set_midiplayer -variable midi(player_sel) -value 6 -selectcolor [black2white $colfg]
 button $w.player6but -text "midiplayer 6" -width 14 -font $df \
    -command {setpath player6; .midiplayer.player6rad invoke} 
 entry $w.player6ent -width 48 -relief sunken -textvariable midi(player6) -font $df
@@ -4380,6 +4381,7 @@ proc locate_editor {} {
 proc set_preferences {} {
 global df
 global midi
+global colfg
 set w .preferences
 if {[winfo exist $w]} {
   raise $w .
@@ -4389,17 +4391,19 @@ toplevel $w
 positionWindow $w
 radiobutton $w.track -text "separate by track" -font $df\
           -value track -variable midi(midishow_sep)\
+          -selectcolor [black2white $colfg]\
           -command {zero_trksel
                     midi_structure_window 
                     }
 radiobutton $w.channel -text "separate by channel" -font $df\
+          -selectcolor [black2white $colfg]\
           -value chan -variable midi(midishow_sep)\
           -command {zero_trksel
                     midi_structure_window 
                     }
-radiobutton $w.focus -text "play and focus on selected" -value 1 -variable midi(playmethod) -font $df
-radiobutton $w.only -text "play only selected" -value 2 -variable midi(playmethod) -font $df
-radiobutton $w.ex -text "play excluding selected" -value 3 -variable midi(playmethod) -font $df
+radiobutton $w.focus -text "play and focus on selected" -value 1 -variable midi(playmethod) -font $df -selectcolor [black2white $colfg]
+radiobutton $w.only -text "play only selected" -value 2 -variable midi(playmethod) -font $df -selectcolor [black2white $colfg]
+radiobutton $w.ex -text "play excluding selected" -value 3 -variable midi(playmethod) -font $df -selectcolor [black2white $colfg]
 grid $w.track -sticky nw
 grid $w.channel -sticky nw
 grid $w.focus -sticky nw
@@ -5413,6 +5417,7 @@ proc ppqn_adjustment_window {} {
 proc chord_histogram_window {source} {
     global df
     global midi
+    global colfg
     
     if {[winfo exist .chordstats]} return
     set w .chordstats
@@ -5420,8 +5425,8 @@ proc chord_histogram_window {source} {
     positionWindow .chordstats
     
     frame $w.head
-    radiobutton $w.head.txt -text "chord list" -font $df -variable midi(chordhist) -value txt -command switch_text_barchart
-    radiobutton $w.head.bar -text barchart -font $df -variable midi(chordhist) -value bar -command switch_text_barchart
+    radiobutton $w.head.txt -text "chord list" -font $df -variable midi(chordhist) -value txt -command switch_text_barchart -selectcolor [black2white $colfg]
+    radiobutton $w.head.bar -text barchart -font $df -variable midi(chordhist) -value bar -command switch_text_barchart -selectcolor [black2white $colfg]
 #    pack $w.head.lab $w.head.key $w.head.freq $w.head.txt $w.head.bar -side left -anchor w
     pack  $w.head.txt $w.head.bar -side left -anchor w
     pack $w.head -anchor w
@@ -6085,6 +6090,7 @@ proc chord_barchart {} {
 global chordcount
 global total_chordcount
 global midi
+global colfg
 set chordcountlist {}
   foreach {elem1 elem2} [array get chordcount] {
      lappend chordcountlist [list $elem1 $elem2]
@@ -6106,11 +6112,11 @@ while {$i < [llength $sortedcountlist]} {
   set iy2 [expr [Graph::iypos [incr i]] - 4]
   set ix1 [Graph::ixpos $count]
   .chordstats.bar create rectangle $ix $iy1 $ix1 $iy2 -fill blue -stipple gray12
-  .chordstats.bar create text 40 [expr $iy1 + 10] -text $chord
+  .chordstats.bar create text 40 [expr $iy1 + 10] -text $chord -fill $colfg
   if {$i > 7} break
   }
 set spacing [best_grid_spacing $maxcount]
-Graph::draw_x_grid .chordstats.bar $spacing $maxcount $spacing 1  0 %5.0f
+Graph::draw_x_grid .chordstats.bar $spacing $maxcount $spacing 1  0 %5.0f $colfg
 }
 
 proc switch_text_barchart {} {
@@ -6916,6 +6922,7 @@ proc midi_structure_window {} {
   global midistructurewidth
   global xstrpick ystrpick
   global midispeed
+  global colfg
 
   if {[winfo exist $w]} {
     raise $w .
@@ -6969,7 +6976,7 @@ function"
   button $wm.help -text help -font $df -command {show_message_page $hlp_midistructure word}
 
   entry $w.fileinent -width $entrywidth -textvariable midi(midifilein) -font $df\
-    -state readonly 
+    -state readonly -readonlybackground [black2white $colfg]
   label $w.txt -text ""
   label $w.txt2 -text "midi structure" -font $df
   label $w.beat -text beat -font $df
@@ -6982,10 +6989,10 @@ function"
 
   set f [frame $w.leftbuttons -bd 3 -relief sunken]
   for {set i 2} {$i <40} {incr i} {
-    checkbutton .midistructure.leftbuttons.$i -text "trk$i" -variable miditracks($i) -font $df -command {updateAllWindows midistructure} -fg black
+    checkbutton .midistructure.leftbuttons.$i -text "trk$i" -variable miditracks($i) -font $df -command {updateAllWindows midistructure} -selectcolor [black2white $colfg]
     }
   for {set i 1} {$i <17} {incr i} {
-    checkbutton .midistructure.leftbuttons.c$i -text "chan$i" -variable midichannels($i) -font $df -command {updateAllWindows midistructure} -fg black
+    checkbutton .midistructure.leftbuttons.c$i -text "chan$i" -variable midichannels($i) -font $df -command {updateAllWindows midistructure} -selectcolor [black2white $colfg]
     }
   set yspacing [winfo reqheight .midistructure.leftbuttons.2]
   canvas $w.can -width $midistructurewidth -height 200 -border 3 -relief sunken -scrollregion "0. 0. $midistructurewidth 200"
@@ -8629,12 +8636,13 @@ proc drumroll_window {} {
 proc drumroll_config {} {
     set p .drumrollconfig
     global df midi
+    global colfg
     if {[winfo exist $p]} return
     toplevel $p
     positionWindow $p
-    radiobutton $p.normal -text "play everything" -variable midi(playdrumdata) -value normaldrum -font $df 
-    radiobutton $p.nodrum -text "do not play the percussion lines" -variable midi(playdrumdata) -font $df -value nodrums
-    radiobutton $p.onlydrum -text "play only the percussion lines" -variable midi(playdrumdata) -font $df -value onlydrums
+    radiobutton $p.normal -text "play everything" -variable midi(playdrumdata) -value normaldrum -font $df -selectcolor [black2white $colfg]
+    radiobutton $p.nodrum -text "do not play the percussion lines" -variable midi(playdrumdata) -font $df -value nodrums -selectcolor [black2white $colfg]
+    radiobutton $p.onlydrum -text "play only the percussion lines" -variable midi(playdrumdata) -font $df -value onlydrums -selectcolor [black2white $colfg]
     pack $p.normal $p.nodrum $p.onlydrum -side top -anchor w
 }
 
@@ -10700,8 +10708,8 @@ proc plot_pitch_class_histogram {} {
     set scompactMidifile [string map {\n ""} $compactMidifile]
     $pitchc create rectangle $xlbx $ytbx $xrbx $ybbx -outline black\
             -width 2
-    $pitchc create text 160 80 -text "entropy = $entropy  perplexity = $perplexity $keysig"
-    $pitchc create text 15 95 -text $scompactMidifile -anchor nw
+    $pitchc create text 160 80 -text "entropy = $entropy  perplexity = $perplexity $keysig" -fill $colfg
+    $pitchc create text 15 95 -text $scompactMidifile -anchor nw -fill $colfg
     bind .pitchclass <Alt-p> {histogram_ps_output .pitchclass.c}
 }
 
@@ -11702,13 +11710,14 @@ proc select_keysig {} {
 global sharpflatnotes
 global keysearch
 global df
+global colfg
 set sharpflatnotes  {C C# D Eb E F F# G G# A Bb B}
 set majmin maj
 toplevel .key
 set keysearch Cmaj
 frame .key.majmin
-radiobutton .key.majmin.min -text "minor" -font $df -value min -variable majmin -command {switch_majmin min}
-radiobutton .key.majmin.maj -text "major" -font $df -value maj -variable majmin -command {switch_majmin maj}
+radiobutton .key.majmin.min -text "minor" -font $df -value min -variable majmin -command {switch_majmin min} -selectcolor [black2white $colfg]
+radiobutton .key.majmin.maj -text "major" -font $df -value maj -variable majmin -command {switch_majmin maj} -selectcolor [black2white $colfg]
 pack .key.majmin.maj .key.majmin.min -side left
 pack .key.majmin
 label .key.lab -width 10 -text Cmaj -font $df
@@ -11741,6 +11750,7 @@ global searchstate
 global df
 global sname
 global midi
+global colfg
 set w .searchbox
 if {[winfo exist $w]} {
   raise $w .
@@ -11752,13 +11762,13 @@ positionWindow $w
 
 frame $w.matchcriterion
 radiobutton $w.matchcriterion.cosine -text "1 - cosine" -font $df\
- -value 1 -variable midi(matchcriterion) -command switch_criterion -background white -fg black
+ -value 1 -variable midi(matchcriterion) -command switch_criterion -selectcolor [black2white $colfg]
 radiobutton $w.matchcriterion.mse -text "root mean square error" -font $df\
- -value 2 -variable midi(matchcriterion) -command switch_criterion -background white -fg black
+ -value 2 -variable midi(matchcriterion) -command switch_criterion -selectcolor [black2white $colfg]
 radiobutton $w.matchcriterion.manhat -text "manhattan distance" -font $df\
- -value 3 -variable midi(matchcriterion) -command switch_criterion -bg white -fg black
+ -value 3 -variable midi(matchcriterion) -command switch_criterion -selectcolor [black2white $colfg]
 radiobutton $w.matchcriterion.cheb -text "chebyshev distance" -font $df\
- -value 4 -variable midi(matchcriterion) -command switch_criterion -bg white -fg black
+ -value 4 -variable midi(matchcriterion) -command switch_criterion -selectcolor [black2white $colfg]
 pack $w.matchcriterion.cosine $w.matchcriterion.mse  $w.matchcriterion.manhat $w.matchcriterion.cheb -side left
 grid $w.matchcriterion -columnspan 4 -sticky w
 
@@ -14938,6 +14948,7 @@ set exec_out "$exec_out\n$cmd\n$result"
 proc midi2abc_config {} {
 global midi
 global df
+global colfg
 set w .cfgmidi2abc
 if {![winfo exist $w]} {
   toplevel $w
@@ -14945,9 +14956,9 @@ if {![winfo exist $w]} {
   label $w.minrestlab -text "minimum rest" -font $df
   entry $w.minrestent -textvariable midi(midirest) -width 2 -font $df
   grid $w.minrestlab $w.minrestent
-  radiobutton $w.nosplits -text "no splits" -value 0 -font $df -variable midi(splits)
-  radiobutton $w.voicesplits -text "voice splits" -value 2 -font $df -variable midi(splits)
-  radiobutton $w.barsplits -text "bar splits" -value 1 -font $df -variable midi(splits)
+  radiobutton $w.nosplits -text "no splits" -value 0 -font $df -variable midi(splits) -selectcolor [black2white $colfg]
+  radiobutton $w.voicesplits -text "voice splits" -value 2 -font $df -variable midi(splits) -selectcolor [black2white $colfg]
+  radiobutton $w.barsplits -text "bar splits" -value 1 -font $df -variable midi(splits) -selectcolor [black2white $colfg]
   grid $w.nosplits $w.barsplits $w.voicesplits
   }
 }
@@ -15051,13 +15062,14 @@ update_console_page
 proc pgram_cfg {} {
 global midi
 global df
+global colfg
 if {![winfo exist .pgramcfg]} {
   set p .pgramcfg
   toplevel $p
   frame $p.mode
   pack $p.mode -anchor w 
-  radiobutton $p.mode.c -text "chord mode" -font $df -variable midi(pgrammode) -value chord
-  radiobutton $p.mode.p -text "no chord mode" -font $df -variable midi(pgrammode) -value nochord
+  radiobutton $p.mode.c -text "chord mode" -font $df -variable midi(pgrammode) -value chord -selectcolor [black2white $colfg]
+  radiobutton $p.mode.p -text "no chord mode" -font $df -variable midi(pgrammode) -value nochord -selectcolor [black2white $colfg]
   pack $p.mode.c $p.mode.p -side left -anchor w
   frame $p.width
   pack $p.width -anchor w
@@ -15593,8 +15605,8 @@ set spacelist {3 4 6 8 12 16 18 24 32 36 48 64}
     pack  $w.cfg.spc -side top -anchor w
     pack $w.cfg.spc.spclab -side left -anchor w
     pack $w.cfg.spc.spcbox -side left -anchor w
-    radiobutton $w.cfg.spc.kk -text kk -value kk -variable midi(pitchcoef) -command "keymap $source" -font $df
-    radiobutton $w.cfg.spc.ss -text ss -value ss -variable midi(pitchcoef) -command "keymap $source" -font $df
+    radiobutton $w.cfg.spc.kk -text kk -value kk -variable midi(pitchcoef) -command "keymap $source" -font $df -selectcolor [black2white $colfg]
+    radiobutton $w.cfg.spc.ss -text ss -value ss -variable midi(pitchcoef) -command "keymap $source" -font $df -selectcolor [black2white $colfg]
     checkbutton $w.cfg.spc.w -text pitchWeighting -variable midi(pitchWeighting) -command "keymap $source" -font $df -selectcolor [black2white $colfg]
     button $w.cfg.spc.h -text help -command keymap_help -font $df
     button $w.cfg.spc.c -text colors -command keyscape_keyboard -font $df
@@ -15737,10 +15749,10 @@ set the path to a midi file."
            set y0 [expr (6 -$sf) * $yscale  + 32]
            set x0 [expr $stripscale*$beatfrom]
            set x1 [expr $stripscale*$keySpacing + $x0]
-           set x3 [expr ($x0 + $x1)/2 -2] 
-           set y1 [expr $y0 + 2]
-           set x4 [expr $x3 + 2]
-           .keystrip.c create rect $x3 $y0 $x4 $y1 -fill black 
+           set x3 [expr ($x0 + $x1)/2 -3] 
+           set y1 [expr $y0 + 3]
+           set x4 [expr $x3 + 3]
+           .keystrip.c create rect $x3 $y0 $x4 $y1 -fill red
            if {[lindex $key 1] == "minor"} {
              .keystrip.c create rect $x0 25 $x1 1 -fill $majorColors($jc) -tag $keysig -stipple gray50
               } else {
