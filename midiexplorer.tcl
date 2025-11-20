@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.03 2025-11-11 05:57" 
+set midiexplorer_version "MidiExplorer version 5.04 2025-11-18 21:11" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -449,7 +449,7 @@ proc ::tooltip::enableCanvas {w args} {
 # many of the colors from the X color database.  You can click on
 # a color to change the application's palette.
 
-
+set colfg black
 
 proc colorScheme {} {
 global midi
@@ -459,7 +459,7 @@ set w .colors
 catch {destroy $w}
 toplevel $w
 positionWindow $w
-wm title $w "Listbox Demonstration (colors)"
+wm title $w "Color Scheme"
 wm iconname $w "Listbox"
 
 label $w.msg  -wraplength 4i -justify left -font $df -text "A listbox containing several color names is displayed\
@@ -479,8 +479,8 @@ button $w.action.black -text "black mode" -font $df -command {
 	set midi(colorscheme) black
         set hexColor [getHexColor black] 
         ttk::style configure Treeview -foreground white -background [lindex $hexColor 0]
+        set colfg white
         tk_setPalette black
-        set colfg black
         }
 
 pack $w.action
@@ -509,7 +509,6 @@ bind $w.frame.list <Double-1> {
       set colfg [lindex $checkforeground 4]
       destroy .z
 }
-
 
 
 $w.frame.list insert 0 gray60 gray70 gray80 gray85 gray90 gray95 \
@@ -613,6 +612,8 @@ set install_folder [pwd]
 set execpath [pwd]
 
 set cleanData 0
+
+set exec_out "pwd = [pwd]"
 
 proc setupMidiexplorer {} {
 # will create midiexplorer_home in the user's directory if
@@ -1159,17 +1160,17 @@ $ww add command -label "midi player" -font $df -command {
 
 $ww add command -label "font selector" -font $df -command fontSelector
 
-$ww add command -label "midi2abc configuration" -font $df -command midi2abc_config
-
 $ww add command -label "color scheme" -font $df -command colorScheme
-
-$ww add checkbutton -label "auto-open" -font $df -variable midi(autoopen) -selectcolor [black2white $colfg]
 
 $ww add checkbutton -label "tooltips" -font $df -variable midi(tooltips)\
   -command cfgtooltips  -selectcolor [black2white $colfg]
 
 $ww add checkbutton -label "remember locations of windows" -font $df\
  -variable midi(autoposition)  -selectcolor [black2white $colfg]
+
+$ww add checkbutton -label "auto-open" -font $df -variable midi(autoopen) -selectcolor [black2white $colfg]
+
+$ww add command -label "midi2abc configuration" -font $df -command midi2abc_config
 
 $ww add command -label "clear recents" -font $df -command deleteHistory
 
@@ -1523,6 +1524,7 @@ bind all <Control-a> aftertouch
 bind all <Control-b> {play_selected_lines none}
 bind all <Control-d> drumroll_window
 bind all <Control-e> count_bar_rhythm_patterns
+bind all <Control-f> fontSelector
 bind all <Control-g> {google_search genre}
 bind all <Control-h> {chordgram_plot none}
 bind all <Control-k> {show_console_page $exec_out word}
@@ -1546,6 +1548,7 @@ Control-a\taftertouch
 Control-b\tplay
 Control-d\tdrumroll
 Control-e\tbar rhythm patterns
+Control-f\tfont selector
 Control-g\tsearch genre
 Control-h\tchordgram
 Control-k\tconsole
@@ -1736,6 +1739,11 @@ if {[string length $midi(colorscheme)] > 0} {
       ttk::style configure Treeview -foreground black -background [lindex $hexColor 0]
       }
   }
+#ttk::style configure -option background black
+#puts "ttk:style theme names = [ttk::style theme names]"
+#ttk::style theme use default
+#puts "ttk::style options = [ttk::style configure -option]"
+#puts "ttk:style names = [ttk::style element names]"
 ttk::treeview $w.tree -columns {fullpath type size criterion} -displaycolumns {size criterion} \
 	-yscroll "$w.vsb set" -xscroll "$w.hsb set" -selectmode browse -padding 3
 #puts [$w.tree configure]
@@ -4740,6 +4748,7 @@ proc piano_window {} {
     global midi
     global df
     global midispeed
+    global trksel
     global colfg
     if {[winfo exist .piano]} {destroy .piano}
     toplevel .piano
@@ -4813,8 +4822,8 @@ proc piano_window {} {
                 plotmidi_velocity_pdf}
     $p.action.items add command  -label "velocity map" -font $df \
             -command {plot_velocity_map pianoroll}
-    $p.action.items add command  -label "velocity map detailed" -font $df \
-            -command {piano_roll_velocity}
+    #$p.action.items add command  -label "velocity map detailed" -font $df \
+    #        -command {piano_roll_velocity}
     $p.action.items add command  -label "beat graph" -font $df \
             -command {beat_graph pianoroll}
     $p.action.items add command  -label "notegram" -font $df \
@@ -4922,12 +4931,12 @@ if {$trksel($num)} {
   } else {
   .piano.can itemconfigure trk$num -fill black -width 4
   }
-update_displayed_pdf_windows .piano.can
 if {$midi(midishow_sep) == "track"} {
   set miditracks($num) $trksel($num)
   } else {
   set midichannels($num) $trksel($num)
   }
+update_displayed_pdf_windows .piano.can
 if {[winfo exists .tinfo] == 1} {
    midiTable
    }
@@ -4944,7 +4953,6 @@ global miditracks
 global midi
 
 set nselected [count_trksel]
-puts "highlightTrackStatic $num nselected = $nselected trksel($num) = $trksel($num)"
 if {$nselected == 0} {hideExposeSomePianoRollTracksChannels 0
 	             }
 
@@ -5005,6 +5013,8 @@ for {set i 0} {$i < 32} {incr i} {
 return $count
 }
 
+# not used from November 18
+# you should delete all references to .pianovelocity
 proc piano_roll_velocity {} {
 set p .pianovelocity
 global pianorollwidth
@@ -5018,8 +5028,11 @@ if {![winfo exist $p]} {
   pack $p.msg
   }
 compute_pianoroll_velocity
+set xv [lindex [.piano.can xview] 0]
+piano_horizontal_scroll $xv
 }
 
+# not used from November 18
 proc compute_pianoroll_velocity {} {
 global pianoresult pianoxscale
 global midi
@@ -5034,7 +5047,6 @@ set pianovsr [.pianovelocity.can cget -scrollregion]
 #puts "pianovsr = $pianovsr"
 set xscroll [lindex $pianosr 2]
 set pianovsr [lreplace $pianovsr 2 2 $xscroll]
-#puts "pianovsr = $pianovsr"
 .pianovelocity.can configure -scrollregion $pianovsr
 
 
@@ -5068,6 +5080,7 @@ if {$npoints < 2}   {
 piano_velocity_qnotelines
 }
 
+# not used from November 18
 proc piano_velocity_qnotelines {} {
     global ppqn midilength pianoxscale piano_vert_lines
     global piano_qnote_offset vspace
@@ -7613,7 +7626,6 @@ if {$hide == 1} {
   } else {
   set col black
   }
-puts "hideExposeSomePiano... hide = $hide col = $col"
 if {$midi(midishow_sep) == "track"} {
   for {set i 2} {$i < 32} {incr i} {
     if {[info exist track2channel($i)] && $trksel($i) == 0} {
@@ -8094,7 +8106,6 @@ set fbeat [lindex $limits 0]
 set tbeat  [lindex $limits 1]
 set trkchn ""
 set option ""
-#puts "midi(midishow_sep) = $midi(midishow_sep)"
 if {$midi(midishow_sep) == "track"} {
   set n $lasttrack
   if {$n > 39} {set n 39}
@@ -8128,7 +8139,6 @@ set cmd "file delete -force -- $midi(outfilename)"
 catch {eval $cmd} done
 set midi(outfilename) tmp.mid
 # create temporary file
-#puts "play_selected_lines option = $option"
 if {[string length $option] > 0} {
   set cmd "exec [list $midi(path_midicopy)]  $option"
   lappend cmd  $midi(midifilein) $midi(outfilename)
@@ -11155,7 +11165,6 @@ proc plot_velocity_map {source} {
     global fbeat
     global tbeat
     global colfg
-    #puts "plot_velocity_map $source"
     set velmap .midivelocity.c
     if {[winfo exists .midivelocity] == 0} {
         toplevel .midivelocity
@@ -11201,7 +11210,6 @@ proc plot_velocity_map {source} {
         set t [lindex $line 2]
         set c [lindex $line 3]
         if {$midi(midishow_sep) == "track"} {set sep $t} else {set sep $c}
-        if {$tsel != 0 && $trksel($sep) == 0} continue
         set ix1 [Graph::ixpos $begin]
         #set ix2 [Graph::ixpos $end]
         set ix2 [expr $ix1 + 2]
