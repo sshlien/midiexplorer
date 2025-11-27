@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.04 2025-11-18 21:11" 
+set midiexplorer_version "MidiExplorer version 5.04 2025-11-26 19:17" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -985,17 +985,7 @@ midiInit
 if {[file exists midiexplorer.ini]} {
 	readMidiexplorerIni
 } else {
-  if {$tcl_platform(platform) == "windows"} {
-     ### not used
-     ####was already set in midiInit 2024-08-02
-     # set midi(dir_abcmidi) $install_folder
-     # set midi(path_abc2midi) [file join $install_folder abc2midi.exe]
-     # set midi(path_abcm2ps) [file join $install_folder abcm2ps.exe]
-     # set midi(path_midi2abc) [file join $install_folder midi2abc.exe]
-     # set midi(path_midistats) [file join $install_folder midistats.exe]
-     # set midi(path_midicopy) [file join $install_folder midicopy.exe]
-     # set midi(path_gs) ""
-  } elseif {$tcl_platform(platform) == "unix"} {
+  if {$tcl_platform(platform) == "unix"} {
       # this is necessary 2024-08-02
       findLinuxExecutables
        }
@@ -1556,7 +1546,7 @@ Control-o\tgoogle search
 Control-n\tnotebook
 Control-p\tselect midi player
 Control-r\tpiano roll
-Control-s\tmidi structre
+Control-s\tmidi structure
 Control-t\tdetailed tableau
 Control-u\tduckduckgo search
 Control-w\tplay midi file
@@ -2568,6 +2558,7 @@ global rmaj
 global programmod
 array unset xchannel2program
 array unset trkinfo
+
 set midierror ""
 set ntrks 0
 set hasLyrics 0
@@ -2666,7 +2657,6 @@ foreach line [split $midi_info '\n'] {
     clean_quantization {set cleanq 1} 
     default {if {[info exist t] && ($info_id == "trkinfo" )} {
                  lappend trkinfo($t) $line
-                 #puts "line = $line"
                  set track2channel($t) [lindex $line 1]
                  }
             }
@@ -2760,7 +2750,7 @@ proc list_timesigmod {} {
  
 
 
-proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax prng duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy nzeros nsteps njumps line} {
+proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax prng duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy nzeros nsteps njumps  avgvel stdvel line} {
  global ppqn
  upvar 1 $channel c
  upvar 1 $prog p
@@ -2783,6 +2773,8 @@ proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax prng duration du
  upvar 1 $nzeros zeros
  upvar 1 $nsteps steps
  upvar 1 $njumps jumps
+ upvar 1 $avgvel vel
+ upvar 1 $stdvel vels
  set c [lindex $line 1]
  set p [lindex $line 2]
  set n [lindex $line 3]
@@ -2818,6 +2810,8 @@ proc get_trkinfo {channel prog  nnotes nharmony pmean pmin pmax prng duration du
  set steps [lindex $line 19]
  set jumps [lindex $line 20]
  if {[string length $pentropy] > 1} {set pentropy [format %4.2f $pentropy]}
+ set vel [lindex $line 21]
+ set vels [lindex $line 22]
 }
 
 # progMel maps the midi program number 0 to 127 to
@@ -2886,7 +2880,7 @@ set nlines 0
 for {set i 1} {$i <= $ntrks} {incr i} {
   foreach line $trkinfo($i) {
     if {[lindex $line 0] == "trkinfo"} {
-       get_trkinfo channel p nnotes nharmony pmean pmin pmax prng duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy nzeros nsteps njumps $line
+       get_trkinfo channel p nnotes nharmony pmean pmin pmax prng duration durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy nzeros nsteps njumps avgvel stdvel $line
 
       set activechan($channel) 1
       set track2channel($i) $channel
@@ -4643,8 +4637,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 0.99} {
-         appendInfoError "You need midistats.exe version 0.99 or higher."
+    if {$err == 0 || $ver < 1.01} {
+         appendInfoError "You need midistats.exe version 1.01 or higher."
          }
     return pass
 }
@@ -7636,7 +7630,6 @@ if {$midi(midishow_sep) == "track"} {
   for {set i 0} {$i <17} {incr i} {
     if {[info exist activechan($i)] && $trksel($i) == 0} {
       .piano.can itemconfigure trk$i -fill $col -width 4
-      puts "hide channel $i"
     }
   }
 }
@@ -14257,7 +14250,7 @@ that now we are substituting the pitch class (pitch modulo 12) instead\
 of the percussion instrument. Pitch class analysis is performed by\
 fragmenting each bar into 1/16 note segments. For each segment we\
 determine all the pitch classes that are onset in this interval and\
-respresent this information in a 12 bit binary number. A histogram of the\
+represent this information in a 12 bit binary number. A histogram of the\
 occurrences of all the distinct numbers are determined and the\
 distinct numbers are assigned sequential numeric labels.\
 These distinct instances can be considered to be the alphabet.\n\n\
@@ -16117,7 +16110,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 5.02\
             path_midi2abc 3.64\
             path_midicopy 1.40\
-	    path_midistats 0.99\
+	    path_midistats 1.01\
             path_abcm2ps 8.14.6}
 
 
@@ -17659,12 +17652,13 @@ label $w.zer -text "zero" -bg bisque -font $df
 label $w.stp -text "step" -bg bisque -font $df
 label $w.jmp -text "jump" -bg bisque -font $df
 label $w.rhy -text "rpat" -bg bisque -font $df
+label $w.vel -text "vel" -bg lightgrey -font $df
+label $w.vels -text "vels" -bg lightgrey -font $df
 label $w.pbn -text "pbn" -bg tan -font $df
 label $w.ctp -text "ctp" -bg tan -font $df
 label $w.prs -text "prs" -bg tan -font $df
 
-#grid $w.chk $w.chn $w.prg $w.vol $w.notes $w.spread $w.ngaps $w.pav $w.prng $w.pme $w.dav $w.dmn $w.dmx $w.zer $w.stp $w.jmp $w.rhy $w.pbn $w.ctp $w.prs -row $labelrow
-grid $w.chk $w.chn $w.prg $w.vol $w.notes $w.spread $w.ngaps $w.pav $w.prng $w.pme $w.dav  $w.zer $w.stp $w.jmp $w.rhy $w.pbn $w.ctp $w.prs -row $labelrow
+grid $w.chk $w.chn $w.prg $w.vol $w.notes $w.spread $w.ngaps $w.pav $w.prng $w.pme $w.dav  $w.zer $w.stp $w.jmp $w.rhy $w.vel $w.vels $w.pbn $w.ctp $w.prs -row $labelrow
 
 tooltip::tooltip $w.chn "Midi channel number starting from 1"
 tooltip::tooltip $w.prg "Midi program"
@@ -17682,6 +17676,8 @@ tooltip::tooltip $w.zer "Number of pitch repeats"
 tooltip::tooltip $w.stp "Number of pitch steps"
 tooltip::tooltip $w.jmp "Number of pitch jumps"
 tooltip::tooltip $w.rhy "Number of rhythm pattern"
+tooltip::tooltip $w.vel "average note velocity"
+tooltip::tooltip $w.vels "standard deviation of note velocity"
 tooltip::tooltip $w.pbn "Number of pitchbends"
 tooltip::tooltip $w.ctp "Number of control messages"
 tooltip::tooltip $w.prs "Number of pressure messages"
@@ -17722,7 +17718,7 @@ foreach token $midiInfo {
   if {[string first "trkinfo" $token] >= 0} {
     incr labelrow 
     set labelcol 0
-    get_trkinfo channel prog nnotes nharmony pmean pmin pmax prng dur durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy nzeros nsteps njumps $token
+    get_trkinfo channel prog nnotes nharmony pmean pmin pmax prng dur durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy nzeros nsteps njumps avgvel stdvel $token
 
    if {$ntrks == 1} {
      checkbutton $w.c$labelrow -text $trk -variable midichannels($channel) -font $df -pady 0
@@ -17826,6 +17822,16 @@ foreach token $midiInfo {
 
    # number of rhythm patterns
    label $w.lab$labelrow$hyphen$labelcol -text $rhythmpatterns -bg bisque -font $df -pady 0
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -ipady 0 -pady 0
+   incr labelcol
+
+   # average velocity
+   label $w.lab$labelrow$hyphen$labelcol -text $avgvel -bg lightgrey -font $df -pady 0
+   grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -ipady 0 -pady 0
+   incr labelcol
+
+   # standard deviation of velocity
+   label $w.lab$labelrow$hyphen$labelcol -text $stdvel -bg lightgrey -font $df -pady 0
    grid $w.lab$labelrow$hyphen$labelcol -row $labelrow -column $labelcol -ipady 0 -pady 0
    incr labelcol
 
