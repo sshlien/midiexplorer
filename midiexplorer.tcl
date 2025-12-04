@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.04 2025-11-26 19:17" 
+set midiexplorer_version "MidiExplorer version 5.07 2025-12-03 10:48" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -1076,6 +1076,10 @@ $ww add command -label "reload last midi file" -font $df -command load_last_midi
 
 $ww add command -label "restore root directory" -font $df -command restore_root_folder
 
+$ww add command -label "open midi file" -font $df\
+   -command {set midi(midifilein) [tk_getOpenFile -filetypes $miditype]
+             load_last_midi_file
+            }
 $ww add cascade -label "recent" -font $df -menu $ww.recent
 
 $ww add command -label "playlist manager" -font $df -command make_playlist_manager
@@ -1182,6 +1186,7 @@ $ww add command -label "mftext of output midi file" -font $df \
 $ww add command -label "save output midi file" -font $df \
                  -command save_output_midi_file
 $ww add command -label "contents of midiexplorer_home" -command dirhome -font $df
+$ww add command -label "midistats output" -font $df -command midistatsViewer -accelerator "ctrl-M"
 tooltip::tooltip .treebrowser.menuline.internals "This menu contains functions to
 expose how this program operates"
 
@@ -1195,6 +1200,8 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
 	    -command google_search 
 	$ww add command -label "google genre" -font $df -accelerator "ctrl-g"\
 	    -command "google_search genre"
+	$ww add command -label "google chord progression" -font $df \
+	    -command "google_search \"chord progression\""
         $ww add command -label "musicmap similar" -font $df\
             -command musicmap
 	$ww add command -label "duckduckgo search" -font $df -accelerator "ctrl-u"\
@@ -1404,7 +1411,7 @@ button .treebrowser.menuline2.restore -text "restore root" -font $df -command {r
 label .treebrowser.menuline2.transpose -text "transpose by"  -font $df
 tooltip::tooltip .treebrowser.menuline2.transpose "Number of semitones to transpose. It is restored
  to zero whenever you select another midi file."
-spinbox .treebrowser.menuline2.semi -from -11 -to 11 -increment 1  -font $df -width 4 -textvariable midi(semitones) 
+spinbox .treebrowser.menuline2.semi -from -11 -to 11 -increment 1  -font $df -width 4 -textvariable midi(semitones) -command {updateAllWindows none}
 
 
 scale .treebrowser.menuline2.speed -length 100 -from 0.1 -to 3.0 -orient horizontal\
@@ -1519,6 +1526,7 @@ bind all <Control-g> {google_search genre}
 bind all <Control-h> {chordgram_plot none}
 bind all <Control-k> {show_console_page $exec_out word}
 bind all <Control-o> google_search
+bind all <Control-M> {midistatsViewer}
 bind all <Control-n> {notebook}
 bind all <Control-p> set_midi_players
 bind all <Control-r> piano_roll_display
@@ -1528,7 +1536,6 @@ bind all <Control-u> duckduckgo_search
 bind all <Control-v> genre_window
 bind all <Control-w> {playmidifile 0}
 bind all <Control-y> {keymap none}
-bind all <Control-z> {newfunction}
 }
 
 bind_accelerators
@@ -1729,11 +1736,6 @@ if {[string length $midi(colorscheme)] > 0} {
       ttk::style configure Treeview -foreground black -background [lindex $hexColor 0]
       }
   }
-#ttk::style configure -option background black
-#puts "ttk:style theme names = [ttk::style theme names]"
-#ttk::style theme use default
-#puts "ttk::style options = [ttk::style configure -option]"
-#puts "ttk:style names = [ttk::style element names]"
 ttk::treeview $w.tree -columns {fullpath type size criterion} -displaycolumns {size criterion} \
 	-yscroll "$w.vsb set" -xscroll "$w.hsb set" -selectmode browse -padding 3
 #puts [$w.tree configure]
@@ -5495,8 +5497,8 @@ proc chordtext_window {source} {
      button $f.1.histogram -text "chord histogram" -font $df -command "chord_histogram $source"
      menubutton $f.1.options -text options -font $df -menu $f.1.options.items
      menu $f.1.options.items 
-     $f.1.options.items add checkbutton  -label "open chords" -font $df -variable midi(openChords) -command "openClosedChords $source" -fg black
-     $f.1.options.items add checkbutton -label "show unidentified chords" -font $df -variable midi(showUnidentifiedChords) -command "openClosedChords $source" -fg black
+     $f.1.options.items add checkbutton  -label "open chords" -font $df -variable midi(openChords) -command "openClosedChords $source" -foreground black
+     $f.1.options.items add checkbutton -label "show unidentified chords" -font $df -variable midi(showUnidentifiedChords) -command "openClosedChords $source" -foreground black
      pack $f.1.help $f.1.histogram $f.1.options -side left -anchor w
      frame $f.2
      pack $f.1 $f.2 -side top -anchor w
@@ -5839,7 +5841,7 @@ proc reorganize_pianoresult {source} {
         set stop  [lindex $cmd 1]
         set trk   [lindex $cmd 2]
         set chn   [lindex $cmd 3]
-        set pitch [lindex $cmd 4]
+        set pitch [expr [lindex $cmd 4] + $midi(semitones)]
         if {$chn == 10} continue
         if {$midi(midishow_sep) == "track"} {set sep $trk} else {set sep $chn}
         if {$tsel == 0} {
@@ -9873,6 +9875,7 @@ area and see more detail.\n\n\
 #   Part 11.0 Midi Statistics for Pianoroll and DrumRoll
 
 proc pianoroll_statistics {choice canvs} {
+    puts "pianoroll_statistics $choice $canvs"
     global pianoresult midi
     global histogram
     global ppqn
@@ -10416,7 +10419,7 @@ if {[winfo exists .genrewindow]} {
 if {[winfo exists .tinfo] && $source != "tinfo"} {
    midiTable
    }
-if {[winfo exists .ftable]} {
+if {[winfo exists .ftable] && $source != ".ftable"} {
    set midi_info [get_midi_info_for]
    set midi_info [split $midi_info '\n]
    make_table $midi_info
@@ -17721,9 +17724,9 @@ foreach token $midiInfo {
     get_trkinfo channel prog nnotes nharmony pmean pmin pmax prng dur durmin durmax pitchbendCount cntlparamCount pressureCount quietTime rhythmpatterns ngaps pitchEntropy nzeros nsteps njumps avgvel stdvel $token
 
    if {$ntrks == 1} {
-     checkbutton $w.c$labelrow -text $trk -variable midichannels($channel) -font $df -pady 0
+     checkbutton $w.c$labelrow -text $trk -variable midichannels($channel) -font $df -pady 0 -command {updateAllWindows .ftable}
      } else {
-     checkbutton $w.c$labelrow -text $trk -variable miditracks($trk) -font $df -pady 0 -command  "ftable_checkbutton $trk"
+     checkbutton $w.c$labelrow -text $trk -variable miditracks($trk) -font $df -pady 0 -command  "ftable_checkbutton $trk" 
      }
    grid $w.c$labelrow -row $labelrow -column $labelcol -ipady 0 -pady 0
    incr labelcol
@@ -17865,17 +17868,29 @@ global track2channel
 global midichannels
 set channel $track2channel($i)
 set midichannels($channel) [expr 1 - $midichannels($channel)]
+updateAllWindows .ftable
 }
 
 
-proc newfunction {} {
+proc midistatsViewer {} {
 # experimental function
 global midi
 global df
+set f .midistatsOutput
+if {[winfo exist $f]==0} {
+  toplevel $f
+  frame $f.2
+  pack $f.2
+  text $f.2.txt -width 70 -font $df -yscrollcommand {.midistatsOutput.2.scroll set}
+  scrollbar $f.2.scroll -orient vertical -command {.midistatsOutput.2.txt yview}
+  pack $f.2.txt $f.2.scroll -side left -fill y
+  }
+
 set exec_options "[list $midi(midifilein) ] -pmove"
 set cmd "exec [list $midi(path_midistats)]  $exec_options"
 catch {eval $cmd} midistats_output
-puts $midistats_output
+$f.2.txt delete 0.0 end
+$f.2.txt insert insert $midistats_output
 }
 
 
