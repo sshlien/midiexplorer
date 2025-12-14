@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.07 2025-12-03 10:48" 
+set midiexplorer_version "MidiExplorer version 5.08 2025-12-13 18:55" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -3478,12 +3478,12 @@ if {![winfo exist $w]} {
   tooltip::tooltip $w.header.play "Generates the midi file for the selected\nchannels and region and plays it.."
   menubutton $w.header.dot -text "dot size" -font $df -menu $w.header.dot.items
   menu $w.header.dot.items -tearoff 0
-  $w.header.dot.items add radiobutton -label 0 -font $df -command {dotmod 0}
-  $w.header.dot.items add radiobutton -label 1 -font $df -command {dotmod 1}
-  $w.header.dot.items add radiobutton -label 2 -font $df -command {dotmod 2}
-  $w.header.dot.items add radiobutton -label 3 -font $df -command {dotmod 3}
-  $w.header.dot.items add radiobutton -label 4 -font $df -command {dotmod 4}
-  $w.header.dot.items add radiobutton -label 5 -font $df -command {dotmod 5}
+  $w.header.dot.items add radiobutton -label 0 -font $df -command {dotmod 0} -indicatoron 1
+  $w.header.dot.items add radiobutton -label 1 -font $df -command {dotmod 1} -indicatoron 1
+  $w.header.dot.items add radiobutton -label 2 -font $df -command {dotmod 2} -indicatoron 1
+  $w.header.dot.items add radiobutton -label 3 -font $df -command {dotmod 3} -indicatoron 1
+  $w.header.dot.items add radiobutton -label 4 -font $df -command {dotmod 4} -indicatoron 1
+  $w.header.dot.items add radiobutton -label 5 -font $df -command {dotmod 5} -indicatoron 1
  tooltip::tooltip $w.header.dot "Adjusts the dot size for each note."
 
   
@@ -6221,12 +6221,12 @@ proc chordgram_plot {source} {
     menubutton $ch.res -text resolution -font $df -padx 1 -menu $ch.res.items -relief sunken 
     menu $ch.res.items -tearoff 0
     set resitems $ch.res.items
-    $resitems add radiobutton -label "per beat (default)" -font $df -variable beatsplitter -value 1.0 -command "make_chordgram chordgram"
-    $resitems add radiobutton -label "2 per beat" -font $df -variable beatsplitter -value 2.0 -command "make_chordgram chordgram"
-    $resitems add radiobutton -label "3 per beat" -font $df -variable beatsplitter -value 3.0 -command "make_chordgram chordgram"
-    $resitems add radiobutton -label "1 per 2 beats" -font $df -variable beatsplitter -value 0.5 -command "make_chordgram chordgram"
-    $resitems add radiobutton -label "1 per 3 beats" -font $df -variable beatsplitter -value 0.33 -command "make_chordgram chordgram"
-    $resitems add radiobutton -label "1 per 4 beats" -font $df -variable beatsplitter -value 0.25 -command "make_chordgram chordgram"
+    $resitems add radiobutton -label "per beat (default)" -font $df -variable beatsplitter -value 1.0 -command "make_chordgram chordgram" -selectcolor $colfg -indicatoron 1
+    $resitems add radiobutton -label "2 per beat" -font $df -variable beatsplitter -value 2.0 -command "make_chordgram chordgram" -indicatoron 1 -selectcolor $colfg
+    $resitems add radiobutton -label "3 per beat" -font $df -variable beatsplitter -value 3.0 -command "make_chordgram chordgram" -selectcolor $colfg -indicatoron 1
+    $resitems add radiobutton -label "1 per 2 beats" -font $df -variable beatsplitter -value 0.5 -command "make_chordgram chordgram" -indicatoron 1 -selectcolor $colfg
+    $resitems add radiobutton -label "1 per 3 beats" -font $df -variable beatsplitter -value 0.33 -command "make_chordgram chordgram" -selectcolor $colfg -indicatoron 1
+    $resitems add radiobutton -label "1 per 4 beats" -font $df -variable beatsplitter -value 0.25 -command "make_chordgram chordgram" -selectcolor $colfg -indicatoron 1
 
     menubutton $ch.ana -text analysis -font $df -padx 1 -menu $ch.ana.items -relief sunken
     menu $ch.ana.items -tearoff 0
@@ -8580,6 +8580,9 @@ proc drumroll_window {} {
             -command {drumroll_statistics velocity
                       plotmidi_velocity_pdf
                      }
+    $p.plots.items add command -label "velocity map" -font $df\
+            -command drumroll_plot_velocity_map
+
     
     button $p.help -text help -relief flat -font $df\
             -command {show_message_page $hlp_drumroll word}
@@ -9144,8 +9147,8 @@ proc get_drum_patterns {simple} {
         set begin [lindex $line 0]
         if {$begin < $start} continue
         if {$begin > $stop} continue
-#        set loc [expr ($begin - $start) / $ppqn4]
-        set loc [expr $begin / $ppqn4]
+        set loc [expr ($begin - $start) / $ppqn4]
+#        set loc [expr $begin / $ppqn4]
         if {[string is double $begin] != 1} continue
         set c [lindex $line 3]
         if {$c != 10} continue
@@ -9158,10 +9161,11 @@ proc get_drum_patterns {simple} {
           } else {
           set drumindex [expr $percussionmap($note) - 1]
           }
+#        puts "drumpat = $drumpat loc = $loc"
         set patfrag [dict get $drumpat $loc]
         set patfrag [expr $patfrag | 1<<$drumindex]
         dict set drumpat $loc $patfrag 
-        #puts "drumpat $loc $patfrag $note $drumindex"
+#        puts "drumpat $loc $patfrag $note $drumindex"
        }
    if {$nodrumdata} {
      puts "no percussion channel"
@@ -10446,6 +10450,9 @@ if {[winfo exists .velocitypdf]} {
 if {[winfo exist .drumanalysis]} {
    analyze_drum_patterns 0
    }
+if {[winfo exists .midivelocity]} {
+   drumroll_plot_velocity_map
+   }
 }
   
 
@@ -11217,6 +11224,64 @@ proc plot_velocity_map {source} {
     }
 }
 
+proc drumroll_plot_velocity_map {}  {
+    global pianoresult midi ppqn
+    global trksel
+    global start stop
+    global colfg
+    set velmap .midivelocity.c
+    if {[winfo exists .midivelocity] == 0} {
+        toplevel .midivelocity
+        positionWindow .midivelocity
+        wm title .midivelocity "midi velocity versus beat number"        
+        pack [canvas $velmap -width 560]
+    } else {
+        .midivelocity.c delete all}
+
+    set limits [midi_limits .drumroll.can]
+    set start [lindex $limits 0]
+    set stop  [lindex $limits 1]
+    set tsel [count_selected_midi_tracks]
+    set stop [expr $stop/$ppqn]
+    set start [expr $start/$ppqn]
+    set delta_tick [expr int(($stop - $start)/10.0)]
+    if {$delta_tick < 1} {set delta_tick 1}
+    set perclist [make_list_of_percussions_of_interest]
+    set perclistlength [llength $perclist]
+    $velmap create rectangle 50 20 550 220 -outline black\
+            -width 2 -fill white
+    Graph::alter_transformation 50 550 220 20 $start $stop 0.0 132
+    if {[expr $stop - $start] > 2.0} {
+      Graph::draw_x_ticks $velmap $start $stop $delta_tick 2  0 %4.0f $colfg
+      } else {
+    Graph::draw_x_ticks $velmap $start $stop 0.5 1  0 %4.1f $colfg
+      }
+
+    Graph::draw_y_ticks $velmap 0.0 132.0 8.0 2 %3.0f $colfg
+    foreach line $pianoresult {
+        if {[llength $line] != 6} continue
+        set begin [expr double([lindex $line 0])/$ppqn]
+        set end [expr double([lindex $line 1])/$ppqn]
+        if {[string is double $begin] != 1} continue
+        if {$begin < $start} continue
+        if {$end   > $stop}  continue
+        set note [lindex $line 4]
+	if {$perclistlength >0 && [lsearch $perclist $note] < 0} continue
+        set v [lindex $line 5]
+        set t [lindex $line 2]
+        set c [lindex $line 3]
+        if {$c != 10} continue
+        if {$midi(midishow_sep) == "track"} {set sep $t} else {set sep $c}
+        set ix1 [Graph::ixpos $begin]
+        #set ix2 [Graph::ixpos $end]
+        set ix2 [expr $ix1 + 2]
+        set iy [Graph::iypos $v]
+        set iy2 [expr $iy + 2]
+	if {$ix2 > 550} {set ix2 550}
+        $velmap create rect $ix1 $iy $ix2 $iy2
+        #puts "      $line\nbegin=$begin v=$v"
+    }
+}
 #end of velocitymap.tcl
 
 
@@ -15750,12 +15815,12 @@ set the path to a midi file."
            #puts $keysig
            set sf $key2sf($keysig)
            lappend sflist $sf
-           set y0 [expr (6 -$sf) * $yscale  + 32]
+           set y0 [expr (6 -$sf) * $yscale  + 31]
            set x0 [expr $stripscale*$beatfrom]
            set x1 [expr $stripscale*$keySpacing + $x0]
-           set x3 [expr ($x0 + $x1)/2 -3] 
-           set y1 [expr $y0 + 3]
-           set x4 [expr $x3 + 3]
+           set x3 [expr ($x0 + $x1)/2 -4] 
+           set y1 [expr $y0 + 4]
+           set x4 [expr $x3 + 4]
            .keystrip.c create rect $x3 $y0 $x4 $y1 -fill red
            if {[lindex $key 1] == "minor"} {
              .keystrip.c create rect $x0 25 $x1 1 -fill $majorColors($jc) -tag $keysig -stipple gray50
