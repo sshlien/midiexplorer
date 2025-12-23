@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.08 2025-12-13 18:55" 
+set midiexplorer_version "MidiExplorer version 5.09 2025-12-21 17:16" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -6242,16 +6242,27 @@ proc chordgram_plot {source} {
 
      entry $ch.key -width 10 -textvariable keysig -font $df  
      bind $ch.key  <Return> {call_compute_chordgram chordgram}
-     button $ch.help -text help -font $df -padx 1 -command {show_message_page $hlp_chordgram word}
+     button $ch.help -text help -font $df -padx 1 -command {
+          show_message_page $hlp_chordgram word
+          draw_chordgram_legend
+          }
      pack  $ch.2 $ch.play $ch.zoom $ch.unzoom $ch.left $ch.right $ch.res $ch.ana $ch.key $ch.help -side left -anchor w
      pack  $ch -side top -anchor w 
-     set c .chordgram.can
-     canvas $c -width [expr $pianorollwidth+10] -height 250 -border 3 -relief sunken
-     pack $c
 
-     bind .chordgram.can <ButtonPress-1> {chordgram_Button1Press %x %y}
-     bind .chordgram.can <ButtonRelease-1> chordgram_Button1Release
-     bind .chordgram.can <Double-Button-1> chordgram_ClearMark
+     set f .chordgram.f
+     frame $f
+     pack $f -side top
+
+     set c  $f.can
+     set cl $f.legcan
+
+     canvas $c -width [expr $pianorollwidth+10] -height 250 -border 3 -relief sunken
+     canvas $cl -width 110
+     pack $c $cl -side left
+
+     bind $c <ButtonPress-1> {chordgram_Button1Press %x %y}
+     bind $c <ButtonRelease-1> chordgram_Button1Release
+     bind $c <Double-Button-1> chordgram_ClearMark
      }
    make_chordgram $source
    update_console_page
@@ -6267,7 +6278,7 @@ set stop $lastbeat
 #puts "getCanvasLimits $source"
 switch $source {
   chordgram {
-    set co [.chordgram.can coords mark]
+    set co [.chordgram.f.can coords mark]
     #puts "co = $co"
     set limits [chordgram_limits $co]
        if {[lindex $co 0] > 0} {
@@ -6391,22 +6402,22 @@ compute_chordgram $start $stop
 }
 
 proc chordgram_Button1Press {x y} {
-    set xc [.chordgram.can canvasx $x]
-    .chordgram.can raise mark
-    .chordgram.can coords mark $xc 20 $xc 220
-    bind .chordgram.can <Motion> { chordgram_Button1Motion %x }
+    set xc [.chordgram.f.can canvasx $x]
+    .chordgram.f.can raise mark
+    .chordgram.f.can coords mark $xc 20 $xc 220
+    bind .chordgram.f.can <Motion> { chordgram_Button1Motion %x }
 }
 
 proc chordgram_Button1Motion {x} {
-    set xc [.chordgram.can canvasx $x]
+    set xc [.chordgram.f.can canvasx $x]
     if {$xc < 0} { set xc 0 }
-    set co [.chordgram.can coords mark]
-    .chordgram.can coords mark [lindex $co 0] 20 $xc 220
+    set co [.chordgram.f.can coords mark]
+    .chordgram.f.can coords mark [lindex $co 0] 20 $xc 220
 }
 
 proc chordgram_Button1Release {} {
-    bind .chordgram.can <Motion> {}
-    set co [.chordgram.can coords mark]
+    bind .chordgram.f.can <Motion> {}
+    set co [.chordgram.f.can coords mark]
     if {[winfo exist .midistructure]} {
           chordgram_migrate_to_midistruct $co  
       }
@@ -6449,7 +6460,7 @@ set beat2 [expr [lindex $beatlimits 1]*$pixels_per_beat]
 }
 
 proc chordgram_ClearMark {} {
-    .chordgram.can coords mark -1 -1 -1 -1
+    .chordgram.f.can coords mark -1 -1 -1 -1
 }
 
 
@@ -6491,7 +6502,7 @@ proc compute_chordgram {start stop} {
    set xlbx  60
    set ytbx 20
    set ybbx 220 
-   set c .chordgram.can
+   set c .chordgram.f.can
    $c delete all
    $c create rectangle $xlbx $ybbx $xrbx $ytbx -outline black -width 2 -fill lightgrey 
   set start5 [expr (1 + int($start)/5)*5.0]
@@ -6534,30 +6545,7 @@ proc compute_chordgram {start stop} {
      #puts "chordtype = $chordtype"
      set ix [Graph::ixpos [expr double($j)]]
      set iy [Graph::iypos [expr double($loc*16) + 7 ]]
-     set iy1 [expr $iy - 5]
-     set iy2 [expr $iy + 5]
-     set ix1 [expr $ix - 5]
-     set ix2 [expr $ix + 5]
-     switch $chordtype {
-       5   {$c create oval $ix1 $iy1 $ix2 $iy2 -fill violet}
-       6   {$c create oval $ix1 $iy1 $ix2 $iy2 -fill pink}
-       7   {$c create oval $ix1 $iy1 $ix2 $iy2 -fill red}
-       maj {$c create oval $ix1 $iy1 $ix2 $iy2 -fill darkred}
-       maj9 {$c create oval $ix1 $iy1 $ix2 $iy2 -fill orange}
-       m7 {$c create oval $ix1 $iy1 $ix2 $iy2 -fill blue}
-       min {$c create oval $ix1 $iy1 $ix2 $iy2 -fill darkblue}
-       dim {$c create oval $ix1 $iy1 $ix2 $iy2 -fill darkgreen}
-       dim7 {$c create oval $ix1 $iy1 $ix2 $iy2 -fill green}
-       aug {$c create oval $ix1 $iy1 $ix2 $iy2 -fill purple}
-       default {$c create oval $ix1 $iy1 $ix2 $iy2 -fill black}
-       }
-     if {$inverse > 1} {
-       set ix1 [expr $ix-2]
-       set ix2 [expr $ix+2]
-       set iy1 [expr $iy-2]
-       set iy2 [expr $iy+2]
-       $c create rect $ix1 $iy1 $ix2 $iy2 -fill white
-       }
+     draw_chordgram_symbol $c $chordtype $inverse $ix $iy
 
      }
   set i 0
@@ -6620,31 +6608,54 @@ proc compute_chordgram {start stop} {
     set spacing [best_grid_spacing $graphlength]
     Graph::draw_x_grid $c $start5 $stop $spacing 1  0 %5.0f $colfg
 
-   .chordgram.can create rect -1 -1 -1 -1 -tags mark -fill yellow -stipple gray25
+    $c create rect -1 -1 -1 -1 -tags mark -fill yellow -stipple gray25
 }
 
-# not used anymore 2024.06.24
-proc saveChordgramData {} {
-global midi
-global chord_sequence
-global seqlength
-global chordgramLimits
-global midiTempo
-set beats2seconds [expr 60.0/double($midiTempo)]
-set start [lindex $chordgramLimits 0]
-set stop [lindex $chordgramLimits 1]
-set outhandle [open "chordgram.txt" w]
-puts $outhandle "chordgram results for $midi(midifilein)"
-for {set j 0} {$j <$seqlength} {incr j} {
-  if {$j < $start} continue
-  if {$j > $stop} break
-  set chord [dict get $chord_sequence $j]
-  set seconds [format "%5.2f" [expr $j * $beats2seconds]]
-  puts $outhandle "$j\t$seconds\t$chord"
-  }
-close $outhandle
-tk_messageBox -message "saved in midiexplorer_home/chordgram.txt"  -type ok
+
+proc draw_chordgram_symbol {c chordtype inverse ix iy} {
+     set iy1 [expr $iy - 5]
+     set iy2 [expr $iy + 5]
+     set ix1 [expr $ix - 5]
+     set ix2 [expr $ix + 5]
+     switch $chordtype {
+       5   {$c create oval $ix1 $iy1 $ix2 $iy2 -fill violet}
+       6   {$c create oval $ix1 $iy1 $ix2 $iy2 -fill pink}
+       7   {$c create oval $ix1 $iy1 $ix2 $iy2 -fill red}
+       maj {$c create oval $ix1 $iy1 $ix2 $iy2 -fill darkred}
+       maj9 {$c create oval $ix1 $iy1 $ix2 $iy2 -fill orange}
+       m7 {$c create oval $ix1 $iy1 $ix2 $iy2 -fill blue}
+       min {$c create oval $ix1 $iy1 $ix2 $iy2 -fill darkblue}
+       dim {$c create oval $ix1 $iy1 $ix2 $iy2 -fill darkgreen}
+       dim7 {$c create oval $ix1 $iy1 $ix2 $iy2 -fill green}
+       aug {$c create oval $ix1 $iy1 $ix2 $iy2 -fill purple}
+       default {$c create oval $ix1 $iy1 $ix2 $iy2 -fill black}
+       }
+     if {$inverse > 0} {
+       set ix1 [expr $ix-2]
+       set ix2 [expr $ix+2]
+       set iy1 [expr $iy-2]
+       set iy2 [expr $iy+2]
+       $c create rect $ix1 $iy1 $ix2 $iy2 -fill white
+       }
 }
+
+proc draw_chordgram_legend {} {
+set f .chordgram.f
+set c $f.legcan
+set chordnames {maj min dim aug m7 maj9 dim7 5 6 7 unknown}
+$c create rect 5 0 150 250 -fill lightgrey
+set iy 25
+set ix 15
+$c create text 65 10 -text inversion
+foreach chord $chordnames {
+     draw_chordgram_symbol $c $chord 0 $ix $iy 
+     draw_chordgram_symbol $c $chord 1 [expr $ix +30] $iy 
+     $c create text [expr $ix +65] $iy -text $chord
+     set iy [expr $iy + 20]
+     } 
+}
+
+
 
 set hlp_notegram "Notegram
 
@@ -9147,8 +9158,8 @@ proc get_drum_patterns {simple} {
         set begin [lindex $line 0]
         if {$begin < $start} continue
         if {$begin > $stop} continue
-        set loc [expr ($begin - $start) / $ppqn4]
-#        set loc [expr $begin / $ppqn4]
+#        set loc [expr ($begin - $start) / $ppqn4]
+        set loc [expr $begin / $ppqn4]
         if {[string is double $begin] != 1} continue
         set c [lindex $line 3]
         if {$c != 10} continue
@@ -9161,11 +9172,10 @@ proc get_drum_patterns {simple} {
           } else {
           set drumindex [expr $percussionmap($note) - 1]
           }
-#        puts "drumpat = $drumpat loc = $loc"
         set patfrag [dict get $drumpat $loc]
         set patfrag [expr $patfrag | 1<<$drumindex]
         dict set drumpat $loc $patfrag 
-#        puts "drumpat $loc $patfrag $note $drumindex"
+        #puts "drumpat $loc $patfrag $note $drumindex"
        }
    if {$nodrumdata} {
      puts "no percussion channel"
