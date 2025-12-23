@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.09 2025-12-21 17:16" 
+set midiexplorer_version "MidiExplorer version 5.10 2025-12-23 08:02" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -730,7 +730,6 @@ proc midiInit {} {
     set midi(.pitchclass) ""
     set midi(.keypitchclass) ""
     set midi(.midivelocity) ""
-    set midi(.pianovelocity) ""
     set midi(.mftext) ""
     set midi(.searchbox) ""
     set midi(.graph) ""
@@ -4936,7 +4935,6 @@ update_displayed_pdf_windows .piano.can
 if {[winfo exists .tinfo] == 1} {
    midiTable
    }
-if {[winfo exists .pianovelocity] == 1} compute_pianoroll_velocity
 }
 
 
@@ -4967,7 +4965,6 @@ update_displayed_pdf_windows .piano.can
 if {[winfo exists .tinfo]} {
    midiTable
    }
-if {[winfo exists .pianovelocity]} {compute_pianoroll_velocity}
 }
 
 proc applyHighlightTrackStatic {} {
@@ -5009,104 +5006,7 @@ for {set i 0} {$i < 32} {incr i} {
 return $count
 }
 
-# not used from November 18
-# you should delete all references to .pianovelocity
-proc piano_roll_velocity {} {
-set p .pianovelocity
-global pianorollwidth
-if {![winfo exist $p]} {
-  toplevel $p
-  canvas $p.can -width $pianorollwidth -height 140 -border 3 -relief sunken -scrollregion\
-            {0 0 2500 140} -bd 3
-  positionWindow .pianovelocity
-  label $p.msg -text ""
-  pack $p.can
-  pack $p.msg
-  }
-compute_pianoroll_velocity
-set xv [lindex [.piano.can xview] 0]
-piano_horizontal_scroll $xv
-}
 
-# not used from November 18
-proc compute_pianoroll_velocity {} {
-global pianoresult pianoxscale
-global midi
-global trksel
-global piano_vert_lines
-global colfg
-#puts "trksel [array get trksel]"
-set p .pianovelocity.can
-set pianosr  [.piano.can cget -scrollregion]
-#puts "pianosr = $pianosr"
-set pianovsr [.pianovelocity.can cget -scrollregion]
-#puts "pianovsr = $pianovsr"
-set xscroll [lindex $pianosr 2]
-set pianovsr [lreplace $pianovsr 2 2 $xscroll]
-.pianovelocity.can configure -scrollregion $pianovsr
-
-
-$p delete all
-set npoints 0
-foreach line $pianoresult {
-   if {[llength $line] != 6} continue
-   set begin [lindex $line 0]
-   if {[string is double $begin] != 1} continue
-   set end [lindex $line 1]
-   set t [lindex $line 2]
-   set c [lindex $line 3]
-   if {$c == 10} continue
-   if {$trksel($c) == 0} continue
-   set track2channel($t) $c
-   if {$midi(midishow_sep) == "track"} {set sep $t} else {set sep $c}
-   set v [lindex $line 5]
-   set ix1 [expr $begin/$pianoxscale]
-   set iy1 [expr 140 - $v]
-   set ix2 [expr $ix1+2]
-   set iy2 [expr $iy1+2]
-   $p create rect $ix1 $iy1 $ix2 $iy2 -outline $colfg
-   incr npoints
-   }
-if {$npoints < 2}   {
-   .pianovelocity.msg configure -text "select a track or channel in the pianoroll window and zoom or scroll" -fg red
-   } else {
-   .pianovelocity.msg configure -text ""
-   }
-
-piano_velocity_qnotelines
-}
-
-# not used from November 18
-proc piano_velocity_qnotelines {} {
-    global ppqn midilength pianoxscale piano_vert_lines
-    global piano_qnote_offset vspace
-    global colfg
-    set p .pianovelocity
-    set top 0
-    set bot 138
-    $p.can delete -tag  barline
-    if {$piano_vert_lines > 0} {
-        set vspace [expr $ppqn*$piano_vert_lines]
-        set txspace $vspace
-        while {[expr $txspace/$pianoxscale] < 40} {
-            set txspace [expr $txspace + $vspace]
-        }
-        
-        
-        for {set i $piano_qnote_offset} {$i < $midilength} {incr i $vspace} {
-            set ix1 [expr $i/$pianoxscale]
-            if {$ix1 < 0} continue
-            $p.can create line $ix1 $top $ix1 $bot -width 1 -tag barline -fill green
-        }
-        
-        for {set i $piano_qnote_offset} {$i < $midilength} {incr i $txspace} {
-            set ix1 [expr $i/$pianoxscale]
-            if {$ix1 < 0} continue
-            $p.can create text $ix1 5 -text [expr $piano_vert_lines*int($i/$vspace)] -fill $colfg
-        }
-    }
-}
-#
 
 
 #        Support functions
@@ -5143,10 +5043,6 @@ proc BindXview {lists args} {
     foreach l $lists {
         eval {$l xview} $args
     }
-    if {[winfo exist .pianovelocity]} {
-      .pianovelocity.can xview moveto [lindex $args 1] 
-      # puts "pianovelocity.can xview moveto $args"
-      }
     update_displayed_pdf_windows [lindex $lists 0]
 }
 
@@ -7737,7 +7633,6 @@ proc put_trkchan_selector {} {
 proc piano_horizontal_scroll {val} {
     .piano.can xview moveto $val
     .piano.canx xview moveto $val
-    if {[winfo exist .pianovelocity]} {.pianovelocity.can xview moveto $val}
 }
 
 
@@ -13581,7 +13476,7 @@ proc getGeometryOfAllToplevels {} {
                ".colors" ".chordview" ".chordgram" ".midistructure" 
                ".drumsel" ".drumroll" ".drumanalysis" ".pitchpdf"
                ".velocitypdf" ".onsetpdf" ".offsetpdf"  ".durpdf" ".pitchclass"
-               ".midivelocity" ".pianovelocity" ".mftext" ".searchbox" ".graph"
+               ".midivelocity" ".mftext" ".searchbox" ".graph"
                ".fontwindow" ".support" ".preferences" ".beatgraph"
                ".ppqn" ".drumrollconfig" ".indexwindow" ".wiki"
                ".dictview" ".notegram" ".barmap" ".playmanage" ".data_info"
