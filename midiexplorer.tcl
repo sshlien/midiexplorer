@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.10 2025-12-23 08:02" 
+set midiexplorer_version "MidiExplorer version 5.11 2025-02-18 04:38" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -1334,6 +1334,9 @@ menu $ww -tearoff 0
        $ww add command -label search -font $df -command {load_desc
                                                   search_window
                                                  }
+       $ww add command -label searchkey -font $df -command {load_desc
+                                                  search_key_window
+                                                 }
        $ww add command -label "defective files" -font $df -command find_bad_files
        $ww add cascade -label "export" -font $df -menu $ww.export
 
@@ -1353,6 +1356,7 @@ $ww.export add command -label "file index" -font $df -command export_fileindex
 $ww.export add command -label "progcolor data" -font $df -command export_progcolor_to_csv
 $ww.export add command -label "prog data" -font $df -command "export_progs_to_csv 0"
 $ww.export add command -label "normalized prog data" -font $df -command "export_progs_to_csv 1"
+$ww.export add command -label "key stability" -font $df -command "export_keystability_to_csv"
 $ww.export add command -label "drum data" -font $df -command export_drum_to_csv
 $ww.export add command -label "drum hits data" -font $df -command export_drum_hits_to_csv
 $ww.export add command -label "pitch data" -font $df -command export_pitches_to_csv
@@ -1407,10 +1411,10 @@ button .treebrowser.menuline2.random -text "random pick" -font $df -command {ran
 
 button .treebrowser.menuline2.restore -text "restore root" -font $df -command {restore_root_folder}
 
-label .treebrowser.menuline2.transpose -text "transpose by"  -font $df
+button .treebrowser.menuline2.transpose -text "transpose by"  -font $df -command transpose_tool
 tooltip::tooltip .treebrowser.menuline2.transpose "Number of semitones to transpose. It is restored
  to zero whenever you select another midi file."
-spinbox .treebrowser.menuline2.semi -from -11 -to 11 -increment 1  -font $df -width 4 -textvariable midi(semitones) -command {updateAllWindows none}
+spinbox .treebrowser.menuline2.semi -from -24 -to 24 -increment 1  -font $df -width 4 -textvariable midi(semitones) -command {updateAllWindows none}
 
 
 scale .treebrowser.menuline2.speed -length 100 -from 0.1 -to 3.0 -orient horizontal\
@@ -4638,8 +4642,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 1.01} {
-         appendInfoError "You need midistats.exe version 1.01 or higher."
+    if {$err == 0 || $ver < 1.02} {
+         appendInfoError "You need midistats.exe version 1.02 or higher."
          }
     return pass
 }
@@ -6140,7 +6144,6 @@ proc chordgram_plot {source} {
      bind $ch.key  <Return> {call_compute_chordgram chordgram}
      button $ch.help -text help -font $df -padx 1 -command {
           show_message_page $hlp_chordgram word
-          draw_chordgram_legend
           }
      pack  $ch.2 $ch.play $ch.zoom $ch.unzoom $ch.left $ch.right $ch.res $ch.ana $ch.key $ch.help -side left -anchor w
      pack  $ch -side top -anchor w 
@@ -6153,7 +6156,7 @@ proc chordgram_plot {source} {
      set cl $f.legcan
 
      canvas $c -width [expr $pianorollwidth+10] -height 250 -border 3 -relief sunken
-     canvas $cl -width 110
+     canvas $cl -width 155
      pack $c $cl -side left
 
      bind $c <ButtonPress-1> {chordgram_Button1Press %x %y}
@@ -6161,6 +6164,7 @@ proc chordgram_plot {source} {
      bind $c <Double-Button-1> chordgram_ClearMark
      }
    make_chordgram $source
+   draw_chordgram_legend
    update_console_page
 }
 
@@ -6401,7 +6405,7 @@ proc compute_chordgram {start stop} {
    set c .chordgram.f.can
    $c delete all
    $c create rectangle $xlbx $ybbx $xrbx $ytbx -outline black -width 2 -fill lightgrey 
-  set start5 [expr (1 + int($start)/5)*5.0]
+  set start5 [expr (1 + int($start)/4)*4.0]
 
    set pixelsperbeat [expr ($xrbx - $xlbx) / double($stop - $start)]
    Graph::alter_transformation $xlbx $xrbx $ybbx $ytbx $start $stop 0.0 200.0 
@@ -6502,6 +6506,7 @@ proc compute_chordgram {start stop} {
    }
     set graphlength [expr $stop - $start]
     set spacing [best_grid_spacing $graphlength]
+    #puts "start5=$start5 spacing=$spacing"
     Graph::draw_x_grid $c $start5 $stop $spacing 1  0 %5.0f $colfg
 
     $c create rect -1 -1 -1 -1 -tags mark -fill yellow -stipple gray25
@@ -6536,17 +6541,18 @@ proc draw_chordgram_symbol {c chordtype inverse ix iy} {
 }
 
 proc draw_chordgram_legend {} {
+global df
 set f .chordgram.f
 set c $f.legcan
-set chordnames {maj min dim aug m7 maj9 dim7 5 6 7 unknown}
+set chordnames {maj min dim aug m7 maj9 dim7 5 6 7 " unassigned"}
 $c create rect 5 0 150 250 -fill lightgrey
 set iy 25
 set ix 15
-$c create text 65 10 -text inversion
+$c create text 65 10 -text inversion -font $df
 foreach chord $chordnames {
      draw_chordgram_symbol $c $chord 0 $ix $iy 
      draw_chordgram_symbol $c $chord 1 [expr $ix +30] $iy 
-     $c create text [expr $ix +65] $iy -text $chord
+     $c create text [expr $ix +80] $iy -text $chord -font $df
      set iy [expr $iy + 20]
      } 
 }
@@ -9784,7 +9790,7 @@ area and see more detail.\n\n\
 #   Part 11.0 Midi Statistics for Pianoroll and DrumRoll
 
 proc pianoroll_statistics {choice canvs} {
-    puts "pianoroll_statistics $choice $canvs"
+    #puts "pianoroll_statistics $choice $canvs"
     global pianoresult midi
     global histogram
     global ppqn
@@ -10758,8 +10764,8 @@ proc best_grid_spacing {x} {
    set d [lindex $divlist $j]
    set n [expr $n * $d]
    set q [expr $x/$n]
-   if {$q <8} break
-   if {$q <4} break
+   if {$q <10} break
+   if {$q <5} break
    }
  return $n
 }
@@ -12043,6 +12049,14 @@ set filter_code(cpitche) "if \{\[match_pitch_entropy \$item\] == -1\} \{return 0
 set filter_code(lyrics) "if \{\[dict get \$desc(\$item) lyrics\] < 1} \{return 0\}"
 set filter_code(keysig) "if \{\[string equal \[dict get \$desc(\$item) key\]  \$keysearch\] != 1}  \{return 0\}"
 
+proc search_key_window {} {
+toplevel .searchkey
+#unquantized
+#tempocmds
+#dithered_quantization
+#triplets
+#manytimesigs
+}
 
 
 proc expand_proglist {proglist} {
@@ -12847,6 +12861,76 @@ for {set i 1} {$i < $descsize} {incr i} {
   }
 close $outhandle
 appendInfoMessage "\ndata stored in $csvfile"
+}
+
+proc count_number_of_records {filename} {
+set count 0
+set inhandle [open $filename]
+while {[gets $inhandle line] != -1} {incr count}
+close $inhandle
+return $count
+}
+
+
+proc export_keystability_to_csv {} {
+global desc
+global midi
+global stopScan
+set infile [file join $midi(rootfolder) fileindex.tsv]
+set csvfile [file join $midi(rootfolder) keystability.csv]
+
+if {![file exists $infile]} {
+   tk_messageBox -message "Cannot find $infile, you will need to run \
+database/export/file index to create this file." -type ok
+   return
+   }
+set nrecords [count_number_of_records $infile]
+set inhandle [open $infile r]
+set outhandle [open $csvfile w]
+
+
+
+frame .status
+label .status.msg -text "progress"
+ttk::progressbar .status.progress -mode determinate -length 200 \
+ -value 0 -maximum 1.0
+button .status.abort -text stop -command abortScan
+pack .status
+grid .status.progress .status.msg .status.abort
+update
+set sizelimit $nrecords
+set starttime [clock seconds]
+
+while {[eof $inhandle] != 1 && $stopScan != 1} {
+  gets $inhandle line
+  if {[eof $inhandle]} break
+  set linelist [split $line \t]
+  set i [lindex $linelist 0]
+  set filepath [list [lindex $linelist 1]]
+
+  set entropy [get_keystability $filepath]
+  set perplexity [expr 2**$entropy]
+  set perplexity [format "%6.2f" $perplexity]
+  #puts "$i $filepath $entropy"
+  puts $outhandle "$i\t$perplexity"
+
+  if {[expr $i % 100] == 0} {
+        set value [expr double($i)/$sizelimit]
+        set elapsedtime [expr [clock seconds] - $starttime]
+        set expectedtime [expr round($elapsedtime/$value)]
+       .status.msg configure -text "$elapsedtime / $expectedtime seconds"
+       .status.progress configure -value $value
+       update
+       }
+  }
+
+close $outhandle
+close $inhandle
+appendInfoMessage "\ndata stored in $csvfile"
+.status.progress stop
+destroy .status.progress
+destroy .status.abort
+destroy .status
 }
 
 proc export_info_to_csv {} {
@@ -16083,7 +16167,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 5.02\
             path_midi2abc 3.64\
             path_midicopy 1.40\
-	    path_midistats 1.01\
+	    path_midistats 1.02\
             path_abcm2ps 8.14.6}
 
 
@@ -18118,6 +18202,102 @@ foreach g $groovelist {
   $v insert insert "[lindex $g 0]\t\t[lindex $g 1]\n"
   }
 }
+
+set hlp_transpose_tool "Transpose tool
+
+This window is designed to assist you to count the number of semitones\
+between the key signatures. Suppose you wish to transpose a\
+midi file from f# minor to d minor. You need to count the number\
+of semitones between these to keys. f# is at 6 o'clock and d\
+is at 2 o'clock, so you need to transpose by -4 semitones to\
+get to the d minor key signature.
+"
+
+proc transpose_tool {} {
+global sharpnotes
+global flatnotes
+global df
+global hlp_transpose_tool
+set t .notecircle
+set pi 3.14159265
+if {![winfo exist .notecircle]} {
+  toplevel $t
+  button $t.help -text help -font $df -command {show_message_page $hlp_transpose_tool word}
+  pack $t.help
+  canvas $t.c -width 200 -height 200
+  pack $t.c
+  set xc 100
+  set yc 100
+  set i -3
+  foreach p $sharpnotes {
+    set angle [expr $pi * $i * 30.0/180.0]
+    set dy [expr 50.0*sin($angle)]
+    set dx [expr 50.0*cos($angle)]
+    set x [expr $xc + $dx]
+    set y [expr $yc + $dy]
+    $t.c create text $x $y -text $p -font $df
+    incr i
+    }
+  set i -3
+  foreach p $flatnotes {
+    set angle [expr $pi * $i * 30.0/180.0]
+    set dy [expr 75.0*sin($angle)]
+    set dx [expr 75.0*cos($angle)]
+    set x [expr $xc + $dx]
+    set y [expr $yc + $dy]
+    $t.c create text $x $y -text $p -font $df
+    incr i
+    }
+  }
+}
+
+proc test_new_midistats_feature {} {
+global midi
+puts "test_new_midistats_feature"
+set cmd "exec [list $midi(path_midistats)] [list $midi(midifilein)] -keystability"
+puts $cmd
+set result [eval $cmd]
+set sf [lrange [split $result] 2 end]
+puts $sf
+array set sfhistogram {-7 0 -6 0 -5 0 -4 0 -3 0 -2 0 -1 0 0 0 1 0 2 0 3 0 4 0 5 0 6 0 7 0}
+foreach v $sf {
+  incr sfhistogram($v)
+  }
+#puts [array get sfhistogram]
+set pdflist [list]
+foreach v [array names sfhistogram] {
+  if {$sfhistogram($v) > 0} {
+    #puts "$v $sfhistogram($v)"
+    lappend pdflist $sfhistogram($v)
+  }
+}
+#puts $pdflist
+puts "entropy = [pdf_entropy $pdflist]"
+}
+
+proc get_keystability {midifile} {
+global midi
+set cmd "exec [list $midi(path_midistats)] $midifile -keystability"
+#puts $cmd
+set result [eval $cmd]
+set sf [lrange [split $result] 2 end]
+#puts $sf
+array set sfhistogram {-7 0 -6 0 -5 0 -4 0 -3 0 -2 0 -1 0 0 0 1 0 2 0 3 0 4 0 5 0 6 0 7 0}
+foreach v $sf {
+  incr sfhistogram($v)
+  }
+set pdflist [list]
+foreach v [array names sfhistogram] {
+  if {$sfhistogram($v) > 0} {
+    #puts "$v $sfhistogram($v)"
+    lappend pdflist $sfhistogram($v)
+  }
+}
+set entropy [pdf_entropy $pdflist]
+return $entropy
+}
+
+bind all <Alt-t> test_new_midistats_feature
 
 
 bind all <Alt-d> {drumgroove_window
