@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.11 2025-02-18 04:38" 
+set midiexplorer_version "MidiExplorer version 5.13 2026-02-24 08:39" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -1334,9 +1334,6 @@ menu $ww -tearoff 0
        $ww add command -label search -font $df -command {load_desc
                                                   search_window
                                                  }
-       $ww add command -label searchkey -font $df -command {load_desc
-                                                  search_key_window
-                                                 }
        $ww add command -label "defective files" -font $df -command find_bad_files
        $ww add cascade -label "export" -font $df -menu $ww.export
 
@@ -1768,7 +1765,8 @@ grid rowconfigure $w.dummy 0 -weight 1
 
 
 proc rglob {dirlist globlist} {
-        set showprogress 1
+        #set showprogress 1 hangs on Windows 11 for large directories
+        set showprogress 0
         set result {}
         set recurse {}
         foreach dir $dirlist {
@@ -2255,6 +2253,7 @@ proc interpretMidi {} {
   if {$qnotes > 0} {append gridcmd ".info.qnotes "}
   if {$programchanges > 0} {append gridcmd ".info.progchanges "}
   if {$ntempos > 1} {append gridcmd ".info.tempochanges "}
+  if {$ntimesig > 1} {append gridcmd ".info.ntimesig "}
   if {[string length $gridcmd] > 6} {
     append gridcmd "-sticky w"
     eval $gridcmd
@@ -11459,7 +11458,7 @@ grid .status.progress .status.msg .status.abort
 .status.progress start
 set starttime [clock seconds]
 #fconfigure stdin -blocking 0 -buffering none
-puts $outhandle "database_version 11"
+puts $outhandle "database_version 12"
 foreach midifile $filelist {
   incr i
   #puts "$i $midifile"
@@ -11511,6 +11510,9 @@ set pcolor {}
 set programlist {}
 set progsact {}
 set lyrics 0
+set triplets 0
+set unquantized 0
+set ntimesig 0
 foreach line [split $midi_info '\n'] {
   #puts $line
   #remove any embedded double quotes and braces if present
@@ -11521,6 +11523,7 @@ foreach line [split $midi_info '\n'] {
     program {lappend cprogs [lindex $line 2]}
     cprogram {lappend programlist [lindex $line 2]}
     tempo {set tempo [lindex $line 1]}
+    ntimesig {set ntimesig [lindex $line 1]}
     pitchbends {set pitchbends [lindex $line 1]}
     programcmd {set programchanges [lindex $line 1]}
     drums {lappend drums [lrange $line 1 end]}
@@ -11537,6 +11540,8 @@ foreach line [split $midi_info '\n'] {
     progsact {set pprogsact [lrange $line 1 end]}
     pitchentropy {set pitchentropy [lindex $line 1]}
     key {set key [lindex $line 1]}
+    triplets {set triplets 1}
+    unquantized {set unquantized 1}
     Lyrics {set lyrics 1}
     Error: {
             #appendInfoMessage "Defective file $midifile"
@@ -11578,6 +11583,9 @@ puts $outhandle "pitches $pitches"
 puts $outhandle "pitchentropy $pitchentropy"
 puts $outhandle "key $key"
 puts $outhandle "lyrics $lyrics"
+if {$triplets} {puts $outhandle "triplets"}
+if {$unquantized} {puts $outhandle "unquantized"}
+if {$ntimesig > 1} {puts $outhandle "ntimesig $ntimesig"}
 }
 
 
@@ -11639,8 +11647,8 @@ gets $inhandle line
 if {[lindex $line 0] == "database_version"} {
   set version [lindex $line 1]
   }
-if {$version != 11} {
-  appendInfoError "You should rerun create database to get version 11"
+if {$version != 12} {
+  appendInfoError "You should rerun create database to get version 12"
   } 
 while {![eof $inhandle]} {
   gets $inhandle line
@@ -11658,6 +11666,10 @@ while {![eof $inhandle]} {
      set var1 [lindex $line 0]
      set var2 [lrange $line 1 end]
      dict set desc($index) $var1 $var2
+     } elseif {[llength $line] == 2} {
+       dict set desc($index) [lindex $line 0] [lindex $line 1]
+     } else {
+       dict set desc($index) [lindex $line 0] 1
      }
   }
 #puts "desc($index) = [dict get $desc($index)]"
@@ -11814,9 +11826,9 @@ grid $w.checkndrums $w.labndrums $w.scaledrums $w.labndrums2 -sticky nsew
 checkbutton $w.checkpitchentropy -variable searchstate(cpitche) \
   -command searchpitche -fg black
 label $w.labpitche -text "pitch entropy" -font $df
-scale $w.scapitche -length 150 -from 1.6 -to 3.8 -orient horizontal\
+scale $w.scapitche -length 120 -from 1.6 -to 3.8 -orient horizontal\
   -resolution 0.05 -width 9 -variable midi(pitche) -font $df
-grid $w.checkpitchentropy $w.labpitche $w.scapitche
+grid $w.checkpitchentropy $w.labpitche $w.scapitche -sticky nsew
 
 checkbutton $w.checkkeysignature -variable searchstate(keysig)
 button $w.choosekey -text "choose key signature" -font $df -command select_keysig
@@ -11831,6 +11843,18 @@ checkbutton $w.checkname -variable searchstate(cname) -command searchname -fg bl
 label $w.labname -text "string in file name" -font $df 
 entry $w.name -textvariable midi(sname) -width 16 -font $df -state disabled
 grid $w.checkname $w.labname $w.name -sticky nsew
+
+checkbutton $w.timesignature -variable searchstate(ntimesig) -fg black
+label $w.labtimesig -text "time signatures" -font $df
+grid $w.timesignature $w.labtimesig -sticky nsew
+
+checkbutton $w.triplets -variable searchstate(triplets) -fg black
+label $w.hastriplets -text "has triplets" -font $df
+grid $w.triplets $w.hastriplets -sticky nsew
+
+checkbutton $w.unquantized -variable searchstate(unquantized) -fg black
+label $w.unquantlab -text "not quantized" -font $df
+grid $w.unquantized $w.unquantlab -sticky nsew
 
 
 set state {{cname sname} {ctempo tempo} {checkprogs proglist} {cbends nbends} {cndrums ndrums} {cpcol pcolthr} {cpitch pitchthr} {cpitche pitche}}
@@ -12048,15 +12072,10 @@ return 0\}"
 set filter_code(cpitche) "if \{\[match_pitch_entropy \$item\] == -1\} \{return 0\}"
 set filter_code(lyrics) "if \{\[dict get \$desc(\$item) lyrics\] < 1} \{return 0\}"
 set filter_code(keysig) "if \{\[string equal \[dict get \$desc(\$item) key\]  \$keysearch\] != 1}  \{return 0\}"
+set filter_code(unquantized) "if \{!\[dict exists \$desc(\$item) unquantized\]\} \{return 0\}"
+set filter_code(ntimesig) "if \{!\[dict exists \$desc(\$item) ntimesig\]\}  \{return 0\}"
+set filter_code(triplets) "if \{!\[dict exists \$desc(\$item) triplets\]\}  \{return 0\}"
 
-proc search_key_window {} {
-toplevel .searchkey
-#unquantized
-#tempocmds
-#dithered_quantization
-#triplets
-#manytimesigs
-}
 
 
 proc expand_proglist {proglist} {
@@ -12184,7 +12203,8 @@ append revised_procedure "if \{\[dict exists \$desc(\$item) damaged\]\} \{return
 
 
 set i 0
-foreach item {cname ctempo checkprogs checkperc checkexclude cbends cndrums cpcol cpitch  cpitche cprog1 cprog2 lyrics keysig} {
+foreach item {cname ctempo checkprogs checkperc checkexclude cbends cndrums cpcol cpitch  cpitche cprog1 cprog2 lyrics keysig unquantized ntimesig triplets} {
+  #if {![info exist searchstate($item)]} {set searchstate($item) 0}
   if {$searchstate($item) > 0} {
      append revised_procedure "\n$filter_code($item)"
      incr i
@@ -12640,6 +12660,7 @@ for {set i 1} {$i < $descsize} {incr i} {
      incr j
      if {$j > 200} break
      set midifile [dict get $desc($i) file]
+     #puts "$i midifile = $midifile"
      set compactMidifile [string range $midifile $rootfolderbytes end]
      set id [.treebrowser.tree insert {} end -text $compactMidifile -values [list $midifile "file" 0.0 "" $position]]
      incr position
