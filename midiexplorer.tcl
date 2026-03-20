@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.13 2026-02-24 08:39" 
+set midiexplorer_version "MidiExplorer version 5.17 2026-03-20 13:13" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -3340,7 +3340,8 @@ catch {eval $cmd} pianoresult
 set pianoresult [split $pianoresult \n]
 set nrec [llength $pianoresult]
 #puts "nrec = $nrec"
-set midilength [expr $lastpulse/$ppqn]
+#set midilength [expr $lastpulse/$ppqn]
+set midilength $lastpulse
 if {![string is integer $midilength]} {
    if {![winfo exist .info.error]} {
 	label .info.error -text  "cannot process this file" -fg red -font $df
@@ -4641,8 +4642,8 @@ proc check_midi2abc_midistats_and_midicopy_versions {} {
                     }
     set result [getVersionNumber $midi(path_midistats)]
     set err [scan $result "%f" ver]
-    if {$err == 0 || $ver < 1.02} {
-         appendInfoError "You need midistats.exe version 1.02 or higher."
+    if {$err == 0 || $ver < 1.04} {
+         appendInfoError "You need midistats.exe version 1.04 or higher."
          }
     return pass
 }
@@ -5878,6 +5879,7 @@ proc determineChordSequence {source miditextOutput} {
             set lastchordname ""
             set chordid [list]
             set succeeded 0
+            #puts "beatDivision = $beatDivision midiChordNotes = $midiChordNotes"
             for {set i 0} {$i < $l} {incr i}  {
                 set root [lindex $nnotelist $i]
                 set inverse [expr 12 - $root] 
@@ -6123,6 +6125,7 @@ proc chordgram_plot {source} {
     $resitems add radiobutton -label "per beat (default)" -font $df -variable beatsplitter -value 1.0 -command "make_chordgram chordgram" -selectcolor $colfg -indicatoron 1
     $resitems add radiobutton -label "2 per beat" -font $df -variable beatsplitter -value 2.0 -command "make_chordgram chordgram" -indicatoron 1 -selectcolor $colfg
     $resitems add radiobutton -label "3 per beat" -font $df -variable beatsplitter -value 3.0 -command "make_chordgram chordgram" -selectcolor $colfg -indicatoron 1
+    $resitems add radiobutton -label "4 per beat" -font $df -variable beatsplitter -value 4.0 -command "make_chordgram chordgram" -selectcolor $colfg -indicatoron 1
     $resitems add radiobutton -label "1 per 2 beats" -font $df -variable beatsplitter -value 0.5 -command "make_chordgram chordgram" -indicatoron 1 -selectcolor $colfg
     $resitems add radiobutton -label "1 per 3 beats" -font $df -variable beatsplitter -value 0.33 -command "make_chordgram chordgram" -selectcolor $colfg -indicatoron 1
     $resitems add radiobutton -label "1 per 4 beats" -font $df -variable beatsplitter -value 0.25 -command "make_chordgram chordgram" -selectcolor $colfg -indicatoron 1
@@ -6259,6 +6262,7 @@ global seqlength
 global lastpulse
 if {![info exists lastpulse]} load_last_midi_file
 set chord_sequence [determineChordSequence $source 0]
+#puts "make_chordgram: chord_sequence = $chord_sequence"
 set last_beat [dict size $chord_sequence]
 set seqlength $last_beat
 call_compute_chordgram $source
@@ -8448,6 +8452,7 @@ proc drumroll_window {} {
     global df
     global midispeed
     global drumrollwidth
+    global midilength
 
     if {[winfo exist .drumroll]} return
     set midispeed 1.0
@@ -8477,7 +8482,8 @@ proc drumroll_window {} {
     $p.unzoom.items add command -label "Total unzoom" -command drumroll_total_unzoom -font $df
 
     button $p.analysis -text analysis -relief flat -font $df\
-            -command {analyze_drum_patterns 0}
+            -command {puts "midilength -> $midilength"
+                      analyze_drum_patterns 0}
     tooltip::tooltip $p.analysis "Detailed analysis of drum patterns"
 
     menubutton $p.plots -text plots -width 8 -menu $p.plots.items -font $df
@@ -8732,7 +8738,7 @@ proc compute_drumroll {} {
     $p.cany configure -height $canheight
     
     drumroll_qnotelines
-    
+
     foreach line $pianoresult {
         if {[llength $line] != 6} continue
         set begin [lindex $line 0]
@@ -9050,6 +9056,7 @@ proc get_drum_patterns {simple} {
    set ppqn4 [expr $ppqn/4]
    set ndrumfrag [expr 5 + $mlength/$ppqn4]
    set drumpat [dict create]
+   #puts "drumpat has $ndrumfrag locations"
    for {set i 0} {$i <$ndrumfrag} {incr i} {
      dict set drumpat $i 0
      }
@@ -9058,8 +9065,8 @@ proc get_drum_patterns {simple} {
         set begin [lindex $line 0]
         if {$begin < $start} continue
         if {$begin > $stop} continue
-#        set loc [expr ($begin - $start) / $ppqn4]
-        set loc [expr $begin / $ppqn4]
+        set loc [expr ($begin - $start) / $ppqn4]
+        #set loc [expr $begin / $ppqn4]
         if {[string is double $begin] != 1} continue
         set c [lindex $line 3]
         if {$c != 10} continue
@@ -9072,9 +9079,15 @@ proc get_drum_patterns {simple} {
           } else {
           set drumindex [expr $percussionmap($note) - 1]
           }
-        set patfrag [dict get $drumpat $loc]
-        set patfrag [expr $patfrag | 1<<$drumindex]
-        dict set drumpat $loc $patfrag 
+        #puts "drumpat = $drumpat loc = $loc"
+        if {[dict exist $drumpat $loc]} {
+          set patfrag [dict get $drumpat $loc]
+          set patfrag [expr $patfrag | 1<<$drumindex]
+          dict set drumpat $loc $patfrag
+          #puts "drumpat $loc = $patfrag"
+          } else {
+          puts "no $loc in drumpat"
+          }
         #puts "drumpat $loc $patfrag $note $drumindex"
        }
    if {$nodrumdata} {
@@ -9257,7 +9270,6 @@ set drumpat [get_drum_patterns $simple]
 #puts "drumpat length = [llength $drumpat]"
 if {[llength $drumpat] == 1} {appendInfoError "No percussion channel"
                               return}
-#puts "analyze_drum_patterns drumpat = $drumpat"
 
 if {[winfo exists $d] == 0} {
   setup_i2l
@@ -9355,6 +9367,8 @@ $d.8a configure -text "$barsize patterns"
 $d.7a configure -text $bentropy -command "plot_tatum_histogram $graph [list $beathistogram]"
 $d.9a configure -text $barentropy -command "plot_tatum_histogram $graph [list $barhistogram]"
 
+   set limits [midi_limits .drumroll.can]
+   puts "analyze_drum_patterns limits = $limits simple = $simple"
 }
 
 
@@ -9448,7 +9462,7 @@ for {set i 0} {$i < 65} {incr i} {
  }
 #puts $curve
 if {[winfo exists $graph] == 1} {$graph delete all}
-plotUnivariateDistribution $graph $curve 0.0 16.0 2.0 "beat lag"
+plotUnivariateDistribution $graph $curve 0.0 16.05 2.0 "beat lag"
 return [expr [maxindex $peaks]+1]
 }
 
@@ -16188,7 +16202,7 @@ proc show_data_page {text wrapmode clean} {
 set abcmidilist {path_abc2midi 5.02\
             path_midi2abc 3.64\
             path_midicopy 1.40\
-	    path_midistats 1.02\
+	    path_midistats 1.04\
             path_abcm2ps 8.14.6}
 
 
@@ -18090,7 +18104,8 @@ if {[winfo exist .drumgroove] == 0} {
 proc get_midi_drum_pat {} {
  global midi exec_out
  global midilength
- set midilength 0
+ #trace add variable midilength  write [puts "midilength changed to $midilength"]
+ #set midilength 0
  set fileexist [file exist $midi(midifilein)]
  #puts "get_midi_info_for: midifilein = $midi(midifilein) filexist = $fileexist"
  if {$fileexist} {
@@ -18211,6 +18226,7 @@ pack $f.2.txt $f.2.scroll -side left -fill y
 proc output_patcount {} {
 global patcount
 set patlist [array names patcount]
+set pdflist [list]
 grooveHistogramWindow
 set v .groovehistogram.2.txt
 $v delete 0.0 end
@@ -18221,7 +18237,10 @@ foreach pat $patlist {
 set groovelist [lsort -index 1 -integer -decreasing $groovelist]
 foreach g $groovelist {
   $v insert insert "[lindex $g 0]\t\t[lindex $g 1]\n"
+  lappend pdflist [lindex $g 1]
   }
+set entropy  [pdf_entropy $pdflist]
+$v insert insert "entropy = $entropy\n"
 }
 
 set hlp_transpose_tool "Transpose tool
@@ -18281,9 +18300,14 @@ set result [eval $cmd]
 set sf [lrange [split $result] 2 end]
 puts $sf
 array set sfhistogram {-7 0 -6 0 -5 0 -4 0 -3 0 -2 0 -1 0 0 0 1 0 2 0 3 0 4 0 5 0 6 0 7 0}
+set lastv 9
+set dsf [list]
 foreach v $sf {
+  if {$lastv != 9} {lappend dsf [expr $v - $lastv]}
   incr sfhistogram($v)
+  set lastv $v
   }
+puts "dsf = $dsf"
 #puts [array get sfhistogram]
 set pdflist [list]
 foreach v [array names sfhistogram] {
@@ -18302,7 +18326,7 @@ set cmd "exec [list $midi(path_midistats)] $midifile -keystability"
 #puts $cmd
 set result [eval $cmd]
 set sf [lrange [split $result] 2 end]
-#puts $sf
+puts $sf
 array set sfhistogram {-7 0 -6 0 -5 0 -4 0 -3 0 -2 0 -1 0 0 0 1 0 2 0 3 0 4 0 5 0 6 0 7 0}
 foreach v $sf {
   incr sfhistogram($v)
