@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.17 2026-03-20 13:13" 
+set midiexplorer_version "MidiExplorer version 5.20 2026-03-25 13:07" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -1334,6 +1334,7 @@ menu $ww -tearoff 0
        $ww add command -label search -font $df -command {load_desc
                                                   search_window
                                                  }
+       $ww add command -label "search groove" -font $df -command search_drumgroove_window
        $ww add command -label "defective files" -font $df -command find_bad_files
        $ww add cascade -label "export" -font $df -menu $ww.export
 
@@ -2408,7 +2409,6 @@ proc selected_midi {} {
  set c [.treebrowser.tree item $sel -values]
  set f [lindex $c 0]
  set midi(semitones) 0
- #puts "selected midi $sel $f"
  set extension [string tolower [file extension $f]]
  if {$extension == ".mid"} {  
    enable_top_menubuttons
@@ -2431,7 +2431,6 @@ proc enable_top_menubuttons {} {
 proc open_selected_midi {} {
 global midi
 global pianorollwidth
-#puts "open_selected_midi $midi(midifilein)"
 clearMidiTracksAndChannels
 set midi_info [get_midi_info_for]
 parse_midi_info $midi_info
@@ -8481,10 +8480,18 @@ proc drumroll_window {} {
             -command {drumroll_unzoom 5.0}
     $p.unzoom.items add command -label "Total unzoom" -command drumroll_total_unzoom -font $df
 
-    button $p.analysis -text analysis -relief flat -font $df\
-            -command {puts "midilength -> $midilength"
-                      analyze_drum_patterns 0}
-    tooltip::tooltip $p.analysis "Detailed analysis of drum patterns"
+
+    menubutton $p.grooves -text grooves -width 8 -menu $p.grooves.items -font $df
+    tooltip::tooltip $p.grooves "Analysis of drum patterns"
+    menu $p.grooves.items -tearoff 0
+    $p.grooves.items add command -label "histogram" -font $df\
+            -command count_drum_grooves
+    $p.grooves.items add command -label "drum grooves" -font $df\
+            -command drumgroove_window
+    $p.grooves.items add command -label "analysis" -font $df\
+            -command {analyze_drum_patterns 0}
+       
+
 
     menubutton $p.plots -text plots -width 8 -menu $p.plots.items -font $df
     menu $p.plots.items -tearoff 0
@@ -8504,8 +8511,8 @@ proc drumroll_window {} {
     button $p.help -text help -relief flat -font $df\
             -command {show_message_page $hlp_drumroll word}
     
-    grid  $p.invert $p.play $p.config $p.zoom $p.unzoom $p.analysis $p.plots $p.help -sticky news
-    grid $p -column 1
+    grid  $p.invert $p.play $p.config $p.zoom $p.unzoom  $p.grooves  $p.plots $p.help -sticky news
+    grid $p -columnspan 2
     
     set p .drumroll.file
     frame $p -relief ridge -borderwidth 2
@@ -9366,9 +9373,6 @@ $d.6a configure -text "$bsize patterns"
 $d.8a configure -text "$barsize patterns"
 $d.7a configure -text $bentropy -command "plot_tatum_histogram $graph [list $beathistogram]"
 $d.9a configure -text $barentropy -command "plot_tatum_histogram $graph [list $barhistogram]"
-
-   set limits [midi_limits .drumroll.can]
-   puts "analyze_drum_patterns limits = $limits simple = $simple"
 }
 
 
@@ -18242,6 +18246,149 @@ foreach g $groovelist {
 set entropy  [pdf_entropy $pdflist]
 $v insert insert "entropy = $entropy\n"
 }
+
+global groovebytes
+
+proc search_drumgroove_window {} {
+global df
+global groovecode
+if {[winfo exist .searchgroove] == 0} {
+  set f .searchgroove
+  toplevel $f
+  set groovecode 80:08:80:08
+  frame $f.2
+  pack $f.2
+  label $f.2.lab -text "groove code " -font $df
+  entry $f.2.ent -width 10 -textvariable groovecode  
+  pack $f.2.lab $f.2.ent -side left
+  
+  button $f.2.s -text search -font $df -command search_drumgroove
+  button $f.2.sug -text suggestions -font $df -command show_groove_suggestions
+  button $f.2.help -text help -font $df -command {show_message_page $hlp_search_drumgroove word}
+  pack $f.2.s $f.2.sug $f.2.help -side left
+  }
+}
+
+set hlp_search_drumgroove "Search drumgroove
+
+This window accesses the midi files which contain a particular\
+drum groove. The drum groove is represented by 32 bit integer\
+whose format is explained in a separate help message. (See
+the help file associated with the drumgroove window.)
+
+Method:
+Enter the code word for the drum groove you are looking for in\
+the entry box and then click the button labeled search. A list\
+of common code words can be found by clicking on the suggestions\
+button. If you click one of the items in the list, then the\
+code word associated with that pattern will be put in the\
+entry box automatically. All the midi files which contain\
+instances of that pattern will appear in the table of contents.\
+Clicking on one of the midi files selects that file for further
+analysis.
+
+In order for this function to work, the program requires the
+file, grooveFile.txt to exist in the root folder containing all
+the midi files.
+"
+
+proc search_drumgroove {} {
+global groovecode
+global midi
+set groovefolder [file join $midi(rootfolder) grooveFile.txt]
+puts $groovecode
+if {![file exist $groovefolder]} {
+   set msg "Could not find grooveFile.txt in the rootfolder directory.\
+ It is generated by the the application drumloop in the midistatsWork \
+folder."
+   tk_messageBox -message $msg
+   return
+   }
+set inhandle [open $groovefolder "r"]
+set j 0
+while {[eof $inhandle] != 1} {
+  gets $inhandle line
+  set linelist [split $line ,]
+  foreach topgroove $linelist {
+    set topgroove [string trim $topgroove]
+    #puts "$topgroove $groovestring"
+    if {[string equal $topgroove $groovecode]} {
+     set shortfilename [lindex $linelist 0]
+     set shortfilename [string trim $shortfilename \"]
+     set fullfilename [file join $midi(rootfolder) $shortfilename]
+     incr j
+     set id [.treebrowser.tree insert {} end -text $shortfilename \
+       -values [list $fullfilename] -tag fnt] 
+     }
+   }
+  }
+close $inhandle
+puts "$j matches were found"
+}
+
+proc show_groove_suggestions {} {
+global df
+global groove_suggestions
+global groovecode
+set f .searchgroove.3
+frame $f
+pack $f
+scrollbar $f.yscroll -command "$f.list yview"
+listbox $f.list -width 30 -height 10 -font $df -yscroll "$f.yscroll set"
+pack $f.list $f.yscroll -side left -fill y -expand 1
+for {set i 0} {$i < [llength $groove_suggestions]} {incr i} {
+  $f.list insert end [lindex $groove_suggestions $i]
+  }
+bind .searchgroove.3.list <Button> {
+  set loc [.searchgroove.3.list nearest %y]
+  puts "loc = $loc"
+  set listcontent [split [.searchgroove.3.list get $loc]]
+  puts $listcontent
+  set groovecode [lindex $listcontent 1]
+  puts "groovecode = $groovecode"
+  }
+}
+
+set groove_suggestions {{4on4 08:80:08:80}
+{4onFloor 08:08:08:08}
+{bluesrock 08:82:02:80}
+{bluesshuffle 28:a8:28:a8}
+{bossanova 09:09:09:09}
+{countryrock 28:28:28:28}
+{disco 08:08:08:08}
+{doubleTimeBeat 48:48:48:48}
+{folkrock 04:84:48:00}
+{funkshuffle2nd 08:02:82:02}
+{funkshuffle 08:82:00:82}
+{halfTimeShuffle 48:40:c0:40}
+{hardrock 08:80:0a:80}
+{heavymetal 0a:84:0a:80}
+{heavyRockBeat 08:90:41:80}
+{jazzwaltz 28:00:80}
+{latinwaltz 88:80:82}
+{mazurka 08:80:00}
+{motown 88:80:80:80}
+{offbeat 28:28:28:28}
+{oldshuffle 28:28:28:28}
+{overlay 08:88:08:88}
+{poprock 08:82:08:80}
+{reggae 00:00:08:00}
+{rnbshuffle2nd 08:82:08:80}
+{rnbshuffle 08:88:08:88}
+{rocknroll 08:82:08:80}
+{rockshuffle2nd 0a:82:0a:82}
+{rockshuffle 0a:82:02:82}
+{samba f9:f9:f9:f9}
+{shuffle 08:88:08:88}
+{soca 18:28:28}
+{ 08:82:00:80}
+{ 08:82:08:82}
+{ 08:80:0a:82}
+{ 0a:80:0a:80}
+{ 10:01:10:01}
+{ 11:01:11:01}
+}
+
 
 set hlp_transpose_tool "Transpose tool
 
