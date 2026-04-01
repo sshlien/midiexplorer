@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.22 2026-03-30 08:59" 
+set midiexplorer_version "MidiExplorer version 5.22 2026-03-31 04:51" 
 set briefconsole 1
 
 # Copyright (C) 2019-2025 Seymour Shlien
@@ -18337,6 +18337,7 @@ while {[eof $inhandle] != 1} {
     if {[string equal $topgroove $groovecode]} {
      set shortfilename [lindex $linelist 0]
      set shortfilename [string trim $shortfilename \"]
+     set shortfilename [string range $shortfilename 1 end]
      set fullfilename [file join $midi(rootfolder) $shortfilename]
      incr j
      set id [.treebrowser.tree insert {} end -text $shortfilename \
