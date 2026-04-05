@@ -5,10 +5,10 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.22 2026-03-31 04:51" 
+set midiexplorer_version "MidiExplorer version 5.23 2026-04-03 16:29" 
 set briefconsole 1
 
-# Copyright (C) 2019-2025 Seymour Shlien
+# Copyright (C) 2019-2026 Seymour Shlien
 #
 #
 # This program is free software; you can redistribute it and/or modify
@@ -1332,6 +1332,8 @@ menu $ww -tearoff 0
             -command {count_drum_grooves}
         $ww add command -label "search groove" -font $df\
             -command search_drumgroove_window
+        $ww add command -label "groove to abc" -font $df\
+            -command abc_drumgroove_window
         $ww add command -label "web info" -font $df\
             -command webPercussionInfo
 
@@ -18268,10 +18270,12 @@ global groovebytes
 proc search_drumgroove_window {} {
 global df
 global groovecode
+global grooveListWindow
+set grooveListWindow .searchgroove
 if {[winfo exist .searchgroove] == 0} {
   set f .searchgroove
   toplevel $f
-  set groovecode 80:08:80:08
+  if {![info exist groovecode]} {set groovecode 80:08:80:08}
   frame $f.2
   pack $f.2
   label $f.2.lab -text "groove code " -font $df
@@ -18321,7 +18325,8 @@ puts $groovecode
 if {![file exist $groovefolder]} {
    set choice [tk_messageBox -type yesno -default no \
     -message "We did not find the file grooveFile.txt. I can create the
- the file now. Should I go ahead?" -icon question]
+ the file now. Note that on Windows, the antivirus software may slow down\
+ the directory search. You need to be patient. Should I go ahead?" -icon question]
   if {$choice == yes} createGrooveFile
   }
 if {[llength [.treebrowser.tree children {}]] > 0} {
@@ -18337,7 +18342,7 @@ while {[eof $inhandle] != 1} {
     if {[string equal $topgroove $groovecode]} {
      set shortfilename [lindex $linelist 0]
      set shortfilename [string trim $shortfilename \"]
-     set shortfilename [string range $shortfilename 1 end]
+     if {[string index $shortfilename 0] == "/"}  {set shortfilename [string range $shortfilename 1 end]}
      set fullfilename [file join $midi(rootfolder) $shortfilename]
      incr j
      set id [.treebrowser.tree insert {} end -text $shortfilename \
@@ -18353,18 +18358,19 @@ proc show_groove_suggestions {} {
 global df
 global groove_suggestions
 global groovecode
-set f .searchgroove.3
+global grooveListWindow
+set f $grooveListWindow.3
 frame $f
 pack $f
 scrollbar $f.yscroll -command "$f.list yview"
-listbox $f.list -width 30 -height 10 -font $df -yscroll "$f.yscroll set"
+listbox $f.list -width 25 -height 10 -font $df -yscroll "$f.yscroll set"
 pack $f.list $f.yscroll -side left -fill y -expand 1
 for {set i 0} {$i < [llength $groove_suggestions]} {incr i} {
   $f.list insert end [lindex $groove_suggestions $i]
   }
-bind .searchgroove.3.list <Button> {
-  set loc [.searchgroove.3.list nearest %y]
-  set listcontent [split [.searchgroove.3.list get $loc]]
+bind $f.list <Button> {
+  set loc [$grooveListWindow.3.list nearest %y]
+  set listcontent [split [$grooveListWindow.3.list get $loc]]
   set groovecode [lindex $listcontent 1]
   }
 }
@@ -18563,8 +18569,150 @@ proc get_drum_pat {midifile} {
 }
 
 
-#search_drumgroove_window 
-#createGrooveFile
+#groove2abc.tcl
+
+proc abc_drumgroove_window {} {
+global df
+global groovecode
+global grooveListWindow
+set grooveListWindow .abcgroove.abc
+if {[winfo exist .abcgroove] == 0} {
+  set f .abcgroove
+  toplevel $f
+  if {![info exist groovecode]} {set groovecode 80:08:80:08}
+  frame $f.2 
+  pack $f.2
+  label $f.2.lab -text "groove code " -font $df
+  entry $f.2.ent -width 10 -textvariable groovecode -font $df 
+  pack $f.2.lab $f.2.ent -side left
+  
+  button $f.2.s -text "to abc"  -font $df -command {groove2abc $groovecode}
+  button $f.2.display -text "display" -font $df -command {display_groove $groovecode}
+  button $f.2.sug -text suggestions -font $df -command show_groove_suggestions
+  button $f.2.help -text help -font $df -command {show_message_page $hlp_search_drumgroove word}
+  pack $f.2.s $f.2.display $f.2.sug $f.2.help -side left
+  frame $f.abc 
+  text  $f.abc.txt -font $df -height 12 -width 40 
+  pack $f.abc -anchor w
+  pack $f.abc.txt -side left -anchor w
+  update
+  }
+}
+
+
+#puts "enter groove code:"
+#gets stdin groove
+
+proc has16thnotes {n} {
+  set z [expr $n & 5592405]
+  # binary of 5592405 = 10101010101010101010101
+  if {$z != 0} {set z 1}
+  return $z
+  }
+
+proc chopoff16thnotes {list16} {
+set list8 [list]
+set i 0
+foreach elem $list16 {
+  if {[expr $i % 2] == 0} {lappend list8 $elem}
+  incr i
+  }
+return $list8
+}
+
+proc combineSnareAndBass {snare bass has16th} {
+set g ""
+set i 0
+foreach s $snare b $bass {
+  if {$s == "x" && $b == "x"} {
+      append g z
+      }
+  if {$s == "d" && $b == "x"} {
+      append g $s
+      }
+  if {$s == "x" && $b == "F"} {
+      append g $b 
+      }
+  if {$s == "d" && $b == "F"} {
+      append g "\[Fd\]"
+      }
+  incr i
+  if {[expr $i % 4] == 0} {append g " "}
+  if {$has16th == 0 && [expr $i % 2] ==0} {append g " "}
+  }
+return $g
+}
+
+  
+
+proc groove2abc {groove} {
+#puts "groove = $groove"
+set hits [split $groove :]
+#puts "hits = $hits"
+set binarybass ""
+set has16th 0
+foreach hit $hits {
+  set hit 0x$hit
+  set hithigh [expr $hit/16]
+  set binsnare [format %04b $hithigh] 
+  append binarysnare $binsnare
+  #puts -nonewline "$binsnare "
+  set has16th  [expr $has16th || [has16thnotes $hithigh]]
+  }
+  #puts -nonewline " snare "
+  #puts ""
+foreach hit $hits {
+  set hit 0x$hit
+  set hitlow [expr $hit % 16]
+  set binbass [format %04b $hitlow] 
+  append binarybass $binbass
+  set has16th  [expr $has16th || [has16thnotes $hitlow]]
+  #puts -nonewline "$binbass "
+  }
+  #puts -nonewline " bass "
+  #puts ""
+  set notesnare [string map {1 d 0 x} $binarysnare]
+  set notebass [string map {1 F 0 x} $binarybass]
+  #puts "has16th = $has16th"
+  #puts "$binarybass $notebass"
+  #puts "$binarysnare $notesnare"
+  set snare "[split $notesnare {}]|"
+  set bass "[split $notebass {}]|"
+
+  if {$has16th == 0} {
+    set snare [chopoff16thnotes $snare] 
+    set bass  [chopoff16thnotes $bass] 
+    set L 1/8
+  } else {
+    set L 1/16
+    }
+
+  set c [combineSnareAndBass $snare $bass $has16th]
+
+set head "X:1
+T: $groove
+M: 4/4
+L: $L
+Q: 1/4 = 120
+K: C"
+
+set abc $head
+append abc "%%MIDI channel 10
+%%MIDI drummap F 36
+%%MIDI drummap d 38
+%%percmap F b-d-1
+%%percmap d a-s
+|:$c|$c|$c:|"
+#puts $abc
+.abcgroove.abc.txt delete 1.0 end
+.abcgroove.abc.txt  insert end $abc
+return $abc
+}
+
+proc display_groove {groove} {
+set abc [groove2abc $groove]
+display_abc_output $abc
+}
 
 
 
