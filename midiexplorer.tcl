@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.23 2026-04-03 16:29" 
+set midiexplorer_version "MidiExplorer version 5.25 2026-07-31 17:11" 
 set briefconsole 1
 
 # Copyright (C) 2019-2026 Seymour Shlien
@@ -11455,11 +11455,14 @@ proc make_midi_database {} {
 global midi
 global tcl_platform
 global stopCreation
+global rootfolderbytes
 if {$tcl_platform(platform) == "windows"} {
    set miditype {*.mid *.kar}
 } else {
    set miditype {*.mid *.MID *.kar *.KAR}
    }
+set rootfolder $midi(rootfolder)
+set rootfolderbytes [string length $rootfolder]
 set outfile [file join $midi(rootfolder) MidiDescriptors.txt]
 if {[file exist $outfile]} {
   set choice [tk_messageBox -type yesno -default no \
@@ -11494,7 +11497,7 @@ grid .status.progress .status.msg .status.abort
 .status.progress start
 set starttime [clock seconds]
 #fconfigure stdin -blocking 0 -buffering none
-puts $outhandle "database_version 12"
+puts $outhandle "database_version 13"
 foreach midifile $filelist {
   incr i
   #puts "$i $midifile"
@@ -11534,6 +11537,9 @@ set stopCreation 1
 
 proc get_midi_features {midifile midi_info outhandle index} {
 global cprogsact
+global rootfolderbytes
+set compactMidiFile [string range $midifile $rootfolderbytes end]
+#puts "compactMidifile = $compactMidiFile"
 #global cprogs
 set cprogs {}
 set tempo 120.0
@@ -11603,7 +11609,7 @@ set cprogs [lsort -unique -integer $cprogs]
 set pcolor [normalize_vectorlist $progcolor]
 set pitches [normalize_vectorlist $pitches]
 #puts "pcolor    = $pcolor"
-puts $outhandle "file  [list $midifile]"
+puts $outhandle "sfile [list $compactMidiFile]"
 puts $outhandle "filesize [file size $midifile]"
 puts $outhandle "tempo $tempo"
 puts $outhandle "midilength $midilength"
@@ -11683,8 +11689,8 @@ gets $inhandle line
 if {[lindex $line 0] == "database_version"} {
   set version [lindex $line 1]
   }
-if {$version != 12} {
-  appendInfoError "You should rerun create database to get version 12"
+if {$version != 13} {
+  appendInfoError "You should rerun create database to get version 13"
   } 
 while {![eof $inhandle]} {
   gets $inhandle line
@@ -12695,10 +12701,13 @@ for {set i 1} {$i < $descsize} {incr i} {
   if {[filter_files $i] && rand() < $threshold} {
      incr j
      if {$j > 200} break
-     set midifile [dict get $desc($i) file]
+
+     set smidifile [dict get $desc($i) sfile]
+     set midifile $rootfolder$smidifile
      #puts "$i midifile = $midifile"
-     set compactMidifile [string range $midifile $rootfolderbytes end]
-     set id [.treebrowser.tree insert {} end -text $compactMidifile -values [list $midifile "file" 0.0 "" $position]]
+
+     #set compactMidifile [string range $midifile $rootfolderbytes end]
+     set id [.treebrowser.tree insert {} end -text $smidifile -values [list $midifile "file" 0.0 "" $position]]
      incr position
      if {[file exist $midifile]} {
        set size [file size $midifile]
@@ -12963,13 +12972,15 @@ while {[eof $inhandle] != 1 && $stopScan != 1} {
   if {[eof $inhandle]} break
   set linelist [split $line \t]
   set i [lindex $linelist 0]
-  set filepath [list [lindex $linelist 1]]
-
-  set entropy [get_keystability $filepath]
+  set filepath [lindex $linelist 1]
+  set filepath $midi(rootfolder)$filepath
+  set keystability [get_keystability $filepath]
+  set entropy [lindex $keystability 0]
   set perplexity [expr 2**$entropy]
-  set perplexity [format "%6.2f" $perplexity]
+  set perplexity [format "%6.3f" $perplexity]
+  set fluctuation [lindex $keystability 1]
   #puts "$i $filepath $entropy"
-  puts $outhandle "$i\t$perplexity"
+  puts $outhandle "$i\t$perplexity\t$fluctuation"
 
   if {[expr $i % 100] == 0} {
         set value [expr double($i)/$sizelimit]
@@ -13027,7 +13038,7 @@ set csvfile [file join $midi(rootfolder) fileindex.tsv]
 set outhandle [open $csvfile w]
 for {set i 1} {$i < $descsize} {incr i} {
   if {[dict exists $desc($i) damaged]} continue
-  set filepath [dict get $desc($i) file]
+  set filepath [dict get $desc($i) sfile]
   puts $outhandle "$i\t$filepath"
   }
 close $outhandle
@@ -18796,13 +18807,28 @@ foreach v [array names sfhistogram] {
 puts "entropy = [pdf_entropy $pdflist]"
 }
 
+proc key_fluctuation {sf} {
+#sf is the list of the local key in number of sharps/flats
+set sflength [llength $sf]
+set sflength1 [expr $sflength - 1]
+set sumabsdif 0.0
+for {set i 0} {$i < $sflength1} {incr i} {
+  set key0 [lindex $sf $i]
+  set key1 [lindex $sf [expr $i +1]]
+  set dif [expr $key1 - $key0]
+  set sumabsdif [expr $sumabsdif + abs($dif)]
+  }
+return [expr $sumabsdif/$sflength1]
+}
+
+
 proc get_keystability {midifile} {
 global midi
-set cmd "exec [list $midi(path_midistats)] $midifile -keystability"
+set cmd "exec [list $midi(path_midistats)] [list $midifile] -keystability"
 #puts $cmd
 set result [eval $cmd]
 set sf [lrange [split $result] 2 end]
-puts $sf
+#puts $sf
 array set sfhistogram {-7 0 -6 0 -5 0 -4 0 -3 0 -2 0 -1 0 0 0 1 0 2 0 3 0 4 0 5 0 6 0 7 0}
 foreach v $sf {
   incr sfhistogram($v)
@@ -18815,7 +18841,10 @@ foreach v [array names sfhistogram] {
   }
 }
 set entropy [pdf_entropy $pdflist]
-return $entropy
+set fluctuation  [key_fluctuation $sf] 
+set fluctuation [format "%6.3f" $fluctuation]
+#puts "fluctuation for $midifile = $fluctuation"
+return [list $entropy $fluctuation]
 }
 
 bind all <Alt-t> test_new_midistats_feature
