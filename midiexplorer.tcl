@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.25 2026-07-31 17:11" 
+set midiexplorer_version "MidiExplorer version 5.27 2026-08-04 16:16" 
 set briefconsole 1
 
 # Copyright (C) 2019-2026 Seymour Shlien
@@ -877,6 +877,12 @@ proc midiInit {} {
    set midi(use_js) 1
 #
    set midi(groovelength) 4
+#
+   set midi(stability_low) 1.0
+   set midi(stability_hi) 1.05
+   set midi(fluc_low) 0.5
+   set midi(fluc_hi) 0.7
+
 }
 
 set genreUpdated 0
@@ -1347,6 +1353,7 @@ menu $ww -tearoff 0
        $ww add command -label search -font $df -command {load_desc
                                                   search_window
                                                  }
+       $ww add command -label "more seaching" -font $df -command search_window2
        $ww add command -label "defective files" -font $df -command find_bad_files
        $ww add cascade -label "export" -font $df -menu $ww.export
 
@@ -2516,7 +2523,6 @@ proc get_midi_info_for {} {
  global midilength
  set midilength 0
  set fileexist [file exist $midi(midifilein)]
- #puts "get_midi_info_for: midifilein = $midi(midifilein) filexist = $fileexist"
  if {$fileexist} {
    set exec_options "[list $midi(midifilein) ]"
    set cmd "exec [list $midi(path_midistats)]  $exec_options"
@@ -11909,6 +11915,202 @@ button $w.help -text help -font $df -command {show_message_page $hlp_search word
 grid $w.scan $w.msg $w.help
 }
 
+proc search_window2 {} {
+global df
+global sname
+global midi
+global colfg
+set w .searchbox2
+if {[winfo exist $w]} {
+  raise $w .
+  return
+  }
+
+toplevel $w
+frame $w.keystability 
+pack $w.keystability
+button $w.keystability.but -text "Key stability" -font $df \
+  -command search_keystability 
+label $w.keystability.flab -text from -font $df
+entry $w.keystability.from -width 5 -font $df -textvariable midi(stability_low)
+label $w.keystability.tlab -text to -font $df
+entry $w.keystability.to -width 5 -font $df -textvariable midi(stability_hi)
+button $w.keystability.h -text histogram -font $df\
+  -command plotKeyStabilityHistogram
+pack $w.keystability.but $w.keystability.flab $w.keystability.from\
+ $w.keystability.tlab $w.keystability.to $w.keystability.h -side left
+frame  $w.keyfluctuation 
+pack $w.keyfluctuation
+button $w.keyfluctuation.but -text "Key fluctuation" -font $df \
+  -command {search_key_fluctuation }
+label $w.keyfluctuation.flab -text from -font $df
+entry $w.keyfluctuation.from -width 5 -font $df -textvariable midi(fluc_low)
+label $w.keyfluctuation.tlab -text to -font $df
+entry $w.keyfluctuation.to -width 5 -font $df -textvariable midi(fluc_hi)
+button $w.keyfluctuation.h -text histogram -font $df\
+  -command plotKeyFluctuationHistogram
+pack $w.keyfluctuation.but $w.keyfluctuation.flab $w.keyfluctuation.from\
+ $w.keyfluctuation.tlab $w.keyfluctuation.to $w.keyfluctuation.h -side left
+}
+
+proc search_keystability {} {
+global midi
+set n 0
+.treebrowser.tree delete [.treebrowser.tree children {}] 
+if {![file exists $midi(rootfolder)/keystability.csv]} {
+   tk_messageBox -message "Cannot find keystability.csv file you will need to run \
+database/export/key stability to create this file." -type ok
+   return
+   }
+set inhandle [open $midi(rootfolder)/keystability.csv r]
+set indexhandle [open $midi(rootfolder)/fileindex.csv r]
+while {[eof $inhandle] != 1 && $n < 100} {
+  gets $inhandle line
+  gets $indexhandle indexline
+  set stability [lindex $line 1]  
+  if {$stability >= $midi(stability_low) && $stability < $midi(stability_hi)} {
+     set midifile [lindex [split $indexline \t] 1]
+     set size [file size $midi(rootfolder)$midifile]
+     set size [format %5.2f [expr $size/1000.0]] 
+     set size "$size kb"
+     set id [.treebrowser.tree insert {} end -text $midifile -values [list $midi(rootfolder)$midifile "file" $size $stability]]
+     incr n
+     }
+  if {$n > 99} {
+      set msg "Only the first 100 files are listed.\n"
+      appendInfoMessage "$msg"
+      }
+  }
+close $inhandle
+close $indexhandle
+}  
+
+proc search_key_fluctuation {} {
+global midi
+set n 0
+.treebrowser.tree delete [.treebrowser.tree children {}] 
+if {![file exists $midi(rootfolder)/keystability.csv]} {
+   tk_messageBox -message "Cannot find keystability.csv file you will need to run \
+database/export/key stability to create this file." -type ok
+   return
+   }
+set inhandle [open $midi(rootfolder)/keystability.csv r]
+set indexhandle [open $midi(rootfolder)/fileindex.csv r]
+while {[eof $inhandle] != 1 && $n < 100} {
+  gets $inhandle line
+  gets $indexhandle indexline
+  set fluctuation [lindex $line 2]  
+  if {$fluctuation >= $midi(fluc_low) && $fluctuation < $midi(fluc_hi)} {
+     set midifile [lindex [split $indexline \t] 1]
+     set size [file size $midi(rootfolder)$midifile]
+     set size [format %5.2f [expr $size/1000.0]]
+     set size "$size kb"
+     set id [.treebrowser.tree insert {} end -text $midifile -values [list $midi(rootfolder)$midifile "file" $size $fluctuation]]
+     incr n
+     }
+  if {$n > 99} {
+      set msg "Only the first 100 files are listed.\n"
+      appendInfoMessage "$msg"
+      }
+  }
+close $inhandle
+close $indexhandle
+}  
+
+proc plotKeyStabilityHistogram {} {
+global midi
+global df
+set inhandle [open $midi(rootfolder)/keystability.csv r]
+for {set i 0} {$i < 40} {incr i} {
+   set histogram($i) 0
+   }
+while {[eof $inhandle] != 1} {
+  gets $inhandle line
+  set stability [lindex $line 1]
+  if {$stability == ""} break
+  set is [expr int([expr floor([expr $stability*10])])]
+  if {$is > 39 || $is < 0} continue
+  set histogram($is) [expr $histogram($is) + 1]
+  }
+  close $inhandle
+  set graph .graph.c
+  if {[winfo exists .graph] == 0} {
+      toplevel .graph
+      positionWindow .graph
+      pack [canvas $graph]
+  } else {
+      $graph delete all}
+  raise .graph .
+  set start 0.0
+  set stop  4.0
+  set delta_tick 50
+  $graph create rectangle 50 20 350 200 -outline black\
+          -width 2 -fill white
+  Graph::alter_transformation 50 350 200 20 $start $stop 0.0 4.10
+  Graph::draw_x_ticks $graph $start $stop 0.5 1  0 %4.2f
+  set iyb [Graph::iypos 0.0]
+  for {set i 0} {$i < 40} {incr i} {
+    set y $histogram($i)
+    if {$y > 9000} {set y 9000}
+    set ix [Graph::ixpos [expr double($i)/10.0]]
+    set ix2 [Graph::ixpos [expr double($i+1)/10.0]]
+    set y [expr log10($y+1.0)]
+    set iy  [Graph::iypos $y]
+    $graph create rectangle $ix $iyb $ix2 $iy -fill lightblue
+    }
+  Graph::draw_y_log10ticks $graph 0.0 4.0 %3.0f
+  $graph create text 200 240 -text "key stability" -font $df
+}
+
+proc plotKeyFluctuationHistogram {} {
+    global scanwidth scanheight
+    global xlbx ytbx xrbx ybbx
+    global midi
+    global df
+set inhandle [open $midi(rootfolder)/keystability.csv r]
+for {set i 0} {$i < 40} {incr i} {
+   set histogram($i) 0
+   }
+while {[eof $inhandle] != 1} {
+  gets $inhandle line
+  set fluctuation [lindex $line 2]
+  if {$fluctuation == ""} break
+  set is [expr int([expr floor([expr $fluctuation*10])])]
+  if {$is > 39 || $is < 0} continue
+  if {![info exist fluctuation]} break
+  set histogram($is) [expr $histogram($is) + 1]
+  }
+  close $inhandle
+  set graph .graph.c
+  if {[winfo exists .graph] == 0} {
+      toplevel .graph
+      positionWindow .graph
+      pack [canvas $graph]
+  } else {
+      $graph delete all}
+  raise .graph .
+  set start 0.0
+  set stop  4.0
+  set delta_tick 50
+  $graph create rectangle 50 20 350 200 -outline black\
+          -width 2 -fill white
+  Graph::alter_transformation 50 350 200 20 $start $stop 0.0 4.10
+  Graph::draw_x_ticks $graph $start $stop 0.5 1  0 %4.2f
+  set iyb [Graph::iypos 0.0]
+  for {set i 0} {$i < 40} {incr i} {
+    set y $histogram($i)
+    if {$y > 9000} {set y 9000}
+    set ix [Graph::ixpos [expr double($i)/10.0]]
+    set ix2 [Graph::ixpos [expr double($i+1)/10.0]]
+    set y [expr log10($y+1.0)]
+    set iy  [Graph::iypos $y]
+    $graph create rectangle $ix $iyb $ix2 $iy -fill lightblue
+    }
+  Graph::draw_y_log10ticks $graph 0.0 4.0 %3.0f
+  $graph create text 200 240 -text "key fluctuation" -font $df
+}
+
+
 set hlp_search "Search Function\
 
 
@@ -12942,14 +13144,14 @@ proc export_keystability_to_csv {} {
 global desc
 global midi
 global stopScan
-set infile [file join $midi(rootfolder) fileindex.tsv]
+set infile [file join $midi(rootfolder) fileindex.csv]
 set csvfile [file join $midi(rootfolder) keystability.csv]
-
 if {![file exists $infile]} {
    tk_messageBox -message "Cannot find $infile, you will need to run \
 database/export/file index to create this file." -type ok
    return
    }
+
 set nrecords [count_number_of_records $infile]
 set inhandle [open $infile r]
 set outhandle [open $csvfile w]
@@ -12976,11 +13178,12 @@ while {[eof $inhandle] != 1 && $stopScan != 1} {
   set filepath $midi(rootfolder)$filepath
   set keystability [get_keystability $filepath]
   set entropy [lindex $keystability 0]
-  set perplexity [expr 2**$entropy]
-  set perplexity [format "%6.3f" $perplexity]
+  #set perplexity [expr 2**$entropy]
+  #set perplexity [format "%6.3f" $perplexity]
+  set entropy [format "%6.3f" $entropy]
   set fluctuation [lindex $keystability 1]
   #puts "$i $filepath $entropy"
-  puts $outhandle "$i\t$perplexity\t$fluctuation"
+  puts $outhandle "$i\t$entropy\t$fluctuation"
 
   if {[expr $i % 100] == 0} {
         set value [expr double($i)/$sizelimit]
@@ -13034,7 +13237,7 @@ global desc
 global midi
 load_desc
 set descsize [array size desc]
-set csvfile [file join $midi(rootfolder) fileindex.tsv]
+set csvfile [file join $midi(rootfolder) fileindex.csv]
 set outhandle [open $csvfile w]
 for {set i 1} {$i < $descsize} {incr i} {
   if {[dict exists $desc($i) damaged]} continue
