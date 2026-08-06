@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.27 2026-08-04 16:16" 
+set midiexplorer_version "MidiExplorer version 5.27 2026-08-06 10:00" 
 set briefconsole 1
 
 # Copyright (C) 2019-2026 Seymour Shlien
@@ -1360,8 +1360,8 @@ menu $ww -tearoff 0
 
 tooltip::tooltip $ww -index 0 "Scan all midi files in the given directory
 extract their properties and record this
-information in a file called MidiDescriptors.txt"
-tooltip::tooltip $ww -index 1 "Load the MidiDescriptors.txt database
+information in a file called MidiDescriptors.json"
+tooltip::tooltip $ww -index 1 "Load the MidiDescriptors.json database
 and search for the midi files which
 satisfy certain characteristics."
 tooltip::tooltip $ww -index 2 "List the midi files which were
@@ -1389,7 +1389,7 @@ properties.  Depending on the size of
 the directory, it could take a while
 to compute this database which will be
 stored in a text file called 
-MidiDescriptors.txt."
+MidiDescriptors.json."
 
 
 $ww add command -label "notebook" -font $df -command notebook -accelerator "ctrl-n"
@@ -1785,28 +1785,21 @@ grid rowconfigure $w.dummy 0 -weight 1
 
 
 proc rglob {dirlist globlist} {
-        #set showprogress 1 hangs on Windows 11 for large directories
-        set showprogress 0
         set result {}
         set recurse {}
         foreach dir $dirlist {
-                if {$showprogress} {appendInfoMessage $dir}                
-                if ![file isdirectory $dir] {
+                if {![file isdirectory $dir]} {
                         return -code error "'$dir' is not a directory"
                 }
+                # 1. Find files matching the targeted patterns
                 foreach pattern $globlist {
                         lappend result {*}[glob -nocomplain -directory $dir -- $pattern]
                 }
-                foreach file [glob -nocomplain -directory $dir -- *] {
-                        set file [file join $dir $file]
-                        if [file isdirectory $file] {
-                                set fileTail [file tail $file]
-                                if {!($fileTail eq "." || $fileTail eq "..")} {
-                                        lappend recurse $file
-                                }
-                        }
-                }
+                # 2. Fast directory traversal: Let the OS filter subdirectories natively
+                # This bypasses the slow 'file isdirectory' loop entirely.
+                lappend recurse {*}[glob -nocomplain -directory $dir -types d -- *]
         }
+        # 3. Recurse into subdirectories
         if {[llength $recurse] > 0} {
                 lappend result {*}[rglob $recurse $globlist]
         }
@@ -11469,7 +11462,7 @@ if {$tcl_platform(platform) == "windows"} {
    }
 set rootfolder $midi(rootfolder)
 set rootfolderbytes [string length $rootfolder]
-set outfile [file join $midi(rootfolder) MidiDescriptors.txt]
+set outfile [file join $midi(rootfolder) MidiDescriptors.json]
 if {[file exist $outfile]} {
   set choice [tk_messageBox -type yesno -default no \
     -message "Do you wish to replace the database?" -icon question]
@@ -11524,7 +11517,7 @@ foreach midifile $filelist {
   get_midi_features $midifile $midi_info $outhandle $i
   if {$i > $sizelimit} break
   }
-appendInfoMessage "created file MidiDescriptors.txt"
+appendInfoMessage "created file MidiDescriptors.json"
 set elapsedtime [expr [clock seconds] - $starttime]
 appendInfoMessage "elapsed time = $elapsedtime seconds\n"
 close $outhandle
@@ -11676,12 +11669,12 @@ return $meansquare
 
 # ReadMidiDescriptors.tcl
 # creates or updates dictionary desc with
-# midi file descriptors from file MidiDescriptors.txt
+# midi file descriptors from file MidiDescriptors.json
 proc load_desc {} {
 global desc
 global midi
 if {[array exist desc]} return
-set infile [file join $midi(rootfolder) MidiDescriptors.txt]
+set infile [file join $midi(rootfolder) MidiDescriptors.json]
 clearInfoMessages
 appendInfoMessage "Looking for $infile"
 if {![file exist $infile]} {
@@ -12027,7 +12020,7 @@ for {set i 0} {$i < 40} {incr i} {
 while {[eof $inhandle] != 1} {
   gets $inhandle line
   set stability [lindex $line 1]
-  if {$stability == ""} break
+  if {$stability == "" || $stability == "error"} break
   set is [expr int([expr floor([expr $stability*10])])]
   if {$is > 39 || $is < 0} continue
   set histogram($is) [expr $histogram($is) + 1]
@@ -12123,7 +12116,7 @@ interest and specify the limits or values for those properties.\
 If you have not already done so, \
 you need to create a database of all the midi file\
 descriptors. This data base is stored in the tab separated\
-file called MidiDescriptors.txt. The file is stored in the\
+file called MidiDescriptors.json. The file is stored in the\
 same folder as the root folder.  Note that\
 for large collections of midi files it may take a while\
 to scan all the midi files and extract all the\
@@ -13177,13 +13170,14 @@ while {[eof $inhandle] != 1 && $stopScan != 1} {
   set filepath [lindex $linelist 1]
   set filepath $midi(rootfolder)$filepath
   set keystability [get_keystability $filepath]
-  set entropy [lindex $keystability 0]
-  #set perplexity [expr 2**$entropy]
-  #set perplexity [format "%6.3f" $perplexity]
-  set entropy [format "%6.3f" $entropy]
-  set fluctuation [lindex $keystability 1]
-  #puts "$i $filepath $entropy"
-  puts $outhandle "$i\t$entropy\t$fluctuation"
+  if {$keystability == 0} {
+    puts $outhandle "$i\terror"
+    } else {
+    set entropy [lindex $keystability 0]
+    set entropy [format "%6.3f" $entropy]
+    set fluctuation [lindex $keystability 1]
+    puts $outhandle "$i\t$entropy\t$fluctuation"
+    }
 
   if {[expr $i % 100] == 0} {
         set value [expr double($i)/$sizelimit]
@@ -19014,6 +19008,7 @@ proc key_fluctuation {sf} {
 #sf is the list of the local key in number of sharps/flats
 set sflength [llength $sf]
 set sflength1 [expr $sflength - 1]
+if {$sflength1 < 1} {return 0}
 set sumabsdif 0.0
 for {set i 0} {$i < $sflength1} {incr i} {
   set key0 [lindex $sf $i]
@@ -19028,8 +19023,11 @@ return [expr $sumabsdif/$sflength1]
 proc get_keystability {midifile} {
 global midi
 set cmd "exec [list $midi(path_midistats)] [list $midifile] -keystability"
-#puts $cmd
-set result [eval $cmd]
+catch {eval $cmd} result
+# catch message 'ran out of space in midievents structure'
+if {[string first "ran" $result] == 0} {puts $result
+         return 0
+         }
 set sf [lrange [split $result] 2 end]
 #puts $sf
 array set sfhistogram {-7 0 -6 0 -5 0 -4 0 -3 0 -2 0 -1 0 0 0 1 0 2 0 3 0 4 0 5 0 6 0 7 0}
