@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.27 2026-08-06 10:00" 
+set midiexplorer_version "MidiExplorer version 5.27 2026-08-07 05:57" 
 set briefconsole 1
 
 # Copyright (C) 2019-2026 Seymour Shlien
@@ -13215,6 +13215,7 @@ for {set i 1} {$i < $descsize} {incr i} {
   set tempo [expr round($tempo)]
   set pitchbends [dict get $desc($i) pitchbend]
   set pitchentropy [dict get $desc($i) pitchentropy]
+  if {![dict exists $desc($i) file]} continue
   set filepath [dict get $desc($i) file]
   set ndrums [llength [dict get $desc($i) drums]]
   set nbeats [dict get $desc($i) midilength]
@@ -19012,6 +19013,7 @@ if {$sflength1 < 1} {return 0}
 set sumabsdif 0.0
 for {set i 0} {$i < $sflength1} {incr i} {
   set key0 [lindex $sf $i]
+  if {![string is digit $key0]} break
   set key1 [lindex $sf [expr $i +1]]
   set dif [expr $key1 - $key0]
   set sumabsdif [expr $sumabsdif + abs($dif)]
