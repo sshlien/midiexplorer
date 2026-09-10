@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.27 2026-08-07 05:57" 
+set midiexplorer_version "MidiExplorer version 5.30 2026-09-10 11:10" 
 set briefconsole 1
 
 # Copyright (C) 2019-2026 Seymour Shlien
@@ -89,6 +89,8 @@ set briefconsole 1
 #   Part 29.0 genre_db support
 #   Part 30.0 miditable
 #   Part 31.0 drum grooves
+#   Part 32.0 key stability
+#   Part 33.0 md5 support (eg lmd database)
 #
 
 set welcome "Welcome to $midiexplorer_version. This application
@@ -1207,6 +1209,8 @@ menubutton $w.menuline.view -text view -menu $w.menuline.view.items -font $df -s
 	    -command "google_search genre"
 	$ww add command -label "google chord progression" -font $df \
 	    -command "google_search \"chord progression\""
+	$ww add command -label "hooktheory" -font $df \
+	    -command "google_search hooktheory"
         $ww add command -label "musicmap similar" -font $df\
             -command musicmap
 	$ww add command -label "duckduckgo search" -font $df -accelerator "ctrl-u"\
@@ -1292,6 +1296,7 @@ menu $ww -tearoff 0
         $ww add command -label "chordtext" -font $df -command {chordtext_window .tinfo}
         $ww add command -label notegram -font $df -command {notegram_plot none}
         $ww add command -label keymap -font $df -command {keymap none}
+        $ww add command -label "key stability" -font $df -command measure_key_stability
 	$ww add command -label "entropy analysis" -font $df -command analyze_note_patterns
 tooltip::tooltip $w.menuline.pitch "Computes the and plots the distribution
 of various pitch related parameters of the selected midi file."
@@ -4726,7 +4731,7 @@ proc play_midi_file {name} {
     set cmd "exec [list $midi(path_midiplay)] $midi(midiplay_options) "
     set cmd [concat $cmd [file join [pwd] $name] ]
     set cmd [concat $cmd &]
-    eval $cmd
+    catch {eval $cmd} playreturn
     set exec_out $exec_out\n\n$cmd
     update_console_page
 }
@@ -18976,14 +18981,16 @@ if {![winfo exist .notecircle]} {
   }
 }
 
-proc test_new_midistats_feature {} {
+# Part 32.0 Key Stability
+
+proc measure_key_stability {} {
 global midi
-puts "test_new_midistats_feature"
+set msg "Key Stability\n"
 set cmd "exec [list $midi(path_midistats)] [list $midi(midifilein)] -keystability"
-puts $cmd
+#puts $cmd
 set result [eval $cmd]
 set sf [lrange [split $result] 2 end]
-puts $sf
+append msg $sf\n
 array set sfhistogram {-7 0 -6 0 -5 0 -4 0 -3 0 -2 0 -1 0 0 0 1 0 2 0 3 0 4 0 5 0 6 0 7 0}
 set lastv 9
 set dsf [list]
@@ -18992,7 +18999,7 @@ foreach v $sf {
   incr sfhistogram($v)
   set lastv $v
   }
-puts "dsf = $dsf"
+append msg "dsf = $dsf\n"
 #puts [array get sfhistogram]
 set pdflist [list]
 foreach v [array names sfhistogram] {
@@ -19001,8 +19008,8 @@ foreach v [array names sfhistogram] {
     lappend pdflist $sfhistogram($v)
   }
 }
-#puts $pdflist
-puts "entropy = [pdf_entropy $pdflist]"
+append msg "entropy = [pdf_entropy $pdflist]\n"
+popMessage $msg
 }
 
 proc key_fluctuation {sf} {
@@ -19049,6 +19056,45 @@ set fluctuation [format "%6.3f" $fluctuation]
 #puts "fluctuation for $midifile = $fluctuation"
 return [list $entropy $fluctuation]
 }
+
+
+#   Part 33.0 md5 support (eg lmd database)
+
+
+proc make_md5Index {} {
+global fileInfoPosition
+global filelist
+global midi
+set inputfile [file join $midi(rootfolder) lmd_full "md5_to_paths.json"]
+if {![file exist $inputfile]} {
+    tk_messageBox -message "You need to put md5_to_paths.json in the lmd_full folder. You can get this file from https://colinraffel.com/projects/lmd/" -type ok
+    return
+    }
+set inhandle [open $inputfile "r"]
+set outhandle [open "md5Index.txt" "w"]
+set i 0
+list filelist
+while {![eof $inhandle]} {
+  set line [gets $inhandle]
+  set filePosition [tell $inhandle]
+  if {[string first ": \[" $line] > 4} {
+    set line [string trimleft $line \ ]
+    set line [string trimright $line \ ]
+    set line [string trimright $line \,]
+    set inFileName [lindex [split $line ] 0]
+    set inFileName [string range $inFileName 1 end-2]
+    puts $outhandle "$i $inFileName $filePosition"
+    dict set fileInfoPosition $inFileName $filePosition
+    lappend filelist $inFileName
+    incr i
+    #if {$i > 4} break
+    }
+  } 
+puts "$i lines read"
+close $inhandle 
+close $outhandle
+}
+
 
 bind all <Alt-t> test_new_midistats_feature
 
