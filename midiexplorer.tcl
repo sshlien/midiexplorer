@@ -5,8 +5,9 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.30 2026-09-10 11:10" 
+set midiexplorer_version "MidiExplorer version 5.31 2026-09-14 13:19" 
 set briefconsole 1
+set fileInfoPosition ""
 
 # Copyright (C) 2019-2026 Seymour Shlien
 #
@@ -683,6 +684,7 @@ proc midiInit {} {
 	set midi(path_abc2midi) [file join $x86 abc2midi.exe]
 	set midi(path_abcm2ps)  [file join $x86 abcm2ps.exe]
         set midi(path_editor) "C:/Windows/System32/notepad.exe"
+        set midi(path_mscore) "C:/Program Files/MuseScore 4/bin/MuseScore4.exe"
         set midi(path_gs) ""
 
         set midi(path_midiplay) "C:/Program Files/Windows Media Player/wmplayer.exe"
@@ -696,6 +698,7 @@ proc midiInit {} {
 	set midi(path_abcm2ps)  abcm2ps
         set midi(path_midiplay) timidity
         set midi(path_editor) xed
+        set midi(path_mscore) mscore
         set midi(midiplay_options) "-A 50 -ik"
         set midi(browser) firefox
         set midi(path_gs) gs
@@ -1422,6 +1425,9 @@ tooltip::tooltip $w.menuline.abc "Convert the selected tracks (channels) or enti
 button $w.menuline.display -text display -font $df -command {create_abc_file none "display"} -state disabled
 
 tooltip::tooltip .treebrowser.menuline.display "Display the music notation of the selected channels or tracks"
+
+button $w.menuline.mscore -text mscore -font $df -command mscore_midi_file -state disabled
+
 #        find title 
 button .treebrowser.menuline2.jump -text find -command {findChildInTree .treebrowser $findname} -font $df
 
@@ -1536,7 +1542,7 @@ is still exposed when you exit midiexplorer.
 
 # pack everything and set binding to quick keys
 set ww $w.menuline
-pack $ww.file  $ww.view $ww.play $ww.display $ww.rhythm $ww.pitch $ww.percussion $ww.database $ww.abc $ww.settings $ww.internals $ww.help -anchor w -side left
+pack $ww.file  $ww.view $ww.play $ww.display $ww.mscore  $ww.rhythm $ww.pitch $ww.percussion $ww.database $ww.abc $ww.settings $ww.internals $ww.help -anchor w -side left
 pack .treebrowser.menuline2.jump .treebrowser.menuline2.name .treebrowser.menuline2.random .treebrowser.menuline2.restore .treebrowser.menuline2.transpose .treebrowser.menuline2.semi .treebrowser.menuline2.speed .treebrowser.menuline2.speedlabel -side left
 pack .treebrowser.menuline -anchor w
 pack .treebrowser.menuline2 -anchor w
@@ -2436,6 +2442,15 @@ proc selected_midi {} {
    }
 }
 
+proc get_lmd_file_name_for_selected_midi {} {
+ set sel [.treebrowser.tree selection]
+ set c [.treebrowser.tree item $sel -values]
+ set f [lindex $c 0]
+ set key [string range [file tail $f] 0 end-4]
+ get_md5_names $key
+}
+
+
 proc enable_top_menubuttons {} {
    .treebrowser.menuline.view configure -state normal
    .treebrowser.menuline.play configure -state normal
@@ -2443,6 +2458,7 @@ proc enable_top_menubuttons {} {
    .treebrowser.menuline.pitch configure -state normal
    .treebrowser.menuline.abc configure -state normal
    .treebrowser.menuline.display configure -state normal
+   .treebrowser.menuline.mscore configure -state normal
 }
 
 proc open_selected_midi {} {
@@ -4199,10 +4215,16 @@ grid $w.edbut -row 5 -column 1
 grid $w.edent -row 5 -column 2
 bind $w.edent <Return> {focus .support.header}
 
+button $w.mscorebut -text "musicscore" -width 14 -font $df -command {locate_mscore}
+entry $w.mscent -textvariable midi(path_mscore) -font $df -width 64
+grid $w.mscorebut -row 6 -column 1
+grid $w.mscent     -row 6 -column 2
+bind $w.mscent <Return> {focus .support.header}
+
 checkbutton $w.display -variable midi(use_js) -fg black
 label $w.displaylabel -font $df -text "use Jef Moine's javascript instead of abcm2ps and gs"
-grid $w.display -row 6 -column 1  
-grid $w.displaylabel  -row 6 -column 2 -sticky nw 
+grid $w.display -row 7 -column 1  
+grid $w.displaylabel  -row 7 -column 2 -sticky nw 
 }
 
 
@@ -4403,6 +4425,11 @@ proc locate_ghostscript {} {
 proc locate_editor {} {
     global midi
     set midi(path_editor) [tk_getOpenFile]
+    }
+
+proc locate_mscore {} {
+    global midi
+    set midi(path_mscore) [tk_getOpenFile]
     }
 
 
@@ -15094,6 +15121,23 @@ set exec_out $cmd\n\n$exec_out
 play_midi_file X1.mid
 }
 
+proc mscore_midi_file {} {
+global midi
+global exec_out
+if {![file exist $midi(path_mscore)]} {
+  set msg "Could not find the musicscore executable"
+  tk_messageBox -message $msg  -type ok
+  return
+  }
+ set cmd "exec [list $midi(path_mscore)] " 
+ set cmd [concat $cmd $midi(midifilein)]
+ catch {eval $cmd} mscorereturn
+ set exec_out "$cmd\n$mscorereturn"
+ update_console_page
+}
+
+
+
 
 
 set urlpointer(1) "http://moinejf.free.fr/js/"
@@ -19065,13 +19109,17 @@ proc make_md5Index {} {
 global fileInfoPosition
 global filelist
 global midi
-set inputfile [file join $midi(rootfolder) lmd_full "md5_to_paths.json"]
+set starttime [clock seconds]
+set inputfile [file join $midi(rootfolder) "md5_to_paths.json"]
+puts "inputfile = $inputfile"
 if {![file exist $inputfile]} {
     tk_messageBox -message "You need to put md5_to_paths.json in the lmd_full folder. You can get this file from https://colinraffel.com/projects/lmd/" -type ok
     return
     }
 set inhandle [open $inputfile "r"]
-set outhandle [open "md5Index.txt" "w"]
+set outfile  [file join $midi(rootfolder) "md5Index.txt"]
+puts "outfile = $outfile"
+set outhandle [open $outfile "w"]
 set i 0
 list filelist
 while {![eof $inhandle]} {
@@ -19093,10 +19141,33 @@ while {![eof $inhandle]} {
 puts "$i lines read"
 close $inhandle 
 close $outhandle
+set elapsedtime [expr [clock seconds] - $starttime]
+puts "elapsed time = $elapsedtime"
+}
+
+proc get_md5_names {key} {
+global fileInfoPosition
+global midi
+puts "get_md5_names $key"
+set position [dict get $fileInfoPosition $key]
+set inputfile [file join $midi(rootfolder) "md5_to_paths.json"]
+set inhandle [open $inputfile "r"]
+seek $inhandle $position
+gets $inhandle line
+puts $line
+while {![eof $inhandle] && [string first "\]," $line] < 3}  {
+  gets $inhandle line
+  if {[string first "\]," $line] > 3} break
+  puts $line
+  }
+close $inhandle
 }
 
 
-bind all <Alt-t> test_new_midistats_feature
+
+
+bind all <Alt-t> make_md5Index
+bind all <Alt-y> get_lmd_file_name_for_selected_midi 
 
 
 bind all <Alt-d> {drumgroove_window
