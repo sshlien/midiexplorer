@@ -1,11 +1,11 @@
-#package provide app-midiexplorer 1.0
+# -variable midi(collection_type) -value cleanpackage provide app-midiexplorer 1.0
 #   MidiExplorer
 #!/bin/sh
 # the next line restarts using wish \
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.31 2026-09-14 13:19" 
+set midiexplorer_version "MidiExplorer version 5.33 2026-09-17 14:45" 
 set briefconsole 1
 set fileInfoPosition ""
 
@@ -887,6 +887,9 @@ proc midiInit {} {
    set midi(stability_hi) 1.05
    set midi(fluc_low) 0.5
    set midi(fluc_hi) 0.7
+#
+   set midi(collection_type) "clean"
+   set midi(original_file_name) ""
 
 }
 
@@ -1082,6 +1085,7 @@ $ww add command -label "root directory" -font $df -command {
     }
     if {[info exist desc]} {unset desc}
     }
+$ww add command -label "collection type" -font $df -command setCollectionType
 $ww add command -label "reload last midi file" -font $df -command load_last_midi_file -accelerator "ctrl-m"
 
 $ww add command -label "restore root directory" -font $df -command restore_root_folder
@@ -1124,15 +1128,17 @@ for {set i 0} {$i < $midi(history_length)} {incr i} {
 #versions of tcl/tk due to a bug
 tooltip::tooltip $ww -index 0 "select the folder containing midi
 files to browse. This will be called\nthe root folder."
-tooltip::tooltip $ww -index 1 "extract the information of the last
+tooltip::tooltip $ww -index 1 "determine how to treat this midi
+collection."
+tooltip::tooltip $ww -index 2 "extract the information of the last
 midi file that you viewed."
-tooltip::tooltip $ww -index 2 "restores the last root folder in\nthe directory structure viewer"
-tooltip::tooltip $ww -index 3 "recent folders open"
-tooltip::tooltip $ww -index 4 "opens a selector of midi files
+tooltip::tooltip $ww -index 3 "restores the last root folder in\nthe directory structure viewer"
+tooltip::tooltip $ww -index 5 "recent folders open"
+tooltip::tooltip $ww -index 6 "opens a selector of midi files
 of specific genres."
-tooltip::tooltip $ww -index 5 "shut down this program remembering
+tooltip::tooltip $ww -index 7 "shut down this program remembering
 some of your choices."
-tooltip::tooltip $ww -index 6 "pop ups a window with brief instructions"
+tooltip::tooltip $ww -index 8 "pop ups a window with brief instructions"
 
 tooltip::tooltip .treebrowser.menuline.file "This menu contains functions to
 set the midi directory, restore states,
@@ -2439,15 +2445,21 @@ proc selected_midi {} {
    #updateHistory [file dirname $f]
    updateHistory $f
    open_selected_midi
+   if {$midi(collection_type) == "md5"} {
+      set midi(original_file_name) [get_lmd_file_name_for_selected_midi]
+      }
    }
 }
 
 proc get_lmd_file_name_for_selected_midi {} {
+ global df
  set sel [.treebrowser.tree selection]
  set c [.treebrowser.tree item $sel -values]
  set f [lindex $c 0]
  set key [string range [file tail $f] 0 end-4]
- get_md5_names $key
+ set namelist [get_md5_names $key]
+ .info.genre configure  -text [lindex $namelist 0] -font $df
+ return $namelist
 }
 
 
@@ -2493,6 +2505,28 @@ proc load_last_midi_file {} {
  parse_midi_info $midi_info
  presentMidiInfo
 } 
+
+proc setCollectionType {} {
+global midi
+global df
+set f .collectionTypeWindow
+toplevel $f
+radiobutton $f.clean -text "lakh clean" -font $df -variable midi(collection_type) -value "clean" -command configure_midiexplorer_for_lakh_clean
+radiobutton $f.other -text "Other" -font $df -variable midi(collection_type) -value "other" -command configure_midiexplorer_for_unknown_collection
+radiobutton $f.md5 -text "Md5 hashed filenames" -font $df -variable midi(collection_type) -value md5 -command configure_midiexplorer_for_md5
+pack $f.clean $f.other $f.md5 -anchor nw
+}
+
+proc configure_midiexplorer_for_lakh_clean {} {
+}
+
+proc configure_midiexplorer_for_unknown_collection {} {
+}
+
+proc configure_midiexplorer_for_md5 {} {
+make_md5Index
+}
+
 
 bind . <Control-m> load_last_midi_file
 
@@ -14827,8 +14861,13 @@ proc google_search {{modifier ""}} {
 global midi
 global exec_out
 set exec_out "google_search:\n"
-set splitname [file split $midi(midifilein)]
-#puts $splitname
+if {$midi(collection_type) == "md5"} {
+   #puts "original_file__name = $midi(original_file_name)"
+   set splitname $midi(original_file_name)
+   } else {
+   set splitname [file split $midi(midifilein)]
+   }
+#puts "splitname = $splitname"
 set l [llength $splitname]
 set l1 [expr $l -1]
 set l2 [expr $l -2]
@@ -19111,14 +19150,14 @@ global filelist
 global midi
 set starttime [clock seconds]
 set inputfile [file join $midi(rootfolder) "md5_to_paths.json"]
-puts "inputfile = $inputfile"
+#puts "inputfile = $inputfile"
 if {![file exist $inputfile]} {
     tk_messageBox -message "You need to put md5_to_paths.json in the lmd_full folder. You can get this file from https://colinraffel.com/projects/lmd/" -type ok
     return
     }
 set inhandle [open $inputfile "r"]
 set outfile  [file join $midi(rootfolder) "md5Index.txt"]
-puts "outfile = $outfile"
+#puts "outfile = $outfile"
 set outhandle [open $outfile "w"]
 set i 0
 list filelist
@@ -19131,18 +19170,18 @@ while {![eof $inhandle]} {
     set line [string trimright $line \,]
     set inFileName [lindex [split $line ] 0]
     set inFileName [string range $inFileName 1 end-2]
-    puts $outhandle "$i $inFileName $filePosition"
+    #puts $outhandle "$i $inFileName $filePosition"
     dict set fileInfoPosition $inFileName $filePosition
     lappend filelist $inFileName
     incr i
     #if {$i > 4} break
     }
   } 
-puts "$i lines read"
+#puts "$i lines read"
 close $inhandle 
 close $outhandle
 set elapsedtime [expr [clock seconds] - $starttime]
-puts "elapsed time = $elapsedtime"
+#puts "elapsed time = $elapsedtime"
 }
 
 proc get_md5_names {key} {
@@ -19154,13 +19193,14 @@ set inputfile [file join $midi(rootfolder) "md5_to_paths.json"]
 set inhandle [open $inputfile "r"]
 seek $inhandle $position
 gets $inhandle line
-puts $line
+set namelist  [list $line]
 while {![eof $inhandle] && [string first "\]," $line] < 3}  {
   gets $inhandle line
   if {[string first "\]," $line] > 3} break
   puts $line
   }
 close $inhandle
+return $namelist
 }
 
 
@@ -19172,6 +19212,8 @@ bind all <Alt-y> get_lmd_file_name_for_selected_midi
 
 bind all <Alt-d> {drumgroove_window
                  }
+
+if {$midi(collection_type) == "md5"} {configure_midiexplorer_for_md5}
 
 #check for argc,argv
 if {$argc != 0} {
