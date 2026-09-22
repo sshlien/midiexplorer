@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.33 2026-09-17 14:45" 
+set midiexplorer_version "MidiExplorer version 5.33 2026-09-22 14:22" 
 set briefconsole 1
 set fileInfoPosition ""
 
@@ -2459,8 +2459,29 @@ proc get_lmd_file_name_for_selected_midi {} {
  set key [string range [file tail $f] 0 end-4]
  set namelist [get_md5_names $key]
  .info.genre configure  -text [lindex $namelist 0] -font $df
+ if {[llength $namelist] > 1} {
+   show_lmd_file_names_in_listbox $namelist
+   } else {
+   destroy .lmdfilenames
+   }
  return $namelist
 }
+
+proc show_lmd_file_names_in_listbox {namelist} {
+  global df
+  global midi
+  set f .lmdfilenames
+  if {![winfo exist $f]} {
+     toplevel $f
+     listbox $f.box  -width 50 -height 8 -selectmode single
+     pack $f.box
+  }
+  $f.box delete 0 end
+  foreach item $namelist {
+    $f.box insert end $item
+    }
+}
+
 
 
 proc enable_top_menubuttons {} {
@@ -19187,17 +19208,19 @@ set elapsedtime [expr [clock seconds] - $starttime]
 proc get_md5_names {key} {
 global fileInfoPosition
 global midi
-puts "get_md5_names $key"
+#puts "get_md5_names $key"
 set position [dict get $fileInfoPosition $key]
 set inputfile [file join $midi(rootfolder) "md5_to_paths.json"]
 set inhandle [open $inputfile "r"]
 seek $inhandle $position
 gets $inhandle line
+set line [string range $line 8 end]
 set namelist  [list $line]
 while {![eof $inhandle] && [string first "\]," $line] < 3}  {
   gets $inhandle line
   if {[string first "\]," $line] > 3} break
-  puts $line
+  set line [string range $line 8 end]
+  lappend namelist $line
   }
 close $inhandle
 return $namelist
