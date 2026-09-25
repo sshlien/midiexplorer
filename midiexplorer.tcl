@@ -5,7 +5,7 @@
 exec wish8.6 "$0" "$@"
 
 global midiexplorer_version
-set midiexplorer_version "MidiExplorer version 5.33 2026-09-22 14:22" 
+set midiexplorer_version "MidiExplorer version 5.35 2026-09-25 14:08" 
 set briefconsole 1
 set fileInfoPosition ""
 
@@ -762,6 +762,9 @@ proc midiInit {} {
     set midi(.genremanager) ""
     set midi(.drumgroove) ""
     set midi(.groovehistogram) ""
+    set midi(.collectionTypeWindow) ""
+    set midi(.searchName) ""
+    set midi(.lmdfilenames) ""
 
     
     set midi(player1) ""
@@ -1434,12 +1437,17 @@ tooltip::tooltip .treebrowser.menuline.display "Display the music notation of th
 
 button $w.menuline.mscore -text mscore -font $df -command mscore_midi_file -state disabled
 
+
 #        find title 
 button .treebrowser.menuline2.jump -text find -command {findChildInTree .treebrowser $findname} -font $df
 
 entry .treebrowser.menuline2.name -width 16 -textvariable findname -font $df
 
 bind .treebrowser.menuline2.name <Return> {findChildInTree .treebrowser $findname}
+
+button .treebrowser.menuline2.search -text "title search" -font $df -command searchNameWindow
+tooltip::tooltip .treebrowser.menuline2.search "Find a midi file based on a keyword in the file title."
+
 
 button .treebrowser.menuline2.random -text "random pick" -font $df -command {randomPick .treebrowser}
 
@@ -2539,6 +2547,8 @@ pack $f.clean $f.other $f.md5 -anchor nw
 }
 
 proc configure_midiexplorer_for_lakh_clean {} {
+pack forget .treebrowser.menuline2.search
+pack .treebrowser.menuline2.jump .treebrowser.menuline2.name -side left -before .treebrowser.menuline2.random
 }
 
 proc configure_midiexplorer_for_unknown_collection {} {
@@ -2546,6 +2556,9 @@ proc configure_midiexplorer_for_unknown_collection {} {
 
 proc configure_midiexplorer_for_md5 {} {
 make_md5Index
+pack forget .treebrowser.menuline2.name
+pack forget .treebrowser.menuline2.jump
+pack .treebrowser.menuline2.search -before .treebrowser.menuline2.random -side left
 }
 
 
@@ -2592,6 +2605,7 @@ proc get_midi_info_for {} {
  global midilength
  set midilength 0
  set fileexist [file exist $midi(midifilein)]
+ #puts "looking for $midi(midifilein)"
  if {$fileexist} {
    set exec_options "[list $midi(midifilein) ]"
    set cmd "exec [list $midi(path_midistats)]  $exec_options"
@@ -2600,8 +2614,7 @@ proc get_midi_info_for {} {
    update_console_page
    return $midi_info
    } else {
-   set msg "Unable to find file $midi(midifilein). Perhaps you should \
-   clear the recent history."
+   set msg "Unable to find file $midi(midifilein)."
    show_message_page $msg word
    }
  }
@@ -12081,6 +12094,7 @@ while {[eof $inhandle] != 1 && $n < 100} {
   gets $indexhandle indexline
   set fluctuation [lindex $line 2]  
   if {$fluctuation >= $midi(fluc_low) && $fluctuation < $midi(fluc_hi)} {
+     #puts "line = $line indexline = $indexline"
      set midifile [lindex [split $indexline \t] 1]
      set size [file size $midi(rootfolder)$midifile]
      set size [format %5.2f [expr $size/1000.0]]
@@ -12852,7 +12866,7 @@ proc match_title {item} {
 global desc
 global midi
 set needle [string tolower $midi(sname)]
-set haystack [string tolower [dict get $desc($item) file]]
+set haystack [string tolower [dict get $desc($item) sfile]]
 return [string first $needle $haystack]
 }
 
@@ -13921,7 +13935,8 @@ proc getGeometryOfAllToplevels {} {
                ".keypitchclass" ".channel9" ".ribbon" ".ptableau"
                ".touchplot" ".effect" ".csettings" ".drummap" ".programcolor"
                ".tinfo" ".ftable" ".rminmaj" ".genremanager" ".drumgroove"
-               ".groovehistogram"}
+               ".groovehistogram" ".collectionTypeWindow" ".searchName"
+               ".lmdfilenames"}
   foreach top $toplevellist {
     if {[winfo exist $top]} {
       set g [wm geometry $top]"
@@ -19098,12 +19113,19 @@ append msg $sf\n
 array set sfhistogram {-7 0 -6 0 -5 0 -4 0 -3 0 -2 0 -1 0 0 0 1 0 2 0 3 0 4 0 5 0 6 0 7 0}
 set lastv 9
 set dsf [list]
+set sumabsdif 0.0
+set sflength [llength $sf]
+if {$sflength > 1} {incr sflength -1}
 foreach v $sf {
-  if {$lastv != 9} {lappend dsf [expr $v - $lastv]}
-  incr sfhistogram($v)
-  set lastv $v
+  if {$lastv != 9} {lappend dsf [expr $v - $lastv]
+    set sumabsdif [expr abs($v - $lastv) + $sumabsdif]
+    incr sfhistogram($v)
+    }
+    set lastv $v
   }
+set fluctuation [expr $sumabsdif / $sflength]
 append msg "dsf = $dsf\n"
+append msg "fluctuation = $sumabsdif / $sflength = $fluctuation\n"
 #puts [array get sfhistogram]
 set pdflist [list]
 foreach v [array names sfhistogram] {
@@ -19113,6 +19135,7 @@ foreach v [array names sfhistogram] {
   }
 }
 append msg "entropy = [pdf_entropy $pdflist]\n"
+
 popMessage $msg
 }
 
@@ -19129,7 +19152,9 @@ for {set i 0} {$i < $sflength1} {incr i} {
   set dif [expr $key1 - $key0]
   set sumabsdif [expr $sumabsdif + abs($dif)]
   }
-return [expr $sumabsdif/$sflength1]
+set fluctuation [expr $sumabsdif/$sflength1]
+#puts "key_fluctuation = $sumabsdif/$sflength1 = $fluctuation"
+return $fluctuation 
 }
 
 
@@ -19208,7 +19233,6 @@ set elapsedtime [expr [clock seconds] - $starttime]
 proc get_md5_names {key} {
 global fileInfoPosition
 global midi
-#puts "get_md5_names $key"
 set position [dict get $fileInfoPosition $key]
 set inputfile [file join $midi(rootfolder) "md5_to_paths.json"]
 set inhandle [open $inputfile "r"]
@@ -19224,6 +19248,114 @@ while {![eof $inhandle] && [string first "\]," $line] < 3}  {
   }
 close $inhandle
 return $namelist
+}
+
+
+
+proc searchNameWindow {} {
+global df
+global midi
+if {![winfo exist .searchName]} {
+  toplevel .searchName
+  set w .searchName.f 
+  frame $w 
+  label $w.lab -text "Search String" -font $df
+  entry $w.ent -width 16 -font $df -relief sunken -textvariable midi(searchstring)
+  button $w.scan -text scan -font $df -command {scan_md5_database}
+  button $w.help -text help -font $df -command {show_message_page $hlp_searchName w}
+  pack $w -side top
+  pack $w.lab $w.ent $w.scan $w.help -side left
+  set w .searchName
+  label .searchName.status -font $df -text ""
+  pack .searchName.status
+  #frame $w
+  ttk::scrollbar $w.vsb -orient vertical -command "$w.tree yview"
+  ttk::treeview $w.tree -columns {filename original}\
+      -height 10 -yscroll "$w.vsb set" -show headings\
+      -yscrollcommand {.searchName.vsb set}
+  $w.tree heading 0 -text "filename"
+  $w.tree heading 0 -command [list SortBy 0 1]
+  $w.tree heading 1 -text "original filename"
+  $w.tree heading 1 -command [list SortBy 1 1]
+  $w.tree column \#0 -width 1
+  $w.tree column filename -width 240
+  $w.tree column original -width 300
+
+  pack $w.tree $w.vsb -side left  -fill both
+  bind $w.tree <<TreeviewSelect>> {sinfoSelect}
+  bind $w.f.ent <Return> {search_md5_to_paths $midi(searchstring)}
+  focus $w.f.ent
+  }
+return
+}
+
+
+proc addprefix_to_chosenfile {chosenfile} {
+#need to add these prefixes so we can find it in midicapsIndex.
+global midi
+set mid .mid
+set firstchar [string index $chosenfile 0]
+set secondchar [string index $chosenfile 1]
+set chosenfile $firstchar/$secondchar/$chosenfile
+set chosenfile "$midi(rootfolder)/$chosenfile$mid"
+return $chosenfile
+}
+
+
+proc sinfoSelect {} {
+global midi
+set indices [.searchName.tree selection]
+set chosenfile [lindex [.searchName.tree item $indices -values] 0]
+set chosenfile [addprefix_to_chosenfile $chosenfile]
+set midi(midifilein) $chosenfile
+open_selected_midi
+}
+
+proc search_md5_to_paths {needle} {
+global midi
+#global midicapsPosition
+global fileInfoPosition
+set FindQuoted {"([^""]*)"}
+set needle [string tolower $needle]
+set inhandle [open [file join $midi(rootfolder)  "md5_to_paths.json"] "r"]
+set i 0
+set done 0
+while {![eof $inhandle]} {
+  set line [gets $inhandle]
+  if {[string first ": \[" $line] > 4} {
+    regexp $FindQuoted $line inFileName
+    #ensure that inFileName is also in the fileInfoPosition dictionary
+    # eliminate double quotes
+    set inFileName [string range $inFileName 1 end-1]
+    if {[dict exists $fileInfoPosition $inFileName]} {set done 0}
+    } else {
+    regexp -all $FindQuoted $line haystack
+    if {$done == 0 &&[info exist haystack] && ([string first $needle [string tolower $haystack]] >= 0)} {
+       .searchName.tree insert {} -1 -values [list $inFileName  $haystack]
+       incr i
+       }
+       set done 1
+       #if {$i > 4} break
+       }
+  }
+#puts "adding $i file links"
+.searchName.status configure -text "found $i files"
+close $inhandle 
+}
+
+
+proc scan_md5_database {} {
+global midi
+
+set itemlist  [.searchName.tree children {}]
+#set itemlist [$w.tree children [$w.tree children {}]]
+if {[llength $itemlist] > 0} {
+  .searchName.tree delete $itemlist
+  }
+#puts "scanning $midi(searchstring)"
+.searchName.status configure -text "searching"
+update
+search_md5_to_paths $midi(searchstring)
 }
 
 
